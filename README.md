@@ -1,4 +1,4 @@
-# smart_greenhouse_pbl
+# Pharma Medic
 
 A new Flutter project.
 
