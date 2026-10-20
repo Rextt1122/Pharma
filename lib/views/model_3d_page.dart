@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/sensor_model.dart';
 import '../providers/sensor_provider.dart';
 import '../theme/app_theme.dart';
+import '../widgets/shimmer_loading.dart';
 
 class Model3dPage extends StatefulWidget {
   const Model3dPage({super.key});
@@ -28,6 +29,10 @@ class _Model3dPageState extends State<Model3dPage> {
   Widget build(BuildContext context) {
     return Consumer<SensorProvider>(
       builder: (context, provider, child) {
+        if (provider.isInitialLoading) {
+          return _buildLoadingSkeleton();
+        }
+
         final sensor = provider.sensorData;
 
         return ListView(
@@ -294,6 +299,127 @@ class _Model3dPageState extends State<Model3dPage> {
       children: [
         Text(title, style: AppTypography.caption),
         Text(value, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textDark)),
+      ],
+    );
+  }
+
+  Widget _buildLoadingSkeleton() {
+    return ListView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.only(
+        left: AppSpacing.md,
+        right: AppSpacing.md,
+        top: AppSpacing.sm + 4,
+        bottom: AppSpacing.xl * 3,
+      ),
+      children: [
+        Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: AppColors.cardWhite,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+            border: Border.all(color: const Color(0xFFCBD5E1), width: 1.0),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      const ShimmerLoading(height: 36, width: 36, radius: AppSpacing.radiusPill),
+                      const SizedBox(width: AppSpacing.sm + 4),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          ShimmerLoading(height: 16, width: 150, radius: AppSpacing.radiusSm),
+                          SizedBox(height: 6),
+                          ShimmerLoading(height: 12, width: 110, radius: AppSpacing.radiusSm),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const ShimmerLoading(height: 24, width: 64, radius: AppSpacing.radiusPill),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                physics: const NeverScrollableScrollPhysics(),
+                child: Row(
+                  children: const [
+                    ShimmerLoading(height: 32, width: 70, radius: AppSpacing.radiusPill),
+                    SizedBox(width: AppSpacing.sm),
+                    ShimmerLoading(height: 32, width: 65, radius: AppSpacing.radiusPill),
+                    SizedBox(width: AppSpacing.sm),
+                    ShimmerLoading(height: 32, width: 60, radius: AppSpacing.radiusPill),
+                    SizedBox(width: AppSpacing.sm),
+                    ShimmerLoading(height: 32, width: 75, radius: AppSpacing.radiusPill),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md - 2),
+        const ShimmerLoading(height: 280, radius: AppSpacing.radiusLg),
+        const SizedBox(height: AppSpacing.md - 2),
+        Container(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          decoration: BoxDecoration(
+            color: AppColors.cardWhite,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+            border: Border.all(color: const Color(0xFFCBD5E1), width: 1.0),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const ShimmerLoading(height: 16, width: 150, radius: AppSpacing.radiusSm),
+              const SizedBox(height: AppSpacing.sm + 4),
+              Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.xs + 4,
+                children: const [
+                  ShimmerLoading(height: 30, width: 90, radius: AppSpacing.radiusPill),
+                  ShimmerLoading(height: 30, width: 140, radius: AppSpacing.radiusPill),
+                  ShimmerLoading(height: 30, width: 110, radius: AppSpacing.radiusPill),
+                  ShimmerLoading(height: 30, width: 85, radius: AppSpacing.radiusPill),
+                  ShimmerLoading(height: 30, width: 95, radius: AppSpacing.radiusPill),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md - 2),
+        Container(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          decoration: BoxDecoration(
+            color: AppColors.cardWhite,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+            border: Border.all(color: const Color(0xFFCBD5E1), width: 1.0),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const ShimmerLoading(height: 16, width: 170, radius: AppSpacing.radiusSm),
+              const SizedBox(height: AppSpacing.md),
+              ...List.generate(
+                5,
+                (index) => Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.sm + 4),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: const [
+                      ShimmerLoading(height: 14, width: 120, radius: AppSpacing.radiusSm),
+                      ShimmerLoading(height: 14, width: 130, radius: AppSpacing.radiusSm),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }

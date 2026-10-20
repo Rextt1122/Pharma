@@ -38,11 +38,11 @@ class SensorProvider extends ChangeNotifier {
   final List<AppNotification> _notifications = [];
   
   // Threshold values (loaded from storage)
-  late double _tempMin;
-  late double _tempMax;
-  late double _humidityMin;
-  late double _humidityMax;
-  late double _gasMax;
+  double _tempMin = StorageService.defaultTempMin;
+  double _tempMax = StorageService.defaultTempMax;
+  double _humidityMin = StorageService.defaultHumidityMin;
+  double _humidityMax = StorageService.defaultHumidityMax;
+  double _gasMax = StorageService.defaultGasMax;
   
   // Track recent notifications to avoid duplicates within time window
   final Map<String, DateTime> _lastNotificationTime = {};

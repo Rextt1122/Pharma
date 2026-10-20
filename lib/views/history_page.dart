@@ -488,7 +488,7 @@ class HistoryPage extends StatelessWidget {
 
   Widget _buildLoadingSkeleton() {
     return ListView(
-      physics: const NeverScrollableScrollPhysics(),
+      physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.only(
         left: AppSpacing.md,
         right: AppSpacing.md,

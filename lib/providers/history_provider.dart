@@ -35,11 +35,16 @@ class HistoryProvider extends ChangeNotifier {
       }
     });
 
+    final stopwatch = Stopwatch()..start();
     try {
       _historyList = await _apiService.fetchSensorHistory();
     } catch (e) {
       _errorMessage = e.toString().replaceAll('Exception: ', '');
     } finally {
+      final elapsed = stopwatch.elapsedMilliseconds;
+      if (elapsed < 600) {
+        await Future.delayed(Duration(milliseconds: 600 - elapsed));
+      }
       _isLoading = false;
       notifyListeners();
     }
