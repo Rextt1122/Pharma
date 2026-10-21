@@ -224,59 +224,70 @@ class _MainNavigationState extends State<MainNavigation> {
       bottomNavigationBar: SafeArea(
         top: false,
         child: Container(
-          margin: const EdgeInsets.only(
-            left: AppSpacing.md,
-            right: AppSpacing.md,
-            bottom: AppSpacing.sm + 4,
-            top: AppSpacing.xs,
+          margin: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: 6,
           ),
           decoration: BoxDecoration(
             color: AppColors.cardWhite,
             borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
-            border: Border.all(color: const Color(0xFFCBD5E1), width: 1.0),
+            border: Border.all(color: const Color(0xFFE2E8F0), width: 1.0),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withAlpha(12),
-                blurRadius: 16,
-                offset: const Offset(0, 4),
+                color: Colors.black.withAlpha(8),
+                blurRadius: 12,
+                offset: const Offset(0, 3),
               ),
             ],
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
-            child: NavigationBar(
-              height: 64,
-              elevation: 0,
-              selectedIndex: _selectedIndex,
-              onDestinationSelected: (index) {
-                setState(() {
-                  _selectedIndex = index;
-                });
-              },
-              backgroundColor: AppColors.cardWhite,
-              indicatorColor: AppColors.pharmaNavy,
-              destinations: const [
-                NavigationDestination(
-                  icon: Icon(Icons.sensors_outlined, color: AppColors.textMuted),
-                  selectedIcon: Icon(Icons.sensors, color: Colors.white),
-                  label: 'Realtime',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.view_in_ar_outlined, color: AppColors.textMuted),
-                  selectedIcon: Icon(Icons.view_in_ar, color: Colors.white),
-                  label: 'Model 3D',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.show_chart_outlined, color: AppColors.textMuted),
-                  selectedIcon: Icon(Icons.show_chart, color: Colors.white),
-                  label: 'Riwayat',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.settings_outlined, color: AppColors.textMuted),
-                  selectedIcon: Icon(Icons.settings, color: Colors.white),
-                  label: 'Pengaturan',
-                ),
-              ],
+            child: NavigationBarTheme(
+              data: NavigationBarThemeData(
+                height: 52,
+                labelTextStyle: WidgetStateProperty.resolveWith((states) {
+                  final isSelected = states.contains(WidgetState.selected);
+                  return TextStyle(
+                    fontSize: 10,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                    color: isSelected ? AppColors.pharmaNavy : AppColors.textMuted,
+                  );
+                }),
+              ),
+              child: NavigationBar(
+                height: 52,
+                elevation: 0,
+                selectedIndex: _selectedIndex,
+                onDestinationSelected: (index) {
+                  setState(() {
+                    _selectedIndex = index;
+                  });
+                },
+                backgroundColor: AppColors.cardWhite,
+                indicatorColor: AppColors.pharmaNavy.withAlpha(20),
+                destinations: const [
+                  NavigationDestination(
+                    icon: Icon(Icons.sensors_outlined, size: 19, color: AppColors.textMuted),
+                    selectedIcon: Icon(Icons.sensors, size: 19, color: AppColors.pharmaNavy),
+                    label: 'Realtime',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.view_in_ar_outlined, size: 19, color: AppColors.textMuted),
+                    selectedIcon: Icon(Icons.view_in_ar, size: 19, color: AppColors.pharmaNavy),
+                    label: 'Model 3D',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.show_chart_outlined, size: 19, color: AppColors.textMuted),
+                    selectedIcon: Icon(Icons.show_chart, size: 19, color: AppColors.pharmaNavy),
+                    label: 'Riwayat',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.settings_outlined, size: 19, color: AppColors.textMuted),
+                    selectedIcon: Icon(Icons.settings, size: 19, color: AppColors.pharmaNavy),
+                    label: 'Pengaturan',
+                  ),
+                ],
+              ),
             ),
           ),
         ),

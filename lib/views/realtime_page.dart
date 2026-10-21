@@ -148,7 +148,7 @@ class RealtimePage extends StatelessWidget {
         // 1. Gas Metric Card (Clean & uncluttered)
         AnimatedContainer(
           duration: const Duration(milliseconds: 300),
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
             color: sensor.isGasBahaya ? AppColors.alertRed : AppColors.cardWhite,
             borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
@@ -168,21 +168,21 @@ class RealtimePage extends StatelessWidget {
                       Icon(
                         sensor.isGasBahaya ? Icons.warning_amber_rounded : Icons.co2_outlined,
                         color: sensor.isGasBahaya ? Colors.white : AppColors.pharmaNavy,
-                        size: 20,
+                        size: 18,
                       ),
                       const SizedBox(width: AppSpacing.xs + 4),
                       Text(
                         'Kadar Gas & Udara',
                         style: TextStyle(
                           color: sensor.isGasBahaya ? Colors.white : AppColors.textDark,
-                          fontSize: 13,
+                          fontSize: 12.5,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ],
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
                     decoration: BoxDecoration(
                       color: sensor.isGasBahaya
                           ? Colors.white
@@ -195,13 +195,13 @@ class RealtimePage extends StatelessWidget {
                           : (sensor.kadarGas > provider.gasMax * 0.6 ? 'WASPADA' : 'NORMAL'),
                       style: AppTypography.badge.copyWith(
                         color: sensor.kadarGas > provider.gasMax ? AppColors.alertRed : Colors.white,
-                        fontSize: 10,
+                        fontSize: 9.5,
                       ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: AppSpacing.sm),
+              const SizedBox(height: 6),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -210,14 +210,14 @@ class RealtimePage extends StatelessWidget {
                   Text(
                     '${sensor.kadarGas.toStringAsFixed(1)} PPM',
                     style: AppTypography.heading.copyWith(
-                      fontSize: 26,
+                      fontSize: 22,
                       color: sensor.isGasBahaya ? Colors.white : AppColors.textDark,
                     ),
                   ),
                   Text(
                     'Batas: ${provider.gasMax.toStringAsFixed(0)} PPM',
                     style: TextStyle(
-                      fontSize: 11,
+                      fontSize: 10.5,
                       color: sensor.isGasBahaya ? Colors.white70 : AppColors.textMuted,
                       fontWeight: FontWeight.w500,
                     ),
@@ -227,7 +227,7 @@ class RealtimePage extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: AppSpacing.md),
+        const SizedBox(height: 10),
         // 2. 2x2 Clean Sensor Metrics Grid
         Row(
           children: [
@@ -686,7 +686,7 @@ class RealtimePage extends StatelessWidget {
     required Color iconColor,
   }) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: AppColors.cardWhite,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
@@ -697,13 +697,13 @@ class RealtimePage extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(icon, color: iconColor, size: 18),
+              Icon(icon, color: iconColor, size: 16),
               const SizedBox(width: 6),
               Flexible(
                 child: Text(
                   title,
                   style: const TextStyle(
-                    fontSize: 12,
+                    fontSize: 11.5,
                     fontWeight: FontWeight.w600,
                     color: AppColors.textMuted,
                   ),
@@ -712,11 +712,11 @@ class RealtimePage extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: 6),
           Text(
             value,
             style: AppTypography.heading.copyWith(
-              fontSize: 18,
+              fontSize: 16,
               color: valueColor,
             ),
             overflow: TextOverflow.ellipsis,
@@ -725,7 +725,7 @@ class RealtimePage extends StatelessWidget {
           Text(
             subtitle,
             style: const TextStyle(
-              fontSize: 10,
+              fontSize: 9.5,
               fontWeight: FontWeight.w500,
               color: AppColors.textMuted,
             ),
