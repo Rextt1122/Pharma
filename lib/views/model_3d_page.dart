@@ -15,11 +15,11 @@ class Model3dPage extends StatefulWidget {
 
 class _Model3dPageState extends State<Model3dPage> {
   bool _is3dModel = true;
-  bool _autoRotate = true;
-  String _selectedView = 'ISO 3D';
+  bool _autoRotate = false;
+  String _selectedView = 'Depan';
   int _selectedZone = 0;
 
-  final List<String> _views = const ['ISO 3D', 'Depan', 'Atas', 'Internal'];
+  final List<String> _views = const ['Depan', 'ISO 3D', 'Atas', 'Internal'];
   final List<String> _zones = const [
     'Semua Zona',
     'Cold Storage (2-8°C)',
@@ -29,21 +29,22 @@ class _Model3dPageState extends State<Model3dPage> {
   ];
 
   String _getCameraOrbit() {
-    if (_selectedZone == 1) return '35deg 60deg auto';
-    if (_selectedZone == 2) return '130deg 60deg auto';
-    if (_selectedZone == 3) return '0deg 75deg auto';
-    if (_selectedZone == 4) return '210deg 65deg auto';
+    if (_selectedZone == 1) return '35deg 65deg 55%';
+    if (_selectedZone == 2) return '130deg 65deg 55%';
+    if (_selectedZone == 3) return '0deg 75deg 50%';
+    if (_selectedZone == 4) return '210deg 65deg 55%';
 
     switch (_selectedView) {
       case 'Depan':
-        return '0deg 75deg auto';
+        return '0deg 75deg 65%';
       case 'Atas':
-        return '0deg 5deg auto';
+        return '0deg 5deg 75%';
       case 'Internal':
-        return '180deg 75deg auto';
+        return '180deg 75deg 60%';
       case 'ISO 3D':
+        return '45deg 65deg 70%';
       default:
-        return '45deg 65deg auto';
+        return '0deg 75deg 65%';
     }
   }
 
@@ -259,6 +260,8 @@ class _Model3dPageState extends State<Model3dPage> {
                         autoRotateDelay: 2000,
                         cameraControls: true,
                         cameraOrbit: _getCameraOrbit(),
+                        cameraTarget: 'auto auto auto',
+                        fieldOfView: '30deg',
                         backgroundColor: const Color(0xFF0F172A),
                       )
                     else
@@ -311,8 +314,9 @@ class _Model3dPageState extends State<Model3dPage> {
                             GestureDetector(
                               onTap: () {
                                 setState(() {
-                                  _selectedView = 'ISO 3D';
+                                  _selectedView = 'Depan';
                                   _selectedZone = 0;
+                                  _autoRotate = false;
                                 });
                               },
                               child: Container(

@@ -17,13 +17,6 @@ class MainNavigation extends StatefulWidget {
 class _MainNavigationState extends State<MainNavigation> {
   int _selectedIndex = 0;
 
-  final List<Widget> _pages = const [
-    RealtimePage(),
-    Model3dPage(),
-    HistoryPage(),
-    SettingsPage(),
-  ];
-
   final List<String> _titles = const [
     'Monitoring Gudang Farmasi',
     'Miniatur 3D & Digital Twin',
@@ -218,7 +211,12 @@ class _MainNavigationState extends State<MainNavigation> {
         bottom: false,
         child: IndexedStack(
           index: _selectedIndex,
-          children: _pages,
+          children: [
+            const RealtimePage(),
+            Model3dPage(key: ValueKey('model_3d_view_$_selectedIndex')),
+            const HistoryPage(),
+            const SettingsPage(),
+          ],
         ),
       ),
       bottomNavigationBar: SafeArea(
