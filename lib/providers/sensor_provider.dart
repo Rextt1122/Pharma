@@ -25,7 +25,8 @@ class SensorProvider extends ChangeNotifier {
   final StorageService _storageService = StorageService();
   final ApiService _apiService = ApiService();
   
-  SensorModel _sensorData = SensorModel(
+  SensorModel _device1Data = SensorModel(
+    deviceId: 'device_1',
     suhu: 0.0,
     kelembapan: 0.0,
     kadarGas: 0.0,
@@ -33,6 +34,18 @@ class SensorProvider extends ChangeNotifier {
     statusUv: 0,
     status: 'Menghubungkan...',
   );
+  SensorModel _device2Data = SensorModel(
+    deviceId: 'device_2',
+    suhu: 0.0,
+    kelembapan: 0.0,
+    kadarGas: 0.0,
+    statusPintu: 0,
+    statusUv: 0,
+    status: 'Menghubungkan...',
+  );
+  String _selectedDeviceId = 'device_1';
+  bool _buzzerActive = false;
+
   bool _isConnected = false;
   bool _isInitialLoading = true;
   final List<AppNotification> _notifications = [];
@@ -48,7 +61,11 @@ class SensorProvider extends ChangeNotifier {
   final Map<String, DateTime> _lastNotificationTime = {};
   static const int _notificationCooldownMs = 300000; // 5 minutes
 
-  SensorModel get sensorData => _sensorData;
+  SensorModel get sensorData => _selectedDeviceId == 'device_1' ? _device1Data : _device2Data;
+  SensorModel get device1Data => _device1Data;
+  SensorModel get device2Data => _device2Data;
+  String get selectedDeviceId => _selectedDeviceId;
+  bool get buzzerActive => _buzzerActive;
   bool get isConnected => _isConnected;
   bool get isInitialLoading => _isInitialLoading;
   List<AppNotification> get notifications => List.unmodifiable(_notifications);
@@ -66,6 +83,35 @@ class SensorProvider extends ChangeNotifier {
     _initMqtt();
   }
 
+  void selectDevice(String id) {
+    if (_selectedDeviceId != id) {
+      _selectedDeviceId = id;
+      notifyListeners();
+    }
+  }
+
+  void toggleUv() {
+    final current = sensorData;
+    final nextState = current.statusUv == 1 ? 0 : 1;
+    final updated = current.copyWith(statusUv: nextState);
+    if (_selectedDeviceId == 'device_1') {
+      _device1Data = updated;
+    } else {
+      _device2Data = updated;
+    }
+    _mqttService.publish('pharma/control/$_selectedDeviceId', '{"actuator":"uv","state":$nextState}');
+    _mqttService.publish('pharma/control/uv', '{"device_id":"$_selectedDeviceId","state":$nextState}');
+    notifyListeners();
+  }
+
+  void toggleBuzzer() {
+    _buzzerActive = !_buzzerActive;
+    final state = _buzzerActive ? 1 : 0;
+    _mqttService.publish('pharma/control/$_selectedDeviceId', '{"actuator":"buzzer","state":$state}');
+    _mqttService.publish('pharma/control/buzzer', '{"device_id":"$_selectedDeviceId","state":$state}');
+    notifyListeners();
+  }
+
   Future<void> _initThresholds() async {
     final thresholds = await _storageService.getThresholds();
     _tempMin = thresholds['tempMin'] ?? StorageService.defaultTempMin;
@@ -78,8 +124,8 @@ class SensorProvider extends ChangeNotifier {
   Future<void> _fetchInitialApiData() async {
     try {
       final history = await _apiService.fetchSensorHistory();
-      if (history.isNotEmpty && _sensorData.waktu == null) {
-        _sensorData = history.first;
+      if (history.isNotEmpty && _device1Data.waktu == null) {
+        _device1Data = history.first.copyWith(deviceId: 'device_1');
         notifyListeners();
       }
     } catch (_) {}
@@ -92,20 +138,19 @@ class SensorProvider extends ChangeNotifier {
     Future.delayed(const Duration(seconds: 5), () {
       if (_isInitialLoading) {
         _isInitialLoading = false;
-        _sensorData = SensorModel(
-          suhu: _sensorData.suhu,
-          kelembapan: _sensorData.kelembapan,
-          kadarGas: _sensorData.kadarGas,
-          statusPintu: _sensorData.statusPintu,
-          statusUv: _sensorData.statusUv,
-          status: _isConnected ? 'Menunggu data...' : 'Tidak dapat terhubung',
-        );
+        final statusText = _isConnected ? 'Menunggu data...' : 'Tidak dapat terhubung';
+        _device1Data = _device1Data.copyWith(status: statusText);
+        _device2Data = _device2Data.copyWith(status: statusText);
         notifyListeners();
       }
     });
     
     _mqttService.onDataReceived = (data) {
-      _sensorData = data;
+      if (data.deviceId == 'device_2') {
+        _device2Data = data;
+      } else {
+        _device1Data = data;
+      }
       _isInitialLoading = false;
       _checkAndAddNotifications(data);
       notifyListeners();
@@ -114,14 +159,8 @@ class SensorProvider extends ChangeNotifier {
       _isConnected = connected;
       _isInitialLoading = false;
       if (!connected) {
-        _sensorData = SensorModel(
-          suhu: _sensorData.suhu,
-          kelembapan: _sensorData.kelembapan,
-          kadarGas: _sensorData.kadarGas,
-          statusPintu: _sensorData.statusPintu,
-          statusUv: _sensorData.statusUv,
-          status: 'Terputus',
-        );
+        _device1Data = _device1Data.copyWith(status: 'Terputus');
+        _device2Data = _device2Data.copyWith(status: 'Terputus');
         _addNotification(
           id: 'conn_lost',
           title: 'Koneksi Terputus',
@@ -244,14 +283,8 @@ class SensorProvider extends ChangeNotifier {
 
   void reconnect() {
     _isInitialLoading = true;
-    _sensorData = SensorModel(
-      suhu: _sensorData.suhu,
-      kelembapan: _sensorData.kelembapan,
-      kadarGas: _sensorData.kadarGas,
-      statusPintu: _sensorData.statusPintu,
-      statusUv: _sensorData.statusUv,
-      status: 'Menghubungkan Ulang...',
-    );
+    _device1Data = _device1Data.copyWith(status: 'Menghubungkan Ulang...');
+    _device2Data = _device2Data.copyWith(status: 'Menghubungkan Ulang...');
     notifyListeners();
     _fetchInitialApiData();
     _mqttService.connect();

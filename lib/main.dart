@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => HistoryProvider()),
       ],
       child: MaterialApp(
-        title: 'Smart Greenhouse',
+        title: 'Pharma Medic',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         initialRoute: '/splash',

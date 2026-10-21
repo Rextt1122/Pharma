@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class StorageService {
   static const String _keyServerIp = 'server_ip';
   static const String _keyIsLoggedIn = 'is_logged_in';
-  
+
   // Threshold keys
   static const String _keyTempMin = 'threshold_temp_min';
   static const String _keyTempMax = 'threshold_temp_max';

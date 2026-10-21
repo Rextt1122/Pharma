@@ -58,6 +58,35 @@ class RealtimePage extends StatelessWidget {
                 ],
               ),
             ),
+            // Multi-device switcher (Syarat 2 Device)
+            Padding(
+              padding: const EdgeInsets.only(
+                left: AppSpacing.md,
+                right: AppSpacing.md,
+                top: AppSpacing.sm,
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _buildDeviceTab(
+                      label: 'Device 1 (Rak A)',
+                      icon: Icons.developer_board,
+                      isSelected: provider.selectedDeviceId == 'device_1',
+                      onTap: () => provider.selectDevice('device_1'),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: _buildDeviceTab(
+                      label: 'Device 2 (Rak B)',
+                      icon: Icons.memory,
+                      isSelected: provider.selectedDeviceId == 'device_2',
+                      onTap: () => provider.selectDevice('device_2'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             // Content
             Expanded(
               child: isLoading
@@ -508,6 +537,73 @@ class RealtimePage extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.md - 2),
+        // Actuator Control Card (Syarat Aktuator minimal 2: Buzzer/LED + Aktuator Lain)
+        Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: AppColors.cardWhite,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+            border: Border.all(color: const Color(0xFFCBD5E1), width: 1.0),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.tune_rounded, color: AppColors.pharmaNavy, size: 20),
+                      SizedBox(width: AppSpacing.sm),
+                      Text(
+                        'Kontrol Aktuator Cepat',
+                        style: AppTypography.subtitle,
+                      ),
+                    ],
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppColors.pharmaNavy.withAlpha(20),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                    ),
+                    child: Text(
+                      provider.selectedDeviceId == 'device_1' ? 'DEV-1' : 'DEV-2',
+                      style: AppTypography.badge.copyWith(color: AppColors.pharmaNavy, fontSize: 10),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildActuatorActionTile(
+                      title: 'Lampu Sterilisasi UV',
+                      subtitle: sensor.isUvMenyala ? 'Aktif (Steril)' : 'Nonaktif',
+                      icon: Icons.cleaning_services_rounded,
+                      isActive: sensor.isUvMenyala,
+                      activeColor: AppColors.uvPurple,
+                      onToggle: () => provider.toggleUv(),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: _buildActuatorActionTile(
+                      title: 'Buzzer & LED Alarm',
+                      subtitle: provider.buzzerActive ? 'Alarm Bunyi' : 'Senyap',
+                      icon: Icons.notifications_active_rounded,
+                      isActive: provider.buzzerActive,
+                      activeColor: AppColors.alertRed,
+                      onToggle: () => provider.toggleBuzzer(),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md - 2),
         Container(
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.lg,
@@ -628,6 +724,128 @@ class RealtimePage extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildDeviceTab({
+    required String label,
+    required IconData icon,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.pharmaNavy : AppColors.cardWhite,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          border: Border.all(
+            color: isSelected ? AppColors.pharmaNavy : const Color(0xFFCBD5E1),
+            width: 1,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: AppColors.pharmaNavy.withAlpha(40),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  )
+                ]
+              : null,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 16,
+              color: isSelected ? Colors.white : AppColors.textMuted,
+            ),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: isSelected ? Colors.white : AppColors.textDark,
+                  fontSize: 12,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActuatorActionTile({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required bool isActive,
+    required Color activeColor,
+    required VoidCallback onToggle,
+  }) {
+    return InkWell(
+      onTap: onToggle,
+      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.all(AppSpacing.sm + 2),
+        decoration: BoxDecoration(
+          color: isActive ? activeColor.withAlpha(15) : AppColors.background,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          border: Border.all(
+            color: isActive ? activeColor : const Color(0xFFE2E8F0),
+            width: 1.2,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Icon(
+                  icon,
+                  color: isActive ? activeColor : AppColors.textMuted,
+                  size: 22,
+                ),
+                Switch(
+                  value: isActive,
+                  onChanged: (_) => onToggle(),
+                  activeThumbColor: activeColor,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textDark,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 2),
+            Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+                color: isActive ? activeColor : AppColors.textMuted,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -40,19 +40,34 @@ class MqttService {
       onConnectionChanged?.call(true);
       _client!.subscribe('pharma/sensor', MqttQos.atMostOnce);
       _client!.subscribe('greenhouse/sensor', MqttQos.atMostOnce);
+      _client!.subscribe('pharma/device1/sensor', MqttQos.atMostOnce);
+      _client!.subscribe('pharma/device2/sensor', MqttQos.atMostOnce);
 
       _client!.updates?.listen((List<MqttReceivedMessage<MqttMessage>> messages) {
         final recMess = messages[0].payload as MqttPublishMessage;
+        final topic = messages[0].topic;
         final payload = MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
         try {
           final jsonMap = jsonDecode(payload) as Map<String, dynamic>;
-          final sensorModel = SensorModel.fromJson(jsonMap);
+          String inferredDeviceId = 'device_1';
+          if (topic.contains('device2') || jsonMap['device_id'] == 'device_2' || jsonMap['device_id'] == '2') {
+            inferredDeviceId = 'device_2';
+          }
+          final sensorModel = SensorModel.fromJson(jsonMap, defaultDeviceId: inferredDeviceId);
           onDataReceived?.call(sensorModel);
         } catch (_) {}
       });
     } else {
       _client!.disconnect();
       onConnectionChanged?.call(false);
+    }
+  }
+
+  void publish(String topic, String message) {
+    if (_client != null && _client!.connectionStatus?.state == MqttConnectionState.connected) {
+      final builder = MqttClientPayloadBuilder();
+      builder.addString(message);
+      _client!.publishMessage(topic, MqttQos.atMostOnce, builder.payload!);
     }
   }
 

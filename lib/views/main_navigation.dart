@@ -132,7 +132,7 @@ class _MainNavigationState extends State<MainNavigation> {
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(AppSpacing.sm),
+                padding: const EdgeInsets.all(AppSpacing.sm + 2),
                 decoration: const BoxDecoration(
                   color: AppColors.cardWhite,
                   shape: BoxShape.circle,
@@ -143,7 +143,7 @@ class _MainNavigationState extends State<MainNavigation> {
                   color: AppColors.pharmaNavy,
                 ),
               ),
-              const SizedBox(width: AppSpacing.sm + 4),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -151,10 +151,11 @@ class _MainNavigationState extends State<MainNavigation> {
                   children: [
                     Text(
                       _titles[_selectedIndex],
-                      style: AppTypography.heading.copyWith(fontSize: 17),
+                      style: AppTypography.heading.copyWith(fontSize: 16),
                       overflow: TextOverflow.ellipsis,
                       maxLines: 1,
                     ),
+                    const SizedBox(height: 2),
                     const Text(
                       'Smart Pharma Warehouse • 30 Sep 2026',
                       style: AppTypography.caption,

@@ -63,6 +63,7 @@ class AppTypography {
   static const TextStyle badge = TextStyle(
     fontSize: 11.0,
     fontWeight: FontWeight.bold,
+    color: Colors.white,
     height: 1.1,
     leadingDistribution: TextLeadingDistribution.even,
     letterSpacing: 0.3,

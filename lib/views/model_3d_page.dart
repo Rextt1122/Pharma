@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:model_viewer_plus/model_viewer_plus.dart';
 import 'package:provider/provider.dart';
 import '../models/sensor_model.dart';
 import '../providers/sensor_provider.dart';
@@ -13,6 +14,8 @@ class Model3dPage extends StatefulWidget {
 }
 
 class _Model3dPageState extends State<Model3dPage> {
+  bool _is3dModel = true;
+  bool _autoRotate = true;
   String _selectedView = 'ISO 3D';
   int _selectedZone = 0;
 
@@ -24,6 +27,25 @@ class _Model3dPageState extends State<Model3dPage> {
     'Pintu Utama',
     'Detektor Gas',
   ];
+
+  String _getCameraOrbit() {
+    if (_selectedZone == 1) return '35deg 60deg auto';
+    if (_selectedZone == 2) return '130deg 60deg auto';
+    if (_selectedZone == 3) return '0deg 75deg auto';
+    if (_selectedZone == 4) return '210deg 65deg auto';
+
+    switch (_selectedView) {
+      case 'Depan':
+        return '0deg 75deg auto';
+      case 'Atas':
+        return '0deg 5deg auto';
+      case 'Internal':
+        return '180deg 75deg auto';
+      case 'ISO 3D':
+      default:
+        return '45deg 65deg auto';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -100,6 +122,83 @@ class _Model3dPageState extends State<Model3dPage> {
                     ],
                   ),
                   const SizedBox(height: AppSpacing.md),
+                  Container(
+                    padding: const EdgeInsets.all(3),
+                    decoration: BoxDecoration(
+                      color: AppColors.inputBg,
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                      border: Border.all(color: const Color(0xFFCBD5E1), width: 0.8),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => setState(() => _is3dModel = true),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              decoration: BoxDecoration(
+                                color: _is3dModel ? AppColors.pharmaNavy : Colors.transparent,
+                                borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                              ),
+                              alignment: Alignment.center,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.view_in_ar,
+                                    size: 15,
+                                    color: _is3dModel ? Colors.white : AppColors.textMuted,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'Model 3D Blender',
+                                    style: TextStyle(
+                                      color: _is3dModel ? Colors.white : AppColors.textMuted,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => setState(() => _is3dModel = false),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              decoration: BoxDecoration(
+                                color: !_is3dModel ? AppColors.pharmaNavy : Colors.transparent,
+                                borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                              ),
+                              alignment: Alignment.center,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.map_outlined,
+                                    size: 15,
+                                    color: !_is3dModel ? Colors.white : AppColors.textMuted,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'Denah Sensor (2D)',
+                                    style: TextStyle(
+                                      color: !_is3dModel ? Colors.white : AppColors.textMuted,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm + 4),
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     physics: const BouncingScrollPhysics(),
@@ -141,9 +240,9 @@ class _Model3dPageState extends State<Model3dPage> {
             ),
             const SizedBox(height: AppSpacing.md - 2),
             Container(
-              height: 280,
+              height: 340,
               decoration: BoxDecoration(
-                color: AppColors.pharmaNavy,
+                color: const Color(0xFF0F172A),
                 borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                 border: Border.all(color: AppColors.pharmaNavy, width: 1.0),
               ),
@@ -151,61 +250,165 @@ class _Model3dPageState extends State<Model3dPage> {
                 borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                 child: Stack(
                   children: [
-                    CustomPaint(
-                      size: Size.infinite,
-                      painter: Warehouse3dPainter(
-                        viewMode: _selectedView,
-                        sensorMode: sensor,
-                        selectedZone: _selectedZone,
-                      ),
-                    ),
-                    Positioned(
-                      top: AppSpacing.md,
-                      right: AppSpacing.md,
-                      child: Container(
-                        padding: const EdgeInsets.all(AppSpacing.sm),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withAlpha(100),
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                        ),
-                        child: const Column(
-                          children: [
-                            Icon(Icons.threed_rotation, color: Colors.white, size: 20),
-                            SizedBox(height: 2),
-                            Text(
-                              'Interactive',
-                              style: TextStyle(color: Colors.white70, fontSize: 9),
-                            ),
-                          ],
+                    if (_is3dModel)
+                      ModelViewer(
+                        key: ValueKey('3d-model-$_selectedView-$_selectedZone-$_autoRotate'),
+                        src: 'assets/models/gudang_3d.glb',
+                        alt: 'Digital Twin Miniatur Gudang Farmasi 3D',
+                        autoRotate: _autoRotate,
+                        autoRotateDelay: 2000,
+                        cameraControls: true,
+                        cameraOrbit: _getCameraOrbit(),
+                        backgroundColor: const Color(0xFF0F172A),
+                      )
+                    else
+                      CustomPaint(
+                        size: Size.infinite,
+                        painter: Warehouse3dPainter(
+                          viewMode: _selectedView,
+                          sensorMode: sensor,
+                          selectedZone: _selectedZone,
                         ),
                       ),
-                    ),
                     Positioned(
-                      bottom: AppSpacing.md,
-                      left: AppSpacing.md,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withAlpha(140),
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                color: sensor.isGasBahaya || sensor.isPintuTerbuka ? AppColors.alertRed : AppColors.activeGreen,
-                                shape: BoxShape.circle,
+                      top: AppSpacing.sm + 4,
+                      right: AppSpacing.sm + 4,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (_is3dModel) ...[
+                            GestureDetector(
+                              onTap: () => setState(() => _autoRotate = !_autoRotate),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withAlpha(160),
+                                  borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                                  border: Border.all(color: Colors.white24, width: 0.8),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      _autoRotate ? Icons.pause_circle_filled : Icons.play_circle_fill,
+                                      color: _autoRotate ? AppColors.activeGreen : Colors.white70,
+                                      size: 14,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      _autoRotate ? 'Auto Putar: ON' : 'Auto Putar: OFF',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                             const SizedBox(width: 6),
-                            Text(
-                              'Kamera 3D: $_selectedView',
-                              style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                            GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _selectedView = 'ISO 3D';
+                                  _selectedZone = 0;
+                                });
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withAlpha(160),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: Colors.white24, width: 0.8),
+                                ),
+                                child: const Icon(Icons.refresh, color: Colors.white, size: 14),
+                              ),
                             ),
-                          ],
-                        ),
+                          ] else
+                            Container(
+                              padding: const EdgeInsets.all(AppSpacing.sm),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withAlpha(100),
+                                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                              ),
+                              child: const Column(
+                                children: [
+                                  Icon(Icons.threed_rotation, color: Colors.white, size: 18),
+                                  SizedBox(height: 2),
+                                  Text(
+                                    'Skematik 2D',
+                                    style: TextStyle(color: Colors.white70, fontSize: 9),
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    Positioned(
+                      bottom: AppSpacing.sm + 4,
+                      left: AppSpacing.sm + 4,
+                      right: AppSpacing.sm + 4,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Flexible(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withAlpha(170),
+                                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: BoxDecoration(
+                                      color: sensor.isGasBahaya || sensor.isPintuTerbuka
+                                          ? AppColors.alertRed
+                                          : AppColors.activeGreen,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Flexible(
+                                    child: Text(
+                                      'Kamera: $_selectedView ${_selectedZone > 0 ? "(${_zones[_selectedZone]})" : ""}',
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withAlpha(170),
+                              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.touch_app_outlined, color: Colors.white70, size: 12),
+                                const SizedBox(width: 4),
+                                Text(
+                                  _is3dModel ? 'Geser/Cubit 360°' : 'Layout Denah',
+                                  style: const TextStyle(color: Colors.white70, fontSize: 9),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
