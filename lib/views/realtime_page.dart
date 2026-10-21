@@ -109,7 +109,7 @@ class RealtimePage extends StatelessWidget {
         left: AppSpacing.md,
         right: AppSpacing.md,
         top: AppSpacing.sm,
-        bottom: 130,
+        bottom: AppSpacing.md,
       ),
       children: [
         const ShimmerLoading(height: 100, radius: AppSpacing.radiusLg),
@@ -142,7 +142,7 @@ class RealtimePage extends StatelessWidget {
         left: AppSpacing.md,
         right: AppSpacing.md,
         top: AppSpacing.sm,
-        bottom: 130, // Breathing room above bottom floating nav
+        bottom: AppSpacing.md,
       ),
       children: [
         // 1. Gas Metric Card (Clean & uncluttered)

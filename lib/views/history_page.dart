@@ -154,7 +154,7 @@ class HistoryPage extends StatelessWidget {
             left: AppSpacing.md,
             right: AppSpacing.md,
             top: AppSpacing.sm + 4,
-            bottom: AppSpacing.xl * 3.5,
+            bottom: 72,
           ),
           children: [
             Row(
@@ -496,7 +496,7 @@ class HistoryPage extends StatelessWidget {
         left: AppSpacing.md,
         right: AppSpacing.md,
         top: AppSpacing.sm + 4,
-        bottom: AppSpacing.xl * 3.5,
+        bottom: 72,
       ),
       children: [
         const Row(

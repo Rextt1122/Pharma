@@ -199,7 +199,7 @@ class _SettingsPageState extends State<SettingsPage> {
         left: AppSpacing.md,
         right: AppSpacing.md,
         top: AppSpacing.sm + 4,
-        bottom: AppSpacing.xl * 3,
+        bottom: AppSpacing.md,
       ),
       children: [
         Container(
@@ -510,7 +510,7 @@ class _SettingsPageState extends State<SettingsPage> {
         left: AppSpacing.md,
         right: AppSpacing.md,
         top: AppSpacing.sm + 4,
-        bottom: AppSpacing.xl * 3,
+        bottom: AppSpacing.md,
       ),
       children: [
         // Network configuration card skeleton

@@ -63,7 +63,7 @@ class _Model3dPageState extends State<Model3dPage> {
             left: AppSpacing.md,
             right: AppSpacing.md,
             top: AppSpacing.sm + 4,
-            bottom: AppSpacing.xl * 3,
+            bottom: AppSpacing.md,
           ),
           children: [
             Container(
@@ -513,7 +513,7 @@ class _Model3dPageState extends State<Model3dPage> {
         left: AppSpacing.md,
         right: AppSpacing.md,
         top: AppSpacing.sm + 4,
-        bottom: AppSpacing.xl * 3,
+        bottom: AppSpacing.md,
       ),
       children: [
         Container(
