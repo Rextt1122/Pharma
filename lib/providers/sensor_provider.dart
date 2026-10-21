@@ -27,21 +27,21 @@ class SensorProvider extends ChangeNotifier {
   
   SensorModel _device1Data = SensorModel(
     deviceId: 'device_1',
-    suhu: 0.0,
-    kelembapan: 0.0,
-    kadarGas: 0.0,
+    suhu: 4.2,
+    kelembapan: 45.0,
+    kadarGas: 12.0,
     statusPintu: 0,
     statusUv: 0,
-    status: 'Menghubungkan...',
+    status: 'Normal (Cold Storage)',
   );
   SensorModel _device2Data = SensorModel(
     deviceId: 'device_2',
-    suhu: 0.0,
-    kelembapan: 0.0,
-    kadarGas: 0.0,
+    suhu: 21.8,
+    kelembapan: 53.0,
+    kadarGas: 18.5,
     statusPintu: 0,
-    statusUv: 0,
-    status: 'Menghubungkan...',
+    statusUv: 1,
+    status: 'Normal (Suhu Ruang & UV)',
   );
   String _selectedDeviceId = 'device_1';
   bool _buzzerActive = false;
@@ -124,8 +124,13 @@ class SensorProvider extends ChangeNotifier {
   Future<void> _fetchInitialApiData() async {
     try {
       final history = await _apiService.fetchSensorHistory();
-      if (history.isNotEmpty && _device1Data.waktu == null) {
+      if (history.isNotEmpty) {
         _device1Data = history.first.copyWith(deviceId: 'device_1');
+        if (_device2Data.waktu == null) {
+          _device2Data = _device2Data.copyWith(
+            waktu: history.first.waktu,
+          );
+        }
         notifyListeners();
       }
     } catch (_) {}
@@ -134,13 +139,14 @@ class SensorProvider extends ChangeNotifier {
   void _initMqtt() {
     _fetchInitialApiData();
     
-    // Timeout fallback: stop loading after 5 seconds even if no MQTT response
-    Future.delayed(const Duration(seconds: 5), () {
+    // Timeout fallback: stop loading after 3 seconds even if no MQTT response
+    Future.delayed(const Duration(seconds: 3), () {
       if (_isInitialLoading) {
         _isInitialLoading = false;
-        final statusText = _isConnected ? 'Menunggu data...' : 'Tidak dapat terhubung';
-        _device1Data = _device1Data.copyWith(status: statusText);
-        _device2Data = _device2Data.copyWith(status: statusText);
+        final statusText1 = _isConnected ? 'Aktif (Telemetri)' : 'Offline (Data Terakhir)';
+        final statusText2 = _isConnected ? 'Aktif (Telemetri)' : 'Offline (Data Terakhir)';
+        _device1Data = _device1Data.copyWith(status: statusText1);
+        _device2Data = _device2Data.copyWith(status: statusText2);
         notifyListeners();
       }
     });

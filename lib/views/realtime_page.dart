@@ -140,6 +140,85 @@ class RealtimePage extends StatelessWidget {
         bottom: AppSpacing.xl * 3,
       ),
       children: [
+        // Banner info profile rak aktif
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm + 2),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: provider.selectedDeviceId == 'device_1'
+                  ? [const Color(0xFF0F2B48), const Color(0xFF1E3A8A)]
+                  : [const Color(0xFF1E293B), const Color(0xFF334155)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.sm),
+                decoration: BoxDecoration(
+                  color: Colors.white.withAlpha(25),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  provider.selectedDeviceId == 'device_1'
+                      ? Icons.ac_unit_rounded
+                      : Icons.wb_incandescent_outlined,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm + 2),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      provider.selectedDeviceId == 'device_1'
+                          ? 'Rak A • Cold Storage Vaksin (2–8°C)'
+                          : 'Rak B • Suhu Ruang & Sterilisasi UV',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      provider.selectedDeviceId == 'device_1'
+                          ? 'Sensor: DHT22 (Chiller), MC-38 Pintu, MQ-135 Gas'
+                          : 'Sensor: DHT22 (Ambien), MQ-135 Gas • Aktuator: UV-C',
+                      style: const TextStyle(
+                        color: Color(0xFF94A3B8),
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: provider.selectedDeviceId == 'device_1'
+                      ? AppColors.pharmaNavy.withAlpha(200)
+                      : AppColors.uvPurple.withAlpha(160),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                  border: Border.all(color: Colors.white30, width: 0.8),
+                ),
+                child: Text(
+                  provider.selectedDeviceId == 'device_1' ? 'DEV-1' : 'DEV-2',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 11,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md - 2),
         AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           padding: const EdgeInsets.all(AppSpacing.md + 2),
