@@ -444,30 +444,22 @@ class RealtimePage extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: AppSpacing.md),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildActuatorActionTile(
-                      title: 'Lampu Sterilisasi UV',
-                      subtitle: sensor.isUvMenyala ? 'Aktif (Steril)' : 'Nonaktif',
-                      icon: Icons.cleaning_services_rounded,
-                      isActive: sensor.isUvMenyala,
-                      activeColor: AppColors.uvPurple,
-                      onToggle: () => provider.toggleUv(),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: _buildActuatorActionTile(
-                      title: 'Buzzer & LED Alarm',
-                      subtitle: provider.buzzerActive ? 'Alarm Bunyi' : 'Senyap',
-                      icon: Icons.notifications_active_rounded,
-                      isActive: provider.buzzerActive,
-                      activeColor: AppColors.alertRed,
-                      onToggle: () => provider.toggleBuzzer(),
-                    ),
-                  ),
-                ],
+              _buildActuatorRow(
+                title: 'Lampu Sterilisasi UV',
+                subtitle: sensor.isUvMenyala ? 'Aktif • Sedang Sterilisasi' : 'Nonaktif • Mode Standby',
+                icon: Icons.cleaning_services_rounded,
+                isActive: sensor.isUvMenyala,
+                activeColor: AppColors.uvPurple,
+                onToggle: () => provider.toggleUv(),
+              ),
+              const SizedBox(height: AppSpacing.sm + 2),
+              _buildActuatorRow(
+                title: 'Buzzer & LED Alarm',
+                subtitle: provider.buzzerActive ? 'Alarm Bunyi • Peringatan' : 'Senyap • Kondisi Normal',
+                icon: Icons.notifications_active_rounded,
+                isActive: provider.buzzerActive,
+                activeColor: AppColors.alertRed,
+                onToggle: () => provider.toggleBuzzer(),
               ),
             ],
           ),
@@ -608,7 +600,7 @@ class RealtimePage extends StatelessWidget {
     );
   }
 
-  Widget _buildActuatorActionTile({
+  Widget _buildActuatorRow({
     required String title,
     required String subtitle,
     required IconData icon,
@@ -621,19 +613,30 @@ class RealtimePage extends StatelessWidget {
       borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: isActive ? activeColor.withAlpha(15) : AppColors.background,
+          color: isActive ? activeColor.withAlpha(12) : const Color(0xFFF8FAFC),
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
           border: Border.all(
-            color: isActive ? activeColor : const Color(0xFFE2E8F0),
-            width: 1.2,
+            color: isActive ? activeColor.withAlpha(90) : const Color(0xFFE2E8F0),
+            width: 1.0,
           ),
         ),
         child: Row(
           children: [
-            Icon(icon, color: isActive ? activeColor : AppColors.textMuted, size: 20),
-            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.sm),
+              decoration: BoxDecoration(
+                color: isActive ? activeColor.withAlpha(25) : const Color(0xFFE2E8F0),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                color: isActive ? activeColor : AppColors.textMuted,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -641,12 +644,20 @@ class RealtimePage extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textDark),
-                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textDark,
+                    ),
                   ),
+                  const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.w500, color: isActive ? activeColor : AppColors.textMuted),
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: isActive ? activeColor : AppColors.textMuted,
+                    ),
                   ),
                 ],
               ),
