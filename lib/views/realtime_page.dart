@@ -20,45 +20,7 @@ class RealtimePage extends StatelessWidget {
 
         return Column(
           children: [
-            // Connection status badge at top
-            Container(
-              width: double.infinity,
-              margin: const EdgeInsets.only(
-                left: AppSpacing.md,
-                right: AppSpacing.md,
-                top: AppSpacing.sm,
-              ),
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: AppSpacing.sm + 2,
-              ),
-              decoration: BoxDecoration(
-                color: isConnected ? AppColors.activeGreen : AppColors.alertRed,
-                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Text(
-                    isConnected ? 'Terhubung ke Broker MQTT' : 'Offline - Tidak dapat terhubung',
-                    style: AppTypography.badge.copyWith(
-                      color: Colors.white,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // Multi-device switcher (Syarat 2 Device)
+            // Segmented Device Switcher (Rak A vs Rak B)
             Padding(
               padding: const EdgeInsets.only(
                 left: AppSpacing.md,
@@ -69,8 +31,9 @@ class RealtimePage extends StatelessWidget {
                 children: [
                   Expanded(
                     child: _buildDeviceTab(
-                      label: 'Device 1 (Rak A)',
-                      icon: Icons.developer_board,
+                      title: 'Rak A',
+                      subtitle: 'Cold 2–8°C',
+                      icon: Icons.ac_unit_rounded,
                       isSelected: provider.selectedDeviceId == 'device_1',
                       onTap: () => provider.selectDevice('device_1'),
                     ),
@@ -78,10 +41,50 @@ class RealtimePage extends StatelessWidget {
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: _buildDeviceTab(
-                      label: 'Device 2 (Rak B)',
-                      icon: Icons.memory,
+                      title: 'Rak B',
+                      subtitle: 'Suhu Ruang & UV',
+                      icon: Icons.wb_sunny_outlined,
                       isSelected: provider.selectedDeviceId == 'device_2',
                       onTap: () => provider.selectDevice('device_2'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Unobtrusive connection indicator
+            Padding(
+              padding: const EdgeInsets.only(
+                left: AppSpacing.md + 4,
+                right: AppSpacing.md,
+                top: AppSpacing.xs + 2,
+                bottom: 2,
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 7,
+                    height: 7,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isConnected ? AppColors.activeGreen : const Color(0xFF94A3B8),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    isConnected ? 'Terhubung ke Broker MQTT' : 'Mode Offline / Data Terakhir',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    provider.selectedDeviceId == 'device_1' ? 'DEV-1 (Chiller)' : 'DEV-2 (Steril)',
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textMuted,
                     ),
                   ),
                 ],
@@ -105,27 +108,29 @@ class RealtimePage extends StatelessWidget {
       padding: const EdgeInsets.only(
         left: AppSpacing.md,
         right: AppSpacing.md,
-        top: AppSpacing.sm + 4,
-        bottom: AppSpacing.xl * 3,
+        top: AppSpacing.sm,
+        bottom: 130,
       ),
       children: [
-        // Gas skeleton
-        const ShimmerLoading(height: 140, radius: AppSpacing.radiusLg),
-        const SizedBox(height: AppSpacing.md - 2),
-        // Door + Notification skeletons
+        const ShimmerLoading(height: 100, radius: AppSpacing.radiusLg),
+        const SizedBox(height: AppSpacing.md),
         const Row(
           children: [
-            Expanded(child: ShimmerLoading(height: 100, radius: AppSpacing.radiusLg)),
+            Expanded(child: ShimmerLoading(height: 90, radius: AppSpacing.radiusLg)),
             SizedBox(width: AppSpacing.md),
-            Expanded(child: ShimmerLoading(height: 100, radius: AppSpacing.radiusLg)),
+            Expanded(child: ShimmerLoading(height: 90, radius: AppSpacing.radiusLg)),
           ],
         ),
-        const SizedBox(height: AppSpacing.md - 2),
-        // Temperature gauge skeleton
-        const ShimmerLoading(height: 180, radius: AppSpacing.radiusLg),
-        const SizedBox(height: AppSpacing.md - 2),
-        // Humidity gauge skeleton
-        const ShimmerLoading(height: 180, radius: AppSpacing.radiusLg),
+        const SizedBox(height: AppSpacing.md),
+        const Row(
+          children: [
+            Expanded(child: ShimmerLoading(height: 90, radius: AppSpacing.radiusLg)),
+            SizedBox(width: AppSpacing.md),
+            Expanded(child: ShimmerLoading(height: 90, radius: AppSpacing.radiusLg)),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.md),
+        const ShimmerLoading(height: 170, radius: AppSpacing.radiusLg),
       ],
     );
   }
@@ -136,92 +141,14 @@ class RealtimePage extends StatelessWidget {
       padding: const EdgeInsets.only(
         left: AppSpacing.md,
         right: AppSpacing.md,
-        top: AppSpacing.sm + 4,
-        bottom: AppSpacing.xl * 3,
+        top: AppSpacing.sm,
+        bottom: 130, // Breathing room above bottom floating nav
       ),
       children: [
-        // Banner info profile rak aktif
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm + 2),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: provider.selectedDeviceId == 'device_1'
-                  ? [const Color(0xFF0F2B48), const Color(0xFF1E3A8A)]
-                  : [const Color(0xFF1E293B), const Color(0xFF334155)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.sm),
-                decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(25),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  provider.selectedDeviceId == 'device_1'
-                      ? Icons.ac_unit_rounded
-                      : Icons.wb_incandescent_outlined,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm + 2),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      provider.selectedDeviceId == 'device_1'
-                          ? 'Rak A • Cold Storage Vaksin (2–8°C)'
-                          : 'Rak B • Suhu Ruang & Sterilisasi UV',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      provider.selectedDeviceId == 'device_1'
-                          ? 'Sensor: DHT22 (Chiller), MC-38 Pintu, MQ-135 Gas'
-                          : 'Sensor: DHT22 (Ambien), MQ-135 Gas • Aktuator: UV-C',
-                      style: const TextStyle(
-                        color: Color(0xFF94A3B8),
-                        fontSize: 11,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: provider.selectedDeviceId == 'device_1'
-                      ? AppColors.pharmaNavy.withAlpha(200)
-                      : AppColors.uvPurple.withAlpha(160),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
-                  border: Border.all(color: Colors.white30, width: 0.8),
-                ),
-                child: Text(
-                  provider.selectedDeviceId == 'device_1' ? 'DEV-1' : 'DEV-2',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 11,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md - 2),
+        // 1. Gas Metric Card (Clean & uncluttered)
         AnimatedContainer(
           duration: const Duration(milliseconds: 300),
-          padding: const EdgeInsets.all(AppSpacing.md + 2),
+          padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             color: sensor.isGasBahaya ? AppColors.alertRed : AppColors.cardWhite,
             borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
@@ -236,73 +163,63 @@ class RealtimePage extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Icon(
-                          sensor.isGasBahaya ? Icons.warning_amber_rounded : Icons.co2_outlined,
+                  Row(
+                    children: [
+                      Icon(
+                        sensor.isGasBahaya ? Icons.warning_amber_rounded : Icons.co2_outlined,
+                        color: sensor.isGasBahaya ? Colors.white : AppColors.pharmaNavy,
+                        size: 20,
+                      ),
+                      const SizedBox(width: AppSpacing.xs + 4),
+                      Text(
+                        'Kadar Gas & Udara',
+                        style: TextStyle(
                           color: sensor.isGasBahaya ? Colors.white : AppColors.textDark,
-                          size: 20,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
                         ),
-                        const SizedBox(width: AppSpacing.xs + 4),
-                        Flexible(
-                          child: Text(
-                            'Kadar Gas / Asap Gudang',
-                            style: TextStyle(
-                              color: sensor.isGasBahaya ? Colors.white : AppColors.textMuted,
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: AppSpacing.xs),
                   Container(
-                    alignment: Alignment.center,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.sm + 4,
-                      vertical: AppSpacing.xs,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                     decoration: BoxDecoration(
-                      color: sensor.isGasBahaya ? Colors.white : (sensor.kadarGas > 30 ? AppColors.warningAmber : AppColors.activeGreen),
+                      color: sensor.isGasBahaya
+                          ? Colors.white
+                          : (sensor.kadarGas > provider.gasMax * 0.6 ? AppColors.warningAmber : AppColors.activeGreen),
                       borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
                     ),
                     child: Text(
                       sensor.kadarGas > provider.gasMax
                           ? 'BAHAYA'
                           : (sensor.kadarGas > provider.gasMax * 0.6 ? 'WASPADA' : 'NORMAL'),
-                      textAlign: TextAlign.center,
                       style: AppTypography.badge.copyWith(
                         color: sensor.kadarGas > provider.gasMax ? AppColors.alertRed : Colors.white,
+                        fontSize: 10,
                       ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: AppSpacing.sm + 4),
+              const SizedBox(height: AppSpacing.sm),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
                 children: [
                   Text(
                     '${sensor.kadarGas.toStringAsFixed(1)} PPM',
                     style: AppTypography.heading.copyWith(
-                      fontSize: 24,
+                      fontSize: 26,
                       color: sensor.isGasBahaya ? Colors.white : AppColors.textDark,
                     ),
                   ),
-                  Flexible(
-                    child: Text(
-                      sensor.isGasBahaya ? 'Terdeteksi Kebocoran Gas!' : 'Kualitas Udara Aman',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: sensor.isGasBahaya ? Colors.white70 : AppColors.textMuted,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.end,
+                  Text(
+                    'Batas: ${provider.gasMax.toStringAsFixed(0)} PPM',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: sensor.isGasBahaya ? Colors.white70 : AppColors.textMuted,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
@@ -310,195 +227,68 @@ class RealtimePage extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: AppSpacing.md - 2),
+        const SizedBox(height: AppSpacing.md),
+        // 2. 2x2 Clean Sensor Metrics Grid
         Row(
           children: [
+            // Pintu Gudang
             Expanded(
-              child: Container(
-                padding: const EdgeInsets.all(AppSpacing.md + 2),
-                decoration: BoxDecoration(
-                  color: AppColors.cardWhite,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                  border: Border.all(color: const Color(0xFFCBD5E1), width: 1.0),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          sensor.isPintuTerbuka ? Icons.door_sliding_outlined : Icons.lock_outline,
-                          color: sensor.isPintuTerbuka ? AppColors.alertRed : AppColors.activeGreen,
-                          size: 18,
-                        ),
-                        const SizedBox(width: AppSpacing.xs + 2),
-                        const Flexible(
-                          child: Text(
-                            'Pintu Gudang',
-                            style: AppTypography.caption,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.sm + 4),
-                    Text(
-                      sensor.isPintuTerbuka ? 'Terbuka' : 'Tertutup',
-                      style: AppTypography.heading.copyWith(
-                        fontSize: 17,
-                        color: sensor.isPintuTerbuka ? AppColors.alertRed : AppColors.activeGreen,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      sensor.teksPintu,
-                      style: AppTypography.caption,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
+              child: _buildMetricTile(
+                title: 'Pintu Gudang',
+                value: sensor.isPintuTerbuka ? 'Terbuka' : 'Tertutup',
+                subtitle: sensor.isPintuTerbuka ? 'Perlu Ditutup' : 'Terkunci Rapat',
+                icon: sensor.isPintuTerbuka ? Icons.door_sliding_outlined : Icons.lock_outline,
+                valueColor: sensor.isPintuTerbuka ? AppColors.alertRed : AppColors.activeGreen,
+                iconColor: sensor.isPintuTerbuka ? AppColors.alertRed : AppColors.activeGreen,
               ),
             ),
-            const SizedBox(width: AppSpacing.sm + 4),
+            const SizedBox(width: AppSpacing.md),
+            // Sterilisasi UV
             Expanded(
-              child: Container(
-                padding: const EdgeInsets.all(AppSpacing.md + 2),
-                decoration: BoxDecoration(
-                  color: AppColors.cardWhite,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                  border: Border.all(color: const Color(0xFFCBD5E1), width: 1.0),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.cleaning_services_outlined,
-                          color: sensor.isUvMenyala ? AppColors.uvPurple : AppColors.textMuted,
-                          size: 18,
-                        ),
-                        const SizedBox(width: AppSpacing.xs + 2),
-                        const Flexible(
-                          child: Text(
-                            'Sterilisasi UV',
-                            style: AppTypography.caption,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.sm + 4),
-                    Text(
-                      sensor.isUvMenyala ? 'Menyala' : 'Mati',
-                      style: AppTypography.heading.copyWith(
-                        fontSize: 17,
-                        color: sensor.isUvMenyala ? AppColors.uvPurple : AppColors.textDark,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      sensor.teksUv,
-                      style: AppTypography.caption,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
+              child: _buildMetricTile(
+                title: 'Sterilisasi UV',
+                value: sensor.isUvMenyala ? 'Aktif' : 'Nonaktif',
+                subtitle: sensor.isUvMenyala ? 'Sterilisasi ON' : 'Mode Standby',
+                icon: Icons.cleaning_services_outlined,
+                valueColor: sensor.isUvMenyala ? AppColors.uvPurple : AppColors.textDark,
+                iconColor: sensor.isUvMenyala ? AppColors.uvPurple : AppColors.textMuted,
               ),
             ),
           ],
         ),
-        const SizedBox(height: AppSpacing.md - 2),
+        const SizedBox(height: AppSpacing.md),
         Row(
           children: [
+            // Suhu Storage
             Expanded(
-              child: Container(
-                padding: const EdgeInsets.all(AppSpacing.md + 2),
-                decoration: BoxDecoration(
-                  color: AppColors.cardWhite,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                  border: Border.all(color: const Color(0xFFCBD5E1), width: 1.0),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Row(
-                      children: [
-                        Icon(Icons.thermostat_outlined, color: AppColors.pharmaNavy, size: 18),
-                        SizedBox(width: AppSpacing.xs + 2),
-                        Flexible(
-                          child: Text(
-                            'Suhu Storage',
-                            style: AppTypography.caption,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.sm + 4),
-                    Text(
-                      '${sensor.suhu.toStringAsFixed(1)} °C',
-                      style: AppTypography.heading.copyWith(fontSize: 20),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      sensor.suhu < provider.tempMin
-                          ? 'Terlalu Cold'
-                          : (sensor.suhu <= provider.tempMax ? 'Standar Obat' : 'Suhu Tinggi'),
-                      style: AppTypography.caption,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
+              child: _buildMetricTile(
+                title: 'Suhu Storage',
+                value: '${sensor.suhu.toStringAsFixed(1)} °C',
+                subtitle: 'Target: ${provider.tempMin.toStringAsFixed(0)}–${provider.tempMax.toStringAsFixed(0)}°C',
+                icon: Icons.thermostat_outlined,
+                valueColor: (sensor.suhu >= provider.tempMin && sensor.suhu <= provider.tempMax)
+                    ? AppColors.textDark
+                    : AppColors.alertRed,
+                iconColor: AppColors.tempRed,
               ),
             ),
-            const SizedBox(width: AppSpacing.sm + 4),
+            const SizedBox(width: AppSpacing.md),
+            // Kelembapan
             Expanded(
-              child: Container(
-                padding: const EdgeInsets.all(AppSpacing.md + 2),
-                decoration: BoxDecoration(
-                  color: AppColors.cardWhite,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                  border: Border.all(color: const Color(0xFFCBD5E1), width: 1.0),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Row(
-                      children: [
-                        Icon(Icons.water_drop_outlined, color: AppColors.pharmaBlue, size: 18),
-                        SizedBox(width: AppSpacing.xs + 2),
-                        Flexible(
-                          child: Text(
-                            'Kelembapan',
-                            style: AppTypography.caption,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.sm + 4),
-                    Text(
-                      '${sensor.kelembapan.toStringAsFixed(1)} %',
-                      style: AppTypography.heading.copyWith(fontSize: 20),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      sensor.kelembapan < provider.humidityMin
-                          ? 'Kering'
-                          : (sensor.kelembapan <= provider.humidityMax ? 'Standar Farmasi' : 'Lembap'),
-                      style: AppTypography.caption,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
+              child: _buildMetricTile(
+                title: 'Kelembapan',
+                value: '${sensor.kelembapan.toStringAsFixed(1)} %',
+                subtitle: 'Target: ${provider.humidityMin.toStringAsFixed(0)}–${provider.humidityMax.toStringAsFixed(0)}%',
+                icon: Icons.water_drop_outlined,
+                valueColor: (sensor.kelembapan >= provider.humidityMin && sensor.kelembapan <= provider.humidityMax)
+                    ? AppColors.textDark
+                    : AppColors.alertRed,
+                iconColor: AppColors.humidityBlue,
               ),
             ),
           ],
         ),
-        const SizedBox(height: AppSpacing.md - 2),
+        const SizedBox(height: AppSpacing.md),
         Container(
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
@@ -682,85 +472,35 @@ class RealtimePage extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: AppSpacing.md - 2),
+        const SizedBox(height: AppSpacing.md),
+        // Unified Telemetri & Status Keamanan Card
         Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: AppSpacing.md,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 12),
           decoration: BoxDecoration(
             color: AppColors.pharmaNavy,
             borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-            border: Border.all(color: AppColors.pharmaNavy, width: 1.0),
-          ),
-          child: Row(
-            children: [
-              const Expanded(
-                child: Row(
-                  children: [
-                    Icon(Icons.verified_user_outlined, color: Colors.white, size: 20),
-                    SizedBox(width: AppSpacing.sm + 2),
-                    Flexible(
-                      child: Text(
-                        'Status Keamanan',
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              Container(
-                alignment: Alignment.center,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.sm + 4,
-                  vertical: AppSpacing.xs + 2,
-                ),
-                decoration: BoxDecoration(
-                  color: sensor.isGasBahaya || sensor.isPintuTerbuka ? AppColors.alertRed : AppColors.activeGreen,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
-                ),
-                child: Text(
-                  sensor.isGasBahaya || sensor.isPintuTerbuka ? 'BAHAYA' : 'AMAN & STERIL',
-                  textAlign: TextAlign.center,
-                  style: AppTypography.badge.copyWith(
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md - 2),
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          decoration: BoxDecoration(
-            color: AppColors.pharmaNavy,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-            border: Border.all(color: AppColors.pharmaNavy, width: 1.0),
           ),
           child: Row(
             children: [
               Container(
-                width: 10,
-                height: 10,
+                width: 8,
+                height: 8,
                 decoration: BoxDecoration(
                   color: isConnected ? AppColors.activeGreen : AppColors.alertRed,
                   shape: BoxShape.circle,
                 ),
               ),
-              const SizedBox(width: AppSpacing.sm + 4),
+              const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      isConnected ? 'Sistem Telemetri Gudang Aktif' : 'Terputus dari Broker',
+                      isConnected ? 'Sistem Terhubung • Status Aman' : 'Terputus dari Broker',
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
-                        fontSize: 15,
+                        fontSize: 13,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -768,13 +508,10 @@ class RealtimePage extends StatelessWidget {
                     FutureBuilder<String>(
                       future: StorageService().getServerIp(),
                       builder: (context, snapshot) {
-                        final ip = snapshot.data ?? '...';
+                        final ip = snapshot.data ?? '127.0.0.1';
                         return Text(
-                          '$ip : 1883 • pharma/sensor',
-                          style: const TextStyle(
-                            color: Color(0xFF94A3B8),
-                            fontSize: 11,
-                          ),
+                          '$ip:1883 • Topik: pharma/sensor',
+                          style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 11),
                           overflow: TextOverflow.ellipsis,
                         );
                       },
@@ -782,12 +519,11 @@ class RealtimePage extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: AppSpacing.xs),
               InkWell(
                 onTap: () => provider.reconnect(),
                 borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
                 child: Container(
-                  padding: const EdgeInsets.all(AppSpacing.sm + 2),
+                  padding: const EdgeInsets.all(7),
                   decoration: const BoxDecoration(
                     color: Color(0xFF1E293B),
                     shape: BoxShape.circle,
@@ -795,7 +531,7 @@ class RealtimePage extends StatelessWidget {
                   child: const Icon(
                     Icons.refresh_rounded,
                     color: Colors.white,
-                    size: 18,
+                    size: 16,
                   ),
                 ),
               ),
@@ -807,7 +543,8 @@ class RealtimePage extends StatelessWidget {
   }
 
   Widget _buildDeviceTab({
-    required String label,
+    required String title,
+    required String subtitle,
     required IconData icon,
     required bool isSelected,
     required VoidCallback onTap,
@@ -828,7 +565,7 @@ class RealtimePage extends StatelessWidget {
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: AppColors.pharmaNavy.withAlpha(40),
+                    color: AppColors.pharmaNavy.withAlpha(30),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   )
@@ -840,20 +577,30 @@ class RealtimePage extends StatelessWidget {
           children: [
             Icon(
               icon,
-              size: 16,
-              color: isSelected ? Colors.white : AppColors.textMuted,
+              size: 18,
+              color: isSelected ? Colors.white : AppColors.pharmaNavy,
             ),
-            const SizedBox(width: 6),
-            Flexible(
-              child: Text(
-                label,
-                style: TextStyle(
-                  color: isSelected ? Colors.white : AppColors.textDark,
-                  fontSize: 12,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+            const SizedBox(width: 8),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: isSelected ? Colors.white : AppColors.textDark,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                overflow: TextOverflow.ellipsis,
-              ),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    color: isSelected ? const Color(0xFF94A3B8) : AppColors.textMuted,
+                    fontSize: 10,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -874,7 +621,7 @@ class RealtimePage extends StatelessWidget {
       borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(AppSpacing.sm + 2),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         decoration: BoxDecoration(
           color: isActive ? activeColor.withAlpha(15) : AppColors.background,
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -883,47 +630,94 @@ class RealtimePage extends StatelessWidget {
             width: 1.2,
           ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Icon(
-                  icon,
-                  color: isActive ? activeColor : AppColors.textMuted,
-                  size: 22,
-                ),
-                Switch(
-                  value: isActive,
-                  onChanged: (_) => onToggle(),
-                  activeThumbColor: activeColor,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textDark,
+            Icon(icon, color: isActive ? activeColor : AppColors.textMuted, size: 20),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textDark),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    subtitle,
+                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.w500, color: isActive ? activeColor : AppColors.textMuted),
+                  ),
+                ],
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 2),
-            Text(
-              subtitle,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w500,
-                color: isActive ? activeColor : AppColors.textMuted,
-              ),
+            Switch(
+              value: isActive,
+              onChanged: (_) => onToggle(),
+              activeThumbColor: activeColor,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildMetricTile({
+    required String title,
+    required String value,
+    required String subtitle,
+    required IconData icon,
+    required Color valueColor,
+    required Color iconColor,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.cardWhite,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(color: const Color(0xFFCBD5E1), width: 1.0),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: iconColor, size: 18),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textMuted,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            value,
+            style: AppTypography.heading.copyWith(
+              fontSize: 18,
+              color: valueColor,
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 2),
+          Text(
+            subtitle,
+            style: const TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textMuted,
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
       ),
     );
   }
