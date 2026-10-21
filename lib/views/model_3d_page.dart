@@ -36,7 +36,7 @@ class _Model3dPageState extends State<Model3dPage> {
 
     switch (_selectedView) {
       case 'Depan':
-        return '-8deg 78deg 58%';
+        return '14deg 80deg 60%';
       case 'Atas':
         return '0deg 5deg 75%';
       case 'Internal':
@@ -44,7 +44,7 @@ class _Model3dPageState extends State<Model3dPage> {
       case 'ISO 3D':
         return '45deg 65deg 70%';
       default:
-        return '-8deg 78deg 58%';
+        return '14deg 80deg 60%';
     }
   }
 
@@ -56,9 +56,9 @@ class _Model3dPageState extends State<Model3dPage> {
 
     switch (_selectedView) {
       case 'Depan':
-        return '1.2m 1.0m -3.0m';
+        return '0.55m 1.0m -3.0m';
       default:
-        return 'auto auto auto';
+        return '0.55m 1.0m -3.0m';
     }
   }
 
