@@ -31,12 +31,12 @@ class _Model3dPageState extends State<Model3dPage> {
   String _getCameraOrbit() {
     if (_selectedZone == 1) return '35deg 65deg 55%';
     if (_selectedZone == 2) return '130deg 65deg 55%';
-    if (_selectedZone == 3) return '0deg 75deg 50%';
+    if (_selectedZone == 3) return '-5deg 75deg 50%';
     if (_selectedZone == 4) return '210deg 65deg 55%';
 
     switch (_selectedView) {
       case 'Depan':
-        return '0deg 75deg 65%';
+        return '-8deg 78deg 58%';
       case 'Atas':
         return '0deg 5deg 75%';
       case 'Internal':
@@ -44,7 +44,21 @@ class _Model3dPageState extends State<Model3dPage> {
       case 'ISO 3D':
         return '45deg 65deg 70%';
       default:
-        return '0deg 75deg 65%';
+        return '-8deg 78deg 58%';
+    }
+  }
+
+  String _getCameraTarget() {
+    if (_selectedZone == 1) return '2.5m 1.0m -4.0m';
+    if (_selectedZone == 2) return '-1.5m 1.0m -6.0m';
+    if (_selectedZone == 3) return '0.5m 1.0m 0.0m';
+    if (_selectedZone == 4) return '3.0m 1.5m -5.0m';
+
+    switch (_selectedView) {
+      case 'Depan':
+        return '1.2m 1.0m -3.0m';
+      default:
+        return 'auto auto auto';
     }
   }
 
@@ -260,8 +274,8 @@ class _Model3dPageState extends State<Model3dPage> {
                         autoRotateDelay: 2000,
                         cameraControls: true,
                         cameraOrbit: _getCameraOrbit(),
-                        cameraTarget: 'auto auto auto',
-                        fieldOfView: '30deg',
+                        cameraTarget: _getCameraTarget(),
+                        fieldOfView: '28deg',
                         backgroundColor: const Color(0xFF0F172A),
                       )
                     else
