@@ -31,8 +31,8 @@ class RealtimePage extends StatelessWidget {
                 children: [
                   Expanded(
                     child: _buildDeviceTab(
-                      title: 'Rak A',
-                      subtitle: 'Cold 2–8°C',
+                      title: 'Rak A (Vaksin)',
+                      subtitle: 'Suhu 2°C – 8°C',
                       icon: Icons.ac_unit_rounded,
                       isSelected: provider.selectedDeviceId == 'device_1',
                       onTap: () => provider.selectDevice('device_1'),
@@ -41,8 +41,8 @@ class RealtimePage extends StatelessWidget {
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: _buildDeviceTab(
-                      title: 'Rak B',
-                      subtitle: 'Suhu Ruang & UV',
+                      title: 'Rak B (Steril)',
+                      subtitle: 'Suhu 15°C – 25°C',
                       icon: Icons.wb_sunny_outlined,
                       isSelected: provider.selectedDeviceId == 'device_2',
                       onTap: () => provider.selectDevice('device_2'),
@@ -546,37 +546,37 @@ class RealtimePage extends StatelessWidget {
       borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+        padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 8),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.pharmaNavy : AppColors.cardWhite,
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
           border: Border.all(
             color: isSelected ? AppColors.pharmaNavy : const Color(0xFFCBD5E1),
-            width: 1,
+            width: 1.0,
           ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: AppColors.pharmaNavy.withAlpha(30),
+                    color: AppColors.pharmaNavy.withAlpha(25),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   )
                 ]
               : null,
         ),
-        child: Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              icon,
-              size: 18,
-              color: isSelected ? Colors.white : AppColors.pharmaNavy,
-            ),
-            const SizedBox(width: 8),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                Icon(
+                  icon,
+                  size: 15,
+                  color: isSelected ? Colors.white : AppColors.pharmaNavy,
+                ),
+                const SizedBox(width: 6),
                 Text(
                   title,
                   style: TextStyle(
@@ -585,14 +585,17 @@ class RealtimePage extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    color: isSelected ? const Color(0xFF94A3B8) : AppColors.textMuted,
-                    fontSize: 10,
-                  ),
-                ),
               ],
+            ),
+            const SizedBox(height: 3),
+            Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: isSelected ? const Color(0xFF94A3B8) : AppColors.textMuted,
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ],
         ),
