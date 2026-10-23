@@ -515,9 +515,25 @@ class _Model3dPageState extends State<Model3dPage> {
   Widget _buildSpecRow(String title, String value) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: AppTypography.caption),
-        Text(value, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textDark)),
+        Flexible(
+          flex: 5,
+          child: Text(title, style: AppTypography.caption),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Flexible(
+          flex: 6,
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textDark,
+            ),
+          ),
+        ),
       ],
     );
   }
