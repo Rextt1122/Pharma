@@ -24,8 +24,8 @@ class HistoryProvider extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
 
-    // Anti-stuck safety timer: force dismiss skeleton after 5s if network hangs
-    Future.delayed(const Duration(seconds: 5), () {
+    // Anti-stuck safety timer: force dismiss skeleton after 8s if network hangs
+    Future.delayed(const Duration(seconds: 8), () {
       if (_isLoading) {
         _isLoading = false;
         if (_historyList.isEmpty && _errorMessage == null) {

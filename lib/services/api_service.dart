@@ -1,55 +1,132 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
 import '../models/sensor_model.dart';
 import 'storage_service.dart';
+import 'subnet_ips_io.dart'
+    if (dart.library.js_interop) 'subnet_ips_web.dart'
+    if (dart.library.html) 'subnet_ips_web.dart';
 
 class ApiService {
   final StorageService _storageService = StorageService();
+  static Future<String?>? _ongoingDiscovery;
 
-  Future<List<SensorModel>> fetchSensorHistory() async {
+  Future<String> resolveReachableIp() async {
     final savedIp = await _storageService.getServerIp();
-    final candidates = <String>{
-      savedIp,
-      '192.168.33.10',
-      '127.0.0.1',
-      '192.168.137.1',
-    }.where((ip) => ip.isNotEmpty && ip != '192.168.1.100').toList();
+    if (_ongoingDiscovery != null) {
+      final found = await _ongoingDiscovery;
+      if (found != null) return found;
+    }
+    final completer = Completer<String?>();
+    _ongoingDiscovery = completer.future;
+    try {
+      final found = await _discoverIp(savedIp);
+      completer.complete(found);
+      if (found != null && found != savedIp) {
+        await _storageService.saveServerIp(found);
+      }
+      return found ?? savedIp;
+    } catch (_) {
+      completer.complete(null);
+      return savedIp;
+    } finally {
+      _ongoingDiscovery = null;
+    }
+  }
 
-    Object? lastError;
+  Future<String?> _probeIp(String ip, Duration timeout) async {
+    try {
+      final response = await http
+          .get(Uri.parse('http://$ip:8001/'))
+          .timeout(timeout);
+      if (response.statusCode == 200) {
+        return ip;
+      }
+    } catch (_) {}
+    return null;
+  }
 
-    for (final ip in candidates) {
-      final url = Uri.parse('http://$ip:8001/sensor');
-      try {
-        final response = await http.get(url).timeout(const Duration(milliseconds: 2500));
+  Future<String?> _raceIps(List<String> ips, Duration timeout) async {
+    if (ips.isEmpty) return null;
+    final completer = Completer<String?>();
+    int remaining = ips.length;
 
-        if (response.statusCode == 200) {
-          if (ip != savedIp) {
-            await _storageService.saveServerIp(ip);
-          }
-          final dynamic decodedData = jsonDecode(response.body);
-
-          if (decodedData is List) {
-            return decodedData
-                .map((item) => SensorModel.fromJson(item as Map<String, dynamic>))
-                .toList();
-          } else if (decodedData is Map<String, dynamic>) {
-            return [SensorModel.fromJson(decodedData)];
-          } else {
-            throw const FormatException('Format data JSON tidak valid');
-          }
+    for (final ip in ips) {
+      _probeIp(ip, timeout).then((res) {
+        if (res != null && !completer.isCompleted) {
+          completer.complete(res);
         } else {
-          lastError = Exception(
-            'Gagal mengambil data. Status code: ${response.statusCode}',
-          );
+          remaining--;
+          if (remaining == 0 && !completer.isCompleted) {
+            completer.complete(null);
+          }
         }
-      } catch (e) {
-        if (e is FormatException) rethrow;
-        lastError = e;
+      });
+    }
+    return completer.future;
+  }
+
+  Future<String?> _discoverIp(String savedIp) async {
+    final fastCandidates = <String>{
+      if (savedIp.isNotEmpty && savedIp != '192.168.1.100') savedIp,
+      '127.0.0.1',
+      '192.168.33.10',
+      '192.168.1.21',
+      '192.168.137.1',
+    }.toList();
+
+    final fastHit = await _raceIps(
+      fastCandidates,
+      const Duration(milliseconds: 1200),
+    );
+    if (fastHit != null) return fastHit;
+
+    // Auto-scan phone's Wi-Fi /24 subnet if fast candidates didn't match
+    final prefixes = await getLocalSubnetPrefixes();
+    for (final prefix in prefixes) {
+      for (int start = 1; start <= 254; start += 64) {
+        final end = (start + 63 > 254) ? 254 : start + 63;
+        final batch = <String>[
+          for (int i = start; i <= end; i++) '$prefix.$i',
+        ];
+        final hit = await _raceIps(batch, const Duration(milliseconds: 650));
+        if (hit != null) return hit;
       }
     }
+    return null;
+  }
 
-    throw Exception('Gagal terhubung ke server: $lastError');
+  Future<List<SensorModel>> fetchSensorHistory() async {
+    final ip = await resolveReachableIp();
+    final url = Uri.parse('http://$ip:8001/sensor');
+
+    try {
+      final response = await http
+          .get(url)
+          .timeout(const Duration(milliseconds: 3000));
+
+      if (response.statusCode == 200) {
+        final dynamic decodedData = jsonDecode(response.body);
+
+        if (decodedData is List) {
+          return decodedData
+              .map((item) => SensorModel.fromJson(item as Map<String, dynamic>))
+              .toList();
+        } else if (decodedData is Map<String, dynamic>) {
+          return [SensorModel.fromJson(decodedData)];
+        } else {
+          throw const FormatException('Format data JSON tidak valid');
+        }
+      } else {
+        throw Exception(
+          'Gagal mengambil data. Status code: ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      if (e is FormatException) rethrow;
+      throw Exception('Gagal terhubung ke server: $e');
+    }
   }
 }

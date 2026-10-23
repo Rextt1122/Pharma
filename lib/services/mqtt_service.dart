@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:mqtt_client/mqtt_client.dart';
 import '../models/sensor_model.dart';
+import 'api_service.dart';
 import 'mqtt_client_factory_io.dart'
     if (dart.library.js_interop) 'mqtt_client_factory_web.dart'
     if (dart.library.html) 'mqtt_client_factory_web.dart';
@@ -11,16 +12,19 @@ class MqttService {
   Function(SensorModel)? onDataReceived;
   Function(bool)? onConnectionChanged;
   final StorageService _storageService = StorageService();
+  final ApiService _apiService = ApiService();
 
   Function(bool)? get onStatusChanged => onConnectionChanged;
   set onStatusChanged(Function(bool)? callback) => onConnectionChanged = callback;
 
   Future<void> connect() async {
-    final savedIp = await _storageService.getServerIp();
+    final reachableIp = await _apiService.resolveReachableIp();
     final candidates = <String>{
-      savedIp,
-      '192.168.33.10',
+      reachableIp,
       '127.0.0.1',
+      '192.168.33.10',
+      '192.168.1.21',
+      '192.168.137.1',
     }.where((ip) => ip.isNotEmpty && ip != '192.168.1.100').toList();
 
     for (final serverIp in candidates) {
@@ -42,9 +46,7 @@ class MqttService {
       }
 
       if (_client!.connectionStatus?.state == MqttConnectionState.connected) {
-        if (serverIp != savedIp) {
-          await _storageService.saveServerIp(serverIp);
-        }
+        await _storageService.saveServerIp(serverIp);
         onConnectionChanged?.call(true);
         _client!.subscribe('pharma/sensor', MqttQos.atMostOnce);
         _client!.subscribe('greenhouse/sensor', MqttQos.atMostOnce);
