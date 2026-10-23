@@ -166,7 +166,8 @@ class ClimateDashboardPage extends StatelessWidget {
           const Text('STABILITAS SUHU', style: _section),
           SizedBox(
             height: 150,
-            child: SfRadialGauge(axes: [
+            child: RepaintBoundary(
+              child: SfRadialGauge(axes: [
               RadialAxis(
                 minimum: 0,
                 maximum: 12,
@@ -185,6 +186,7 @@ class ClimateDashboardPage extends StatelessWidget {
                 annotations: [GaugeAnnotation(widget: Text('${s.suhu.toStringAsFixed(1)}°C', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 22, color: AppColors.pharmaNavy)), angle: 90, positionFactor: 0.58)],
               ),
             ]),
+            ),
           ),
           Center(child: Text(safe ? 'Suhu berada dalam batas penyimpanan vaksin.' : 'Suhu di luar batas penyimpanan.', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: safe ? AppColors.activeGreen : AppColors.alertRed))),
         ]),

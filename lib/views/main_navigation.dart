@@ -20,7 +20,7 @@ class _MainNavigationState extends State<MainNavigation>
     with TickerProviderStateMixin {
   int _selectedIndex = 0;
   Timer? _timer;
-  late DateTime _currentTime;
+  late final ValueNotifier<DateTime> _timeNotifier;
   late final AnimationController _ambientController;
   late final AnimationController _tabTransitionController;
   late final Animation<double> _tabFade;
@@ -29,7 +29,7 @@ class _MainNavigationState extends State<MainNavigation>
   @override
   void initState() {
     super.initState();
-    _currentTime = DateTime.now();
+    _timeNotifier = ValueNotifier<DateTime>(DateTime.now());
     _ambientController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 4500),
@@ -53,9 +53,7 @@ class _MainNavigationState extends State<MainNavigation>
     );
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) {
-        setState(() {
-          _currentTime = DateTime.now();
-        });
+        _timeNotifier.value = DateTime.now();
       }
     });
   }
@@ -63,6 +61,7 @@ class _MainNavigationState extends State<MainNavigation>
   @override
   void dispose() {
     _timer?.cancel();
+    _timeNotifier.dispose();
     _ambientController.dispose();
     _tabTransitionController.dispose();
     super.dispose();
@@ -193,15 +192,17 @@ class _MainNavigationState extends State<MainNavigation>
               right: 0,
               height: 150,
               child: IgnorePointer(
-                child: AnimatedBuilder(
-                  animation: _ambientController,
-                  builder: (context, _) {
-                    return CustomPaint(
-                      painter: _HeaderOrganicPainter(
-                        progress: _ambientController.value,
-                      ),
-                    );
-                  },
+                child: RepaintBoundary(
+                  child: AnimatedBuilder(
+                    animation: _ambientController,
+                    builder: (context, _) {
+                      return CustomPaint(
+                        painter: _HeaderOrganicPainter(
+                          progress: _ambientController.value,
+                        ),
+                      );
+                    },
+                  ),
                 ),
               ),
             ),
@@ -252,14 +253,19 @@ class _MainNavigationState extends State<MainNavigation>
                               maxLines: 1,
                             ),
                             const SizedBox(height: 2),
-                            Text(
-                              _formatDateTime(_currentTime),
-                              style: AppTypography.caption.copyWith(
-                                color: Colors.white.withAlpha(210),
-                                fontSize: 11.5,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
+                            ValueListenableBuilder<DateTime>(
+                              valueListenable: _timeNotifier,
+                              builder: (context, currentTime, _) {
+                                return Text(
+                                  _formatDateTime(currentTime),
+                                  style: AppTypography.caption.copyWith(
+                                    color: Colors.white.withAlpha(210),
+                                    fontSize: 11.5,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                );
+                              },
                             ),
                           ],
                         ),
@@ -349,9 +355,9 @@ class _MainNavigationState extends State<MainNavigation>
                             index: _selectedIndex,
                             children: [
                               const ClimateDashboardPage(),
-                              Model3dPage(
-                                key: ValueKey('model_3d_view_$_selectedIndex'),
-                              ),
+                              _selectedIndex == 1
+                                  ? const Model3dPage()
+                                  : const SizedBox.shrink(),
                               const HistoryPage(),
                               const SettingsPage(),
                             ],

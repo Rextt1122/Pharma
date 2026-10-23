@@ -516,15 +516,17 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                         right: 0,
                         height: 260,
                         child: IgnorePointer(
-                          child: AnimatedBuilder(
-                            animation: _ambientController,
-                            builder: (context, _) {
-                              return CustomPaint(
-                                painter: _TopLeftDecorPainter(
-                                  progress: _ambientController.value,
-                                ),
-                              );
-                            },
+                          child: RepaintBoundary(
+                            child: AnimatedBuilder(
+                              animation: _ambientController,
+                              builder: (context, _) {
+                                return CustomPaint(
+                                  painter: _TopLeftDecorPainter(
+                                    progress: _ambientController.value,
+                                  ),
+                                );
+                              },
+                            ),
                           ),
                         ),
                       ),
@@ -1001,16 +1003,18 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                           child: ScaleTransition(
                             scale: _plantScale,
                             alignment: Alignment.bottomCenter,
-                            child: AnimatedBuilder(
-                              animation: _ambientController,
-                              builder: (context, _) {
-                                return CustomPaint(
-                                  size: const Size(115, 140),
-                                  painter: _PharmaPlantPainter(
-                                    progress: _ambientController.value,
-                                  ),
-                                );
-                              },
+                            child: RepaintBoundary(
+                              child: AnimatedBuilder(
+                                animation: _ambientController,
+                                builder: (context, _) {
+                                  return CustomPaint(
+                                    size: const Size(115, 140),
+                                    painter: _PharmaPlantPainter(
+                                      progress: _ambientController.value,
+                                    ),
+                                  );
+                                },
+                              ),
                             ),
                           ),
                         ),
