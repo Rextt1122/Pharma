@@ -432,7 +432,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                   decoration: BoxDecoration(
                     color: AppColors.pharmaNavy,
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                   ),
                   child: Text(
                     '● Active',
@@ -467,7 +467,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                   decoration: BoxDecoration(
                     color: AppColors.pharmaNavy,
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                   ),
                   child: Text(
                     '● Active',

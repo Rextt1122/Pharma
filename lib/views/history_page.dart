@@ -62,7 +62,7 @@ class HistoryPage extends StatelessWidget {
                 ),
               ),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
               ),
             ),
           ),
@@ -214,7 +214,7 @@ class HistoryPage extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: AppColors.pharmaNavy.withAlpha(20),
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                   ),
                   child: Text(
                     '${provider.historyList.length} Catatan',
@@ -277,7 +277,7 @@ class HistoryPage extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: AppColors.pharmaNavy,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                 ),
                 child: Text(
                   'Log #$logNumber',
@@ -301,7 +301,7 @@ class HistoryPage extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: isWarning ? AppColors.alertRed.withAlpha(25) : AppColors.activeGreen.withAlpha(25),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                 ),
                 child: Text(
                   item.status,

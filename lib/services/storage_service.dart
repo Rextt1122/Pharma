@@ -11,8 +11,7 @@ class StorageService {
   static const String _keyHumidityMax = 'threshold_humidity_max';
   static const String _keyGasMax = 'threshold_gas_max';
 
-  // Ubah defaultIp ke IP PC kamu di jaringan LAN (cek dengan `ipconfig`)
-  // Bukan IP VirtualBox Host-Only (192.168.33.x) — HP tidak bisa reach itu.
+  // IP VirtualBox Host-Only (192.168.33.x).
   static const String defaultIp = '192.168.1.100';
 
   // Port untuk REST API FastAPI

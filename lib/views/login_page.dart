@@ -105,7 +105,7 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                               decoration: BoxDecoration(
                                 color: AppColors.pharmaNavy,
-                                borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                               ),
                               child: const Text(
                                 'Pharma Security',

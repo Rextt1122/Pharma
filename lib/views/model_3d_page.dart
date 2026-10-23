@@ -126,7 +126,7 @@ class _Model3dPageState extends State<Model3dPage> {
                         ),
                         decoration: BoxDecoration(
                           color: AppColors.pharmaNavy,
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                         ),
                         child: const Text(
                           '3D LIVE',
@@ -141,7 +141,7 @@ class _Model3dPageState extends State<Model3dPage> {
                     padding: const EdgeInsets.all(3),
                     decoration: BoxDecoration(
                       color: AppColors.inputBg,
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                       border: Border.all(color: AppColors.containerHigh, width: 0.8),
                     ),
                     child: Row(
@@ -153,7 +153,7 @@ class _Model3dPageState extends State<Model3dPage> {
                               padding: const EdgeInsets.symmetric(vertical: 8),
                               decoration: BoxDecoration(
                                 color: _is3dModel ? AppColors.pharmaNavy : Colors.transparent,
-                                borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                               ),
                               alignment: Alignment.center,
                               child: Row(
@@ -185,7 +185,7 @@ class _Model3dPageState extends State<Model3dPage> {
                               padding: const EdgeInsets.symmetric(vertical: 8),
                               decoration: BoxDecoration(
                                 color: !_is3dModel ? AppColors.pharmaNavy : Colors.transparent,
-                                borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                               ),
                               alignment: Alignment.center,
                               child: Row(
@@ -239,7 +239,7 @@ class _Model3dPageState extends State<Model3dPage> {
                               fontSize: 12,
                             ),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                               side: BorderSide(
                                 color: isSelected ? AppColors.pharmaNavy : AppColors.containerHigh,
                               ),
@@ -298,7 +298,7 @@ class _Model3dPageState extends State<Model3dPage> {
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                 decoration: BoxDecoration(
                                   color: Colors.black.withAlpha(160),
-                                  borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                                   border: Border.all(color: Colors.white24, width: 0.8),
                                 ),
                                 child: Row(
@@ -470,7 +470,7 @@ class _Model3dPageState extends State<Model3dPage> {
                           fontSize: 11,
                         ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                           side: BorderSide(
                             color: isSelected ? AppColors.pharmaNavy : AppColors.containerHigh,
                           ),
@@ -559,7 +559,7 @@ class _Model3dPageState extends State<Model3dPage> {
                       ),
                     ],
                   ),
-                  const ShimmerLoading(height: 24, width: 64, radius: AppSpacing.radiusPill),
+                  const ShimmerLoading(height: 24, width: 64, radius: AppSpacing.radiusSm),
                 ],
               ),
               const SizedBox(height: AppSpacing.md),
@@ -568,13 +568,13 @@ class _Model3dPageState extends State<Model3dPage> {
                 physics: const NeverScrollableScrollPhysics(),
                 child: Row(
                   children: const [
-                    ShimmerLoading(height: 32, width: 70, radius: AppSpacing.radiusPill),
+                    ShimmerLoading(height: 32, width: 70, radius: AppSpacing.radiusSm),
                     SizedBox(width: AppSpacing.sm),
-                    ShimmerLoading(height: 32, width: 65, radius: AppSpacing.radiusPill),
+                    ShimmerLoading(height: 32, width: 65, radius: AppSpacing.radiusSm),
                     SizedBox(width: AppSpacing.sm),
-                    ShimmerLoading(height: 32, width: 60, radius: AppSpacing.radiusPill),
+                    ShimmerLoading(height: 32, width: 60, radius: AppSpacing.radiusSm),
                     SizedBox(width: AppSpacing.sm),
-                    ShimmerLoading(height: 32, width: 75, radius: AppSpacing.radiusPill),
+                    ShimmerLoading(height: 32, width: 75, radius: AppSpacing.radiusSm),
                   ],
                 ),
               ),
@@ -600,11 +600,11 @@ class _Model3dPageState extends State<Model3dPage> {
                 spacing: AppSpacing.sm,
                 runSpacing: AppSpacing.xs + 4,
                 children: const [
-                  ShimmerLoading(height: 30, width: 90, radius: AppSpacing.radiusPill),
-                  ShimmerLoading(height: 30, width: 140, radius: AppSpacing.radiusPill),
-                  ShimmerLoading(height: 30, width: 110, radius: AppSpacing.radiusPill),
-                  ShimmerLoading(height: 30, width: 85, radius: AppSpacing.radiusPill),
-                  ShimmerLoading(height: 30, width: 95, radius: AppSpacing.radiusPill),
+                  ShimmerLoading(height: 30, width: 90, radius: AppSpacing.radiusSm),
+                  ShimmerLoading(height: 30, width: 140, radius: AppSpacing.radiusSm),
+                  ShimmerLoading(height: 30, width: 110, radius: AppSpacing.radiusSm),
+                  ShimmerLoading(height: 30, width: 85, radius: AppSpacing.radiusSm),
+                  ShimmerLoading(height: 30, width: 95, radius: AppSpacing.radiusSm),
                 ],
               ),
             ],
