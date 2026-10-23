@@ -3,6 +3,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 class StorageService {
   static const String _keyServerIp = 'server_ip';
   static const String _keyIsLoggedIn = 'is_logged_in';
+  static const String _keyUserName = 'user_name';
+  static const String _keyUserEmail = 'user_email';
+  static const String _keyAuthProvider = 'auth_provider';
 
   // Threshold keys
   static const String _keyTempMin = 'threshold_temp_min';
@@ -46,6 +49,26 @@ class StorageService {
   Future<bool> isLoggedIn() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_keyIsLoggedIn) ?? false;
+  }
+
+  Future<void> saveUserProfile({
+    required String name,
+    required String email,
+    required String provider,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyUserName, name.trim());
+    await prefs.setString(_keyUserEmail, email.trim());
+    await prefs.setString(_keyAuthProvider, provider.trim());
+  }
+
+  Future<Map<String, String>> getUserProfile() async {
+    final prefs = await SharedPreferences.getInstance();
+    return {
+      'name': prefs.getString(_keyUserName) ?? 'Fabian (Admin Farmasi)',
+      'email': prefs.getString(_keyUserEmail) ?? 'fabian.pharma@smartpharma.id',
+      'provider': prefs.getString(_keyAuthProvider) ?? 'Smart Pharma',
+    };
   }
 
   // Threshold methods

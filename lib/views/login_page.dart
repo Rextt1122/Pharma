@@ -21,6 +21,18 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> _handleSubmit() async {
     if (_formKey.currentState!.validate()) {
+      final rawInput = _usernameController.text.trim();
+      final isEmail = rawInput.contains('@');
+      final displayName = isEmail
+          ? rawInput.split('@').first.replaceAll('.', ' ')
+          : rawInput;
+      final email = isEmail ? rawInput : '$rawInput@smartpharma.id';
+
+      await StorageService().saveUserProfile(
+        name: displayName.isNotEmpty ? displayName : 'Admin Farmasi',
+        email: email,
+        provider: 'Smart Pharma',
+      );
       await StorageService().setLoggedIn(true);
       if (mounted) {
         Navigator.pushReplacementNamed(context, '/main');
@@ -28,11 +40,367 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  Future<void> _handleQuickLogin() async {
+  Future<void> _completeSsoLogin({
+    required String name,
+    required String email,
+    required String provider,
+  }) async {
+    await StorageService().saveUserProfile(
+      name: name,
+      email: email,
+      provider: provider,
+    );
     await StorageService().setLoggedIn(true);
-    if (mounted) {
-      Navigator.pushReplacementNamed(context, '/main');
-    }
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Berhasil masuk via $provider sebagai $name'),
+        backgroundColor: AppColors.pharmaNavy,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+    Navigator.pushReplacementNamed(context, '/main');
+  }
+
+  void _showSsoAccountPicker(String provider) {
+    final bool isGoogle = provider == 'Google';
+    final bool isFacebook = provider == 'Facebook';
+
+    final String domain = isGoogle
+        ? 'gmail.com'
+        : (isFacebook ? 'facebook.com' : 'icloud.com');
+    final Color brandColor = isGoogle
+        ? const Color(0xFF4285F4)
+        : (isFacebook ? const Color(0xFF1877F2) : Colors.black87);
+
+    final List<Map<String, String>> presetAccounts = [
+      {
+        'name': 'Fabian (Admin Farmasi)',
+        'email': 'fabian.pharma@$domain',
+        'role': 'Kepala Gudang Vaksin',
+      },
+      {
+        'name': 'Operator Cold Storage',
+        'email': 'coldstorage.unit1@$domain',
+        'role': 'Petugas Shift Aktif',
+      },
+    ];
+
+    final customNameCtrl = TextEditingController();
+    final customEmailCtrl = TextEditingController();
+    bool useCustomAccount = false;
+    bool isAuthenticating = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.cardWhite,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppSpacing.radiusMd),
+        ),
+      ),
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            Future<void> selectAccount(String name, String email) async {
+              setSheetState(() => isAuthenticating = true);
+              await Future.delayed(const Duration(milliseconds: 500));
+              if (sheetContext.mounted) {
+                Navigator.pop(sheetContext);
+              }
+              await _completeSsoLogin(
+                name: name,
+                email: email,
+                provider: provider,
+              );
+            }
+
+            return Padding(
+              padding: EdgeInsets.only(
+                left: AppSpacing.lg,
+                right: AppSpacing.lg,
+                top: AppSpacing.md + 4,
+                bottom:
+                    MediaQuery.of(ctx).viewInsets.bottom + AppSpacing.lg,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: AppColors.containerHigh,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: AppColors.inputBg,
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusSm,
+                          ),
+                        ),
+                        child: isGoogle
+                            ? CustomPaint(
+                                size: const Size(22, 22),
+                                painter: _GoogleLogoPainter(),
+                              )
+                            : Icon(
+                                isFacebook
+                                    ? Icons.facebook_rounded
+                                    : Icons.apple_rounded,
+                                color: brandColor,
+                                size: 26,
+                              ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Masuk dengan $provider',
+                              style: AppTypography.subtitle.copyWith(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            Text(
+                              'Pilih akun $provider untuk lanjut ke Smart Pharma',
+                              style: AppTypography.caption,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  const Divider(color: AppColors.containerLow, height: 1),
+                  const SizedBox(height: AppSpacing.sm),
+                  if (isAuthenticating)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 28),
+                      child: Column(
+                        children: [
+                          CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: brandColor,
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          Text(
+                            'Menghubungkan akun $provider...',
+                            style: AppTypography.body.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else if (!useCustomAccount) ...[
+                    ...presetAccounts.map((acc) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                        child: InkWell(
+                          onTap: () =>
+                              selectAccount(acc['name']!, acc['email']!),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusSm,
+                          ),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.inputBg,
+                              borderRadius: BorderRadius.circular(
+                                AppSpacing.radiusSm,
+                              ),
+                              border: Border.all(
+                                color: AppColors.containerHigh,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                CircleAvatar(
+                                  radius: 18,
+                                  backgroundColor: brandColor.withAlpha(28),
+                                  child: Text(
+                                    acc['name']!.substring(0, 1).toUpperCase(),
+                                    style: TextStyle(
+                                      color: brandColor,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        acc['name']!,
+                                        style: const TextStyle(
+                                          fontSize: 13.5,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppColors.textDark,
+                                        ),
+                                      ),
+                                      Text(
+                                        acc['email']!,
+                                        style: AppTypography.caption,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const Icon(
+                                  Icons.chevron_right_rounded,
+                                  color: AppColors.textMuted,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                    TextButton.icon(
+                      onPressed: () {
+                        setSheetState(() => useCustomAccount = true);
+                      },
+                      icon: Icon(
+                        Icons.person_add_alt_1_outlined,
+                        size: 18,
+                        color: brandColor,
+                      ),
+                      label: Text(
+                        'Gunakan akun $provider lain',
+                        style: TextStyle(
+                          color: brandColor,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ] else ...[
+                    const SizedBox(height: AppSpacing.xs),
+                    const Text(
+                      'Nama Akun',
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textDark,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: customNameCtrl,
+                      decoration: InputDecoration(
+                        hintText: 'Contoh: Fabian',
+                        floatingLabelBehavior: FloatingLabelBehavior.never,
+                        filled: true,
+                        fillColor: AppColors.inputBg,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusSm,
+                          ),
+                          borderSide: const BorderSide(
+                            color: AppColors.containerHigh,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      'Email $provider',
+                      style: const TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textDark,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: customEmailCtrl,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: InputDecoration(
+                        hintText: 'nama@$domain',
+                        floatingLabelBehavior: FloatingLabelBehavior.never,
+                        filled: true,
+                        fillColor: AppColors.inputBg,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusSm,
+                          ),
+                          borderSide: const BorderSide(
+                            color: AppColors.containerHigh,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Row(
+                      children: [
+                        TextButton(
+                          onPressed: () {
+                            setSheetState(() => useCustomAccount = false);
+                          },
+                          child: const Text('Kembali'),
+                        ),
+                        const Spacer(),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: brandColor,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                AppSpacing.radiusSm,
+                              ),
+                            ),
+                          ),
+                          onPressed: () {
+                            final emailInput = customEmailCtrl.text.trim();
+                            final nameInput = customNameCtrl.text.trim();
+                            final finalEmail = emailInput.isNotEmpty
+                                ? (emailInput.contains('@')
+                                      ? emailInput
+                                      : '$emailInput@$domain')
+                                : 'user@$domain';
+                            final finalName = nameInput.isNotEmpty
+                                ? nameInput
+                                : finalEmail.split('@').first;
+                            selectAccount(finalName, finalEmail);
+                          },
+                          child: Text('Lanjutkan dengan $provider'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   void _toggleAuthMode(bool signUp) {
@@ -367,7 +735,9 @@ class _LoginPageState extends State<LoginPage> {
                                             MainAxisAlignment.center,
                                         children: [
                                           _buildSocialButton(
-                                            onTap: _handleQuickLogin,
+                                            onTap: () => _showSsoAccountPicker(
+                                              'Facebook',
+                                            ),
                                             child: const Icon(
                                               Icons.facebook_rounded,
                                               color: Color(0xFF1877F2),
@@ -376,7 +746,9 @@ class _LoginPageState extends State<LoginPage> {
                                           ),
                                           const SizedBox(width: AppSpacing.md),
                                           _buildSocialButton(
-                                            onTap: _handleQuickLogin,
+                                            onTap: () => _showSsoAccountPicker(
+                                              'Google',
+                                            ),
                                             child: CustomPaint(
                                               size: const Size(22, 22),
                                               painter: _GoogleLogoPainter(),
@@ -384,7 +756,9 @@ class _LoginPageState extends State<LoginPage> {
                                           ),
                                           const SizedBox(width: AppSpacing.md),
                                           _buildSocialButton(
-                                            onTap: _handleQuickLogin,
+                                            onTap: () => _showSsoAccountPicker(
+                                              'Apple',
+                                            ),
                                             child: const Icon(
                                               Icons.apple_rounded,
                                               color: Colors.black87,
