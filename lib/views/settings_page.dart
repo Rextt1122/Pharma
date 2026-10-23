@@ -235,12 +235,21 @@ class _SettingsPageState extends State<SettingsPage> {
                 ],
               ),
               const SizedBox(height: AppSpacing.lg),
+              const Text(
+                'IP Server Lokal',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textDark,
+                ),
+              ),
+              const SizedBox(height: 6),
               TextField(
                 controller: _ipController,
                 style: AppTypography.body,
                 decoration: InputDecoration(
-                  labelText: 'IP Server Lokal',
                   hintText: '192.168.1.100',
+                  floatingLabelBehavior: FloatingLabelBehavior.never,
                   prefixIcon: const Icon(Icons.wifi_outlined, color: AppColors.textMuted),
                   suffixIcon: IconButton(
                     icon: const Icon(Icons.restore, size: 20),
@@ -251,15 +260,15 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                    borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+                    borderSide: const BorderSide(color: AppColors.containerHigh, width: 1.0),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                    borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+                    borderSide: const BorderSide(color: AppColors.containerHigh, width: 1.0),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                    borderSide: const BorderSide(color: AppColors.pharmaNavy, width: 2.0),
+                    borderSide: const BorderSide(color: AppColors.pharmaNavy, width: 1.5),
                   ),
                   filled: true,
                   fillColor: AppColors.inputBg,

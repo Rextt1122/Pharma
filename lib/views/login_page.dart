@@ -116,24 +116,33 @@ class _LoginPageState extends State<LoginPage> {
                           ],
                         ),
                         const SizedBox(height: AppSpacing.lg),
+                        const Text(
+                          'Username',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textDark,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
                         TextFormField(
                           controller: _usernameController,
                           style: AppTypography.body,
                           decoration: InputDecoration(
-                            labelText: 'Username',
                             hintText: 'Masukkan username',
+                            floatingLabelBehavior: FloatingLabelBehavior.never,
                             prefixIcon: const Icon(Icons.person_outline, color: AppColors.textMuted),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                              borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+                              borderSide: const BorderSide(color: AppColors.containerHigh, width: 1.0),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                              borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+                              borderSide: const BorderSide(color: AppColors.containerHigh, width: 1.0),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                              borderSide: const BorderSide(color: AppColors.pharmaNavy, width: 2.0),
+                              borderSide: const BorderSide(color: AppColors.pharmaNavy, width: 1.5),
                             ),
                             filled: true,
                             fillColor: AppColors.inputBg,
@@ -146,25 +155,34 @@ class _LoginPageState extends State<LoginPage> {
                           },
                         ),
                         const SizedBox(height: AppSpacing.md),
+                        const Text(
+                          'Password',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textDark,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
                         TextFormField(
                           controller: _passwordController,
                           obscureText: true,
                           style: AppTypography.body,
                           decoration: InputDecoration(
-                            labelText: 'Password',
                             hintText: 'Masukkan password',
+                            floatingLabelBehavior: FloatingLabelBehavior.never,
                             prefixIcon: const Icon(Icons.lock_outline, color: AppColors.textMuted),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                              borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+                              borderSide: const BorderSide(color: AppColors.containerHigh, width: 1.0),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                              borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+                              borderSide: const BorderSide(color: AppColors.containerHigh, width: 1.0),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                              borderSide: const BorderSide(color: AppColors.pharmaNavy, width: 2.0),
+                              borderSide: const BorderSide(color: AppColors.pharmaNavy, width: 1.5),
                             ),
                             filled: true,
                             fillColor: AppColors.inputBg,
