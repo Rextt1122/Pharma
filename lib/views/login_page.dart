@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../services/storage_service.dart';
 import '../theme/app_theme.dart';
@@ -9,15 +10,53 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _phoneController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
+  late final AnimationController _ambientController;
+  late final AnimationController _entranceController;
+  late final Animation<double> _headerFade;
+  late final Animation<Offset> _sheetSlide;
+  late final Animation<double> _plantScale;
+
   bool _isSignUp = false;
   bool _obscurePassword = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _ambientController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 4200),
+    )..repeat();
+
+    _entranceController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 850),
+    )..forward();
+
+    _headerFade = CurvedAnimation(
+      parent: _entranceController,
+      curve: const Interval(0.0, 0.65, curve: Curves.easeOut),
+    );
+    _sheetSlide = Tween<Offset>(
+      begin: const Offset(0, 0.12),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _entranceController,
+        curve: const Interval(0.15, 0.85, curve: Curves.easeOutCubic),
+      ),
+    );
+    _plantScale = CurvedAnimation(
+      parent: _entranceController,
+      curve: const Interval(0.25, 1.0, curve: Curves.easeOutBack),
+    );
+  }
 
   Future<void> _handleSubmit() async {
     if (_formKey.currentState!.validate()) {
@@ -412,6 +451,8 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   void dispose() {
+    _ambientController.dispose();
+    _entranceController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -437,14 +478,22 @@ class _LoginPageState extends State<LoginPage> {
                 child: IntrinsicHeight(
                   child: Stack(
                     children: [
-                      // Top decorative organic leaves / waves
+                      // Animated top decorative organic leaves / waves & floating orbs
                       Positioned(
                         top: -10,
                         left: -10,
+                        right: 0,
+                        height: 260,
                         child: IgnorePointer(
-                          child: CustomPaint(
-                            size: const Size(150, 150),
-                            painter: _TopLeftDecorPainter(),
+                          child: AnimatedBuilder(
+                            animation: _ambientController,
+                            builder: (context, _) {
+                              return CustomPaint(
+                                painter: _TopLeftDecorPainter(
+                                  progress: _ambientController.value,
+                                ),
+                              );
+                            },
                           ),
                         ),
                       ),
@@ -461,78 +510,83 @@ class _LoginPageState extends State<LoginPage> {
                             padding: const EdgeInsets.symmetric(
                               horizontal: AppSpacing.lg + 4,
                             ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                if (_isSignUp) ...[
-                                  const SizedBox(height: AppSpacing.sm),
-                                  InkWell(
-                                    onTap: () => _toggleAuthMode(false),
-                                    borderRadius: BorderRadius.circular(
-                                      AppSpacing.radiusSm,
-                                    ),
-                                    child: const Padding(
-                                      padding: EdgeInsets.symmetric(
-                                        vertical: 6,
-                                        horizontal: 4,
+                            child: FadeTransition(
+                              opacity: _headerFade,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  if (_isSignUp) ...[
+                                    const SizedBox(height: AppSpacing.sm),
+                                    InkWell(
+                                      onTap: () => _toggleAuthMode(false),
+                                      borderRadius: BorderRadius.circular(
+                                        AppSpacing.radiusSm,
                                       ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            Icons.arrow_back_ios_new_rounded,
-                                            size: 16,
-                                            color: Colors.white,
-                                          ),
-                                          SizedBox(width: 6),
-                                          Text(
-                                            'Back to login',
-                                            style: TextStyle(
+                                      child: const Padding(
+                                        padding: EdgeInsets.symmetric(
+                                          vertical: 6,
+                                          horizontal: 4,
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Icons.arrow_back_ios_new_rounded,
+                                              size: 16,
                                               color: Colors.white,
-                                              fontSize: 15,
-                                              fontWeight: FontWeight.w600,
                                             ),
-                                          ),
-                                        ],
+                                            SizedBox(width: 6),
+                                            Text(
+                                              'Back to login',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 15,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                ] else ...[
-                                  const SizedBox(height: AppSpacing.md),
-                                  const Text(
-                                    'Hello!',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 42,
-                                      fontWeight: FontWeight.w800,
-                                      letterSpacing: -0.8,
-                                      height: 1.05,
+                                  ] else ...[
+                                    const SizedBox(height: AppSpacing.md),
+                                    const Text(
+                                      'Hello!',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 42,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: -0.8,
+                                        height: 1.05,
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    'Welcome to Smart Pharma',
-                                    style: TextStyle(
-                                      color: Colors.white.withAlpha(220),
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500,
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      'Welcome to Smart Pharma',
+                                      style: TextStyle(
+                                        color: Colors.white.withAlpha(220),
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                      ),
                                     ),
-                                  ),
+                                  ],
                                 ],
-                              ],
+                              ),
                             ),
                           ),
 
                           // Bottom Rounded Form Sheet
                           Expanded(
-                            child: Container(
-                              padding: const EdgeInsets.fromLTRB(
-                                AppSpacing.lg + 4,
-                                AppSpacing.xl + 4,
-                                AppSpacing.lg + 4,
-                                AppSpacing.lg,
-                              ),
+                            child: SlideTransition(
+                              position: _sheetSlide,
+                              child: Container(
+                                padding: const EdgeInsets.fromLTRB(
+                                  AppSpacing.lg + 4,
+                                  AppSpacing.xl + 4,
+                                  AppSpacing.lg + 4,
+                                  AppSpacing.lg,
+                                ),
                               decoration: const BoxDecoration(
                                 color: AppColors.background,
                                 borderRadius: BorderRadius.vertical(
@@ -829,21 +883,33 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
+                    ),
 
-                      // Overlapping botanical/pharma illustration on the right boundary
-                      if (!_isSignUp)
-                        Positioned(
-                          top: headerHeight - 108,
-                          right: 24,
-                          child: IgnorePointer(
-                            child: CustomPaint(
-                              size: const Size(115, 140),
-                              painter: _PharmaPlantPainter(),
+                    // Overlapping botanical/pharma illustration on the right boundary
+                    if (!_isSignUp)
+                      Positioned(
+                        top: headerHeight - 108,
+                        right: 24,
+                        child: IgnorePointer(
+                          child: ScaleTransition(
+                            scale: _plantScale,
+                            alignment: Alignment.bottomCenter,
+                            child: AnimatedBuilder(
+                              animation: _ambientController,
+                              builder: (context, _) {
+                                return CustomPaint(
+                                  size: const Size(115, 140),
+                                  painter: _PharmaPlantPainter(
+                                    progress: _ambientController.value,
+                                  ),
+                                );
+                              },
                             ),
                           ),
                         ),
+                      ),
                     ],
                   ),
                 ),
@@ -959,120 +1025,191 @@ class _LoginPageState extends State<LoginPage> {
 }
 
 class _TopLeftDecorPainter extends CustomPainter {
+  final double progress;
+
+  _TopLeftDecorPainter({required this.progress});
+
   @override
   void paint(Canvas canvas, Size size) {
+    final double angle = progress * 2 * math.pi;
+    final double wave1 = math.sin(angle);
+    final double wave2 = math.cos(angle);
+
     final fill1 = Paint()
       ..color = Colors.white.withAlpha(24)
       ..style = PaintingStyle.fill;
 
     final fill2 = Paint()
-      ..color = const Color(0xFFE07A68).withAlpha(90)
+      ..color = const Color(0xFFE07A68).withAlpha(95)
       ..style = PaintingStyle.fill;
 
-    // Upper organic leaf lobe
+    final orbPaint = Paint()
+      ..color = Colors.white.withAlpha(18)
+      ..style = PaintingStyle.fill;
+
+    // Upper organic leaf lobe (breathing & swaying)
     final path1 = Path()
       ..moveTo(0, 0)
       ..quadraticBezierTo(
-        size.width * 0.75,
-        4,
-        size.width * 0.62,
-        size.height * 0.42,
+        115 + wave1 * 12,
+        4 + wave2 * 6,
+        94 + wave2 * 10,
+        64 + wave1 * 8,
       )
       ..quadraticBezierTo(
-        size.width * 0.45,
-        size.height * 0.68,
+        68 + wave1 * 8,
+        104 + wave2 * 10,
         0,
-        size.height * 0.55,
+        84 + wave1 * 6,
       )
       ..close();
     canvas.drawPath(path1, fill2);
 
-    // Lower organic leaf lobe
+    // Lower organic leaf lobe (counter-swaying)
     final path2 = Path()
-      ..moveTo(0, size.height * 0.25)
+      ..moveTo(0, 36 + wave2 * 4)
       ..quadraticBezierTo(
-        size.width * 0.52,
-        size.height * 0.35,
-        size.width * 0.38,
-        size.height * 0.78,
+        80 + wave2 * 10,
+        52 + wave1 * 8,
+        58 + wave1 * 9,
+        118 + wave2 * 8,
       )
       ..quadraticBezierTo(
-        size.width * 0.22,
-        size.height * 0.95,
+        34 + wave2 * 6,
+        144 + wave1 * 6,
         0,
-        size.height * 0.88,
+        134 + wave2 * 6,
       )
       ..close();
     canvas.drawPath(path2, fill1);
+
+    // Floating ambient circles in header right/top
+    canvas.drawCircle(
+      Offset(size.width * 0.78 + wave1 * 8, 44 + wave2 * 7),
+      26 + wave1 * 3,
+      orbPaint,
+    );
+    canvas.drawCircle(
+      Offset(size.width * 0.62 - wave2 * 6, 86 + wave1 * 5),
+      12 + wave2 * 2,
+      fill2,
+    );
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _TopLeftDecorPainter oldDelegate) =>
+      oldDelegate.progress != progress;
 }
 
 class _PharmaPlantPainter extends CustomPainter {
+  final double progress;
+
+  _PharmaPlantPainter({required this.progress});
+
   @override
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
 
-    // Ground shadow ellipse
+    final double angle = progress * 2 * math.pi;
+    final double sway = math.sin(angle);
+    final double swaySecondary = math.cos(angle);
+    final double bob = math.sin(angle * 2) * 1.8;
+
+    // Ground shadow ellipse (scales slightly with plant motion)
     final shadowPaint = Paint()
       ..color = Colors.black.withAlpha(18)
       ..style = PaintingStyle.fill;
     canvas.drawOval(
       Rect.fromCenter(
-        center: Offset(w * 0.52, h * 0.91),
-        width: w * 0.56,
+        center: Offset(w * 0.52 + sway * 1.5, h * 0.91),
+        width: w * (0.56 + sway * 0.03),
         height: 11,
       ),
       shadowPaint,
     );
 
-    // Back leaf (left)
+    canvas.save();
+    canvas.translate(0, bob);
+
+    // Back leaf (left) - sways gently
     final backLeafPaint = Paint()
       ..color = const Color(0xFF56796C)
       ..style = PaintingStyle.fill;
     final leftLeaf = Path()
       ..moveTo(w * 0.46, h * 0.58)
-      ..quadraticBezierTo(w * 0.14, h * 0.44, w * 0.20, h * 0.16)
-      ..quadraticBezierTo(w * 0.44, h * 0.24, w * 0.50, h * 0.55)
+      ..quadraticBezierTo(
+        w * 0.14 + sway * 5.0,
+        h * 0.44 + swaySecondary * 2.5,
+        w * 0.20 + sway * 7.5,
+        h * 0.16 + swaySecondary * 3.0,
+      )
+      ..quadraticBezierTo(
+        w * 0.44 + sway * 4.0,
+        h * 0.24,
+        w * 0.50,
+        h * 0.55,
+      )
       ..close();
     canvas.drawPath(leftLeaf, backLeafPaint);
 
-    // Center tall leaf
+    // Center tall leaf - sways with primary breeze
     final centerLeafPaint = Paint()
       ..color = const Color(0xFF3D8063)
       ..style = PaintingStyle.fill;
     final centerLeaf = Path()
       ..moveTo(w * 0.52, h * 0.58)
-      ..quadraticBezierTo(w * 0.36, h * 0.26, w * 0.55, h * 0.04)
-      ..quadraticBezierTo(w * 0.74, h * 0.28, w * 0.58, h * 0.58)
+      ..quadraticBezierTo(
+        w * 0.36 + swaySecondary * 4.5,
+        h * 0.26,
+        w * 0.55 + sway * 6.5,
+        h * 0.04 + swaySecondary * 2.0,
+      )
+      ..quadraticBezierTo(
+        w * 0.74 + sway * 4.5,
+        h * 0.28,
+        w * 0.58,
+        h * 0.58,
+      )
       ..close();
     canvas.drawPath(centerLeaf, centerLeafPaint);
 
-    // Right leaf
+    // Right leaf - sways with phase offset
     final rightLeafPaint = Paint()
       ..color = const Color(0xFF6A9986)
       ..style = PaintingStyle.fill;
     final rightLeaf = Path()
       ..moveTo(w * 0.56, h * 0.58)
-      ..quadraticBezierTo(w * 0.88, h * 0.46, w * 0.86, h * 0.20)
-      ..quadraticBezierTo(w * 0.62, h * 0.26, w * 0.54, h * 0.56)
+      ..quadraticBezierTo(
+        w * 0.88 + swaySecondary * 5.0,
+        h * 0.46 - sway * 2.0,
+        w * 0.86 + swaySecondary * 7.5,
+        h * 0.20 + sway * 3.0,
+      )
+      ..quadraticBezierTo(
+        w * 0.62 + swaySecondary * 4.0,
+        h * 0.26,
+        w * 0.54,
+        h * 0.56,
+      )
       ..close();
     canvas.drawPath(rightLeaf, rightLeafPaint);
 
-    // Center leaf vein
+    // Center leaf vein (follows center leaf sway)
     final veinPaint = Paint()
-      ..color = Colors.white.withAlpha(90)
+      ..color = Colors.white.withAlpha(95)
       ..strokeWidth = 1.4
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
-    canvas.drawLine(
-      Offset(w * 0.54, h * 0.14),
-      Offset(w * 0.54, h * 0.54),
-      veinPaint,
-    );
+    final veinPath = Path()
+      ..moveTo(w * 0.54, h * 0.54)
+      ..quadraticBezierTo(
+        w * 0.53 + sway * 3.0,
+        h * 0.32,
+        w * 0.54 + sway * 5.2,
+        h * 0.14 + swaySecondary * 1.5,
+      );
+    canvas.drawPath(veinPath, veinPaint);
 
     // White planter / pharma vessel
     final potPaint = Paint()
@@ -1118,10 +1255,13 @@ class _PharmaPlantPainter extends CustomPainter {
       ),
       crossPaint,
     );
+
+    canvas.restore();
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _PharmaPlantPainter oldDelegate) =>
+      oldDelegate.progress != progress;
 }
 
 class _GoogleLogoPainter extends CustomPainter {
