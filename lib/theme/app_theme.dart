@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  static const Color background = Color(0xFFF7F4F1);
-  // Warm, calm palette inspired by the provided ClimateSync reference.
-  static const Color pharmaNavy = Color(0xFFB84D40);
-  static const Color pharmaBlue = Color(0xFFCC5848);
-  static const Color pharmaTeal = Color(0xFF56796C);
-  static const Color textDark = Color(0xFF352724);
-  static const Color textMuted = Color(0xFF766763);
-  static const Color cardWhite = Color(0xFFFFFEFC);
-  static const Color inputBg = Color(0xFFF1ECE8);
-  static const Color containerLow = Color(0xFFF0E9E4);
-  static const Color containerHigh = Color(0xFFE2D7D0);
-  static const Color activeGreen = Color(0xFF3D8063);
-  static const Color alertRed = Color(0xFFB83E35);
-  static const Color tempRed = Color(0xFFD66A5D);
-  static const Color warningAmber = Color(0xFFB9782E);
-  static const Color humidityBlue = Color(0xFF547B8A);
-  static const Color uvPurple = Color(0xFF806277);
+  static const Color background = Color(0xFFF3F7F6);
+  // Deep botanical-clinical teal palette matching the Login Page reference.
+  static const Color pharmaNavy = Color(0xFF0E555A);
+  static const Color pharmaBlue = Color(0xFF1F7A7C);
+  static const Color pharmaTeal = Color(0xFF439A86);
+  static const Color textDark = Color(0xFF102A2C);
+  static const Color textMuted = Color(0xFF627D7F);
+  static const Color cardWhite = Color(0xFFFFFFFF);
+  static const Color inputBg = Color(0xFFEAF1F0);
+  static const Color containerLow = Color(0xFFE1ECEA);
+  static const Color containerHigh = Color(0xFFCCE0DC);
+  static const Color activeGreen = Color(0xFF1E8E68);
+  static const Color alertRed = Color(0xFFD63D42);
+  static const Color tempRed = Color(0xFFE06358);
+  static const Color warningAmber = Color(0xFFD9822B);
+  static const Color humidityBlue = Color(0xFF287C9E);
+  static const Color uvPurple = Color(0xFF6B5B95);
 }
 
 class AppSpacing {

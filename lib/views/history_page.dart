@@ -478,7 +478,14 @@ class HistoryPage extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.cardWhite,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(color: AppColors.containerHigh, width: 1.0),
+        border: Border.all(color: AppColors.containerLow, width: 1.0),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x140E555A),
+            blurRadius: 14,
+            offset: Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         children: [

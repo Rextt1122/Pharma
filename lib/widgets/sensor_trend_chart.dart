@@ -83,8 +83,15 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: AppColors.cardWhite,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(color: const Color(0xFFCBD5E1), width: 1.0),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(color: AppColors.containerLow, width: 1.0),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x140E555A),
+            blurRadius: 14,
+            offset: Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

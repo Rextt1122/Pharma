@@ -75,22 +75,30 @@ class ClimateDashboardPage extends StatelessWidget {
 
   Widget _selector(SensorProvider p) => Container(
         padding: const EdgeInsets.all(4),
-        decoration: BoxDecoration(color: AppColors.cardWhite, borderRadius: BorderRadius.circular(AppSpacing.radiusSm), border: Border.all(color: AppColors.containerHigh)),
+        decoration: BoxDecoration(
+          color: AppColors.cardWhite,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          boxShadow: _cardShadow,
+        ),
         child: Row(children: [
           _tab('Rak Vaksin', p.selectedDeviceId == 'device_1', () => p.selectDevice('device_1')),
           _tab('Ruang Steril', p.selectedDeviceId == 'device_2', () => p.selectDevice('device_2')),
         ]),
       );
 
-  Widget _tab(String label, bool on, VoidCallback tap) => Expanded(child: InkWell(onTap: tap, borderRadius: BorderRadius.circular(AppSpacing.radiusSm), child: AnimatedContainer(duration: const Duration(milliseconds: 180), height: 42, alignment: Alignment.center, decoration: BoxDecoration(color: on ? AppColors.pharmaBlue : Colors.transparent, borderRadius: BorderRadius.circular(AppSpacing.radiusSm)), child: Text(label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: on ? Colors.white : AppColors.textMuted)))));
+  Widget _tab(String label, bool on, VoidCallback tap) => Expanded(child: InkWell(onTap: tap, borderRadius: BorderRadius.circular(AppSpacing.radiusSm), child: AnimatedContainer(duration: const Duration(milliseconds: 180), height: 42, alignment: Alignment.center, decoration: BoxDecoration(color: on ? AppColors.pharmaNavy : Colors.transparent, borderRadius: BorderRadius.circular(AppSpacing.radiusSm)), child: Text(label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: on ? Colors.white : AppColors.textMuted)))));
 
   Widget _insight(bool safe, SensorModel s, SensorProvider p) => Container(
         padding: const EdgeInsets.all(AppSpacing.md + 4),
-        decoration: BoxDecoration(color: AppColors.cardWhite, borderRadius: BorderRadius.circular(AppSpacing.radiusMd), border: Border.all(color: AppColors.containerHigh)),
+        decoration: BoxDecoration(
+          color: AppColors.cardWhite,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          boxShadow: _cardShadow,
+        ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           const Text('RINGKASAN SAAT INI', style: _section),
           const SizedBox(height: AppSpacing.sm),
-          Text(safe ? 'Suhu penyimpanan vaksin aman.' : 'Perlu pemeriksaan kondisi gudang.', style: const TextStyle(fontSize: 21, height: 1.2, fontWeight: FontWeight.w800, color: AppColors.textDark)),
+          Text(safe ? 'Suhu penyimpanan vaksin aman.' : 'Perlu pemeriksaan kondisi gudang.', style: const TextStyle(fontSize: 21, height: 1.2, fontWeight: FontWeight.w800, color: AppColors.pharmaNavy)),
           const SizedBox(height: AppSpacing.md),
           Row(children: [
             Expanded(child: _smallStat('Batas suhu', '${p.tempMin.toStringAsFixed(0)}-${p.tempMax.toStringAsFixed(0)}°C')),
@@ -104,14 +112,56 @@ class ClimateDashboardPage extends StatelessWidget {
 
   Widget _protectionCard(SensorModel s) {
     final danger = s.isGasBahaya;
-    return Container(padding: const EdgeInsets.all(AppSpacing.md + 4), decoration: BoxDecoration(color: danger ? AppColors.alertRed : AppColors.pharmaBlue, borderRadius: BorderRadius.circular(AppSpacing.radiusMd)), child: Row(children: [const Icon(Icons.shield_outlined, color: Colors.white, size: 34), const SizedBox(width: AppSpacing.md), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(danger ? 'Gas atau asap terdeteksi' : 'Sistem perlindungan aktif', style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w800)), const SizedBox(height: 3), Text(danger ? 'Periksa ventilasi dan sumber asap.' : 'Sensor, alarm, dan notifikasi siap merespons.', style: const TextStyle(color: Color(0xFFFFF0ED), fontSize: 12))]))]));
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md + 4),
+      decoration: BoxDecoration(
+        color: danger ? AppColors.alertRed : AppColors.pharmaNavy,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        boxShadow: [
+          BoxShadow(
+            color: (danger ? AppColors.alertRed : AppColors.pharmaNavy).withAlpha(45),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Row(children: [
+        const Icon(Icons.shield_outlined, color: Colors.white, size: 34),
+        const SizedBox(width: AppSpacing.md),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(danger ? 'Gas atau asap terdeteksi' : 'Sistem perlindungan aktif', style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w800)),
+          const SizedBox(height: 3),
+          Text(danger ? 'Periksa ventilasi dan sumber asap.' : 'Sensor, alarm, dan notifikasi siap merespons.', style: TextStyle(color: Colors.white.withAlpha(220), fontSize: 12)),
+        ])),
+      ]),
+    );
   }
 
-  Widget _metric(IconData icon, String label, String value, String detail, Color color) => Container(padding: const EdgeInsets.all(AppSpacing.md), decoration: BoxDecoration(color: const Color(0xFFFBECE9), borderRadius: BorderRadius.circular(AppSpacing.radiusMd)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Container(padding: const EdgeInsets.all(7), decoration: BoxDecoration(color: color.withAlpha(25), borderRadius: BorderRadius.circular(AppSpacing.radiusSm)), child: Icon(icon, color: color, size: 19)), const SizedBox(height: AppSpacing.md), Text(value, style: TextStyle(fontSize: 21, fontWeight: FontWeight.w800, color: color), overflow: TextOverflow.ellipsis), const SizedBox(height: 2), Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.textDark)), const SizedBox(height: 2), Text(detail, style: const TextStyle(fontSize: 10.5, color: AppColors.textMuted), overflow: TextOverflow.ellipsis)]));
+  Widget _metric(IconData icon, String label, String value, String detail, Color color) => Container(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: AppColors.cardWhite,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          boxShadow: _cardShadow,
+        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Container(padding: const EdgeInsets.all(7), decoration: BoxDecoration(color: color.withAlpha(24), borderRadius: BorderRadius.circular(AppSpacing.radiusSm)), child: Icon(icon, color: color, size: 19)),
+          const SizedBox(height: AppSpacing.md),
+          Text(value, style: TextStyle(fontSize: 21, fontWeight: FontWeight.w800, color: color), overflow: TextOverflow.ellipsis),
+          const SizedBox(height: 2),
+          Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.textDark)),
+          const SizedBox(height: 2),
+          Text(detail, style: const TextStyle(fontSize: 10.5, color: AppColors.textMuted), overflow: TextOverflow.ellipsis),
+        ]),
+      );
 
   Widget _temperatureGauge(SensorModel s, SensorProvider p, bool safe) => Container(
         padding: const EdgeInsets.fromLTRB(AppSpacing.md + 4, AppSpacing.md, AppSpacing.md + 4, AppSpacing.md + 4),
-        decoration: BoxDecoration(color: AppColors.cardWhite, borderRadius: BorderRadius.circular(AppSpacing.radiusMd), border: Border.all(color: AppColors.containerHigh)),
+        decoration: BoxDecoration(
+          color: AppColors.cardWhite,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          boxShadow: _cardShadow,
+        ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           const Text('STABILITAS SUHU', style: _section),
           SizedBox(
@@ -127,12 +177,12 @@ class ClimateDashboardPage extends StatelessWidget {
                 showLabels: true,
                 axisLineStyle: const AxisLineStyle(thickness: 0.14, thicknessUnit: GaugeSizeUnit.factor, color: AppColors.containerLow),
                 ranges: [
-                  GaugeRange(startValue: 0, endValue: p.tempMin, color: const Color(0xFF9EC5DA), startWidth: 0.14, endWidth: 0.14, sizeUnit: GaugeSizeUnit.factor),
-                  GaugeRange(startValue: p.tempMin, endValue: p.tempMax, color: AppColors.activeGreen, startWidth: 0.14, endWidth: 0.14, sizeUnit: GaugeSizeUnit.factor),
-                  GaugeRange(startValue: p.tempMax, endValue: 12, color: AppColors.pharmaBlue, startWidth: 0.14, endWidth: 0.14, sizeUnit: GaugeSizeUnit.factor),
+                  GaugeRange(startValue: 0, endValue: p.tempMin, color: const Color(0xFF8CC0D8), startWidth: 0.14, endWidth: 0.14, sizeUnit: GaugeSizeUnit.factor),
+                  GaugeRange(startValue: p.tempMin, endValue: p.tempMax, color: AppColors.pharmaTeal, startWidth: 0.14, endWidth: 0.14, sizeUnit: GaugeSizeUnit.factor),
+                  GaugeRange(startValue: p.tempMax, endValue: 12, color: AppColors.tempRed, startWidth: 0.14, endWidth: 0.14, sizeUnit: GaugeSizeUnit.factor),
                 ],
-                pointers: [NeedlePointer(value: s.suhu, needleColor: AppColors.pharmaBlue, knobStyle: const KnobStyle(color: AppColors.pharmaBlue, borderColor: Colors.white, borderWidth: 0.05))],
-                annotations: [GaugeAnnotation(widget: Text('${s.suhu.toStringAsFixed(1)}°C', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 22, color: AppColors.textDark)), angle: 90, positionFactor: 0.58)],
+                pointers: [NeedlePointer(value: s.suhu, needleColor: AppColors.pharmaNavy, knobStyle: const KnobStyle(color: AppColors.pharmaNavy, borderColor: Colors.white, borderWidth: 0.05))],
+                annotations: [GaugeAnnotation(widget: Text('${s.suhu.toStringAsFixed(1)}°C', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 22, color: AppColors.pharmaNavy)), angle: 90, positionFactor: 0.58)],
               ),
             ]),
           ),
@@ -140,12 +190,49 @@ class ClimateDashboardPage extends StatelessWidget {
         ]),
       );
 
-  Widget _automation(IconData icon, String title, String sub, bool on, Color color, VoidCallback tap) => InkWell(onTap: tap, borderRadius: BorderRadius.circular(AppSpacing.radiusMd), child: Container(padding: const EdgeInsets.all(AppSpacing.md), decoration: BoxDecoration(color: AppColors.cardWhite, borderRadius: BorderRadius.circular(AppSpacing.radiusMd), border: Border.all(color: AppColors.containerHigh)), child: Row(children: [Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: color.withAlpha(24), borderRadius: BorderRadius.circular(AppSpacing.radiusSm)), child: Icon(icon, color: color)), const SizedBox(width: AppSpacing.md), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.textDark)), const SizedBox(height: 2), Text(sub, style: AppTypography.caption)])), Switch(value: on, onChanged: (_) => tap(), activeThumbColor: color)])));
+  Widget _automation(IconData icon, String title, String sub, bool on, Color color, VoidCallback tap) => InkWell(
+        onTap: tap,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        child: Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: AppColors.cardWhite,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            boxShadow: _cardShadow,
+          ),
+          child: Row(children: [
+            Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: color.withAlpha(24), borderRadius: BorderRadius.circular(AppSpacing.radiusSm)), child: Icon(icon, color: color)),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.textDark)), const SizedBox(height: 2), Text(sub, style: AppTypography.caption)])),
+            Switch(value: on, onChanged: (_) => tap(), activeThumbColor: color),
+          ]),
+        ),
+      );
 
   Widget _connection(SensorProvider p) {
     final online = p.isConnected;
-    return Container(padding: const EdgeInsets.all(AppSpacing.md), decoration: BoxDecoration(color: online ? const Color(0xFFE8F3EC) : const Color(0xFFFBECE9), borderRadius: BorderRadius.circular(AppSpacing.radiusMd)), child: Row(children: [Icon(online ? Icons.cloud_done_outlined : Icons.cloud_off_outlined, color: online ? AppColors.activeGreen : AppColors.alertRed), const SizedBox(width: AppSpacing.sm), Expanded(child: Text(online ? 'Broker MQTT terhubung. Telemetri masuk langsung.' : 'Broker MQTT terputus. Menampilkan data terakhir.', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textDark))), IconButton(onPressed: p.reconnect, icon: const Icon(Icons.refresh_rounded, color: AppColors.textDark))]));
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: online ? const Color(0xFFE2F2EC) : const Color(0xFFFCE8E8),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      ),
+      child: Row(children: [
+        Icon(online ? Icons.cloud_done_outlined : Icons.cloud_off_outlined, color: online ? AppColors.activeGreen : AppColors.alertRed),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(child: Text(online ? 'Broker MQTT terhubung. Telemetri masuk langsung.' : 'Broker MQTT terputus. Menampilkan data terakhir.', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textDark))),
+        IconButton(onPressed: p.reconnect, icon: const Icon(Icons.refresh_rounded, color: AppColors.pharmaNavy)),
+      ]),
+    );
   }
 }
+
+const List<BoxShadow> _cardShadow = [
+  BoxShadow(
+    color: Color(0x140E555A),
+    blurRadius: 14,
+    offset: Offset(0, 4),
+  ),
+];
 
 const TextStyle _section = TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.textMuted, letterSpacing: 0.8);

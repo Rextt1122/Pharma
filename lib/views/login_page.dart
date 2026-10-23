@@ -1146,7 +1146,7 @@ class _TopLeftDecorPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
 
     final fill2 = Paint()
-      ..color = const Color(0xFFE07A68).withAlpha(95)
+      ..color = AppColors.pharmaTeal.withAlpha(115)
       ..style = PaintingStyle.fill;
 
     final orbPaint = Paint()

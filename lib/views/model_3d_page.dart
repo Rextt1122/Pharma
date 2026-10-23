@@ -86,7 +86,14 @@ class _Model3dPageState extends State<Model3dPage> {
               decoration: BoxDecoration(
                 color: AppColors.cardWhite,
                 borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                border: Border.all(color: AppColors.containerHigh, width: 1.0),
+                border: Border.all(color: AppColors.containerLow, width: 1.0),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x140E555A),
+                    blurRadius: 14,
+                    offset: Offset(0, 4),
+                  ),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -255,7 +262,7 @@ class _Model3dPageState extends State<Model3dPage> {
             Container(
               height: 400,
               decoration: BoxDecoration(
-                color: const Color(0xFFE9E1DB),
+                color: const Color(0xFFDFECE9),
                 borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 border: Border.all(color: AppColors.pharmaNavy, width: 1.0),
               ),
@@ -274,7 +281,7 @@ class _Model3dPageState extends State<Model3dPage> {
                         cameraOrbit: _getCameraOrbit(),
                         cameraTarget: _getCameraTarget(),
                         fieldOfView: '20deg',
-                        backgroundColor: const Color(0xFFE9E1DB),
+                        backgroundColor: const Color(0xFFDFECE9),
                       )
                     else
                       CustomPaint(
@@ -437,7 +444,14 @@ class _Model3dPageState extends State<Model3dPage> {
               decoration: BoxDecoration(
                 color: AppColors.cardWhite,
                 borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                border: Border.all(color: AppColors.containerHigh, width: 1.0),
+                border: Border.all(color: AppColors.containerLow, width: 1.0),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x140E555A),
+                    blurRadius: 14,
+                    offset: Offset(0, 4),
+                  ),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -487,7 +501,14 @@ class _Model3dPageState extends State<Model3dPage> {
               decoration: BoxDecoration(
                 color: AppColors.cardWhite,
                 borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                border: Border.all(color: AppColors.containerHigh, width: 1.0),
+                border: Border.all(color: AppColors.containerLow, width: 1.0),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x140E555A),
+                    blurRadius: 14,
+                    offset: Offset(0, 4),
+                  ),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -553,7 +574,14 @@ class _Model3dPageState extends State<Model3dPage> {
           decoration: BoxDecoration(
             color: AppColors.cardWhite,
             borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-            border: Border.all(color: AppColors.containerHigh, width: 1.0),
+            border: Border.all(color: AppColors.containerLow, width: 1.0),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x140E555A),
+                    blurRadius: 14,
+                    offset: Offset(0, 4),
+                  ),
+                ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -605,7 +633,14 @@ class _Model3dPageState extends State<Model3dPage> {
           decoration: BoxDecoration(
             color: AppColors.cardWhite,
             borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-            border: Border.all(color: AppColors.containerHigh, width: 1.0),
+            border: Border.all(color: AppColors.containerLow, width: 1.0),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x140E555A),
+                    blurRadius: 14,
+                    offset: Offset(0, 4),
+                  ),
+                ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -632,7 +667,14 @@ class _Model3dPageState extends State<Model3dPage> {
           decoration: BoxDecoration(
             color: AppColors.cardWhite,
             borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-            border: Border.all(color: AppColors.containerHigh, width: 1.0),
+            border: Border.all(color: AppColors.containerLow, width: 1.0),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x140E555A),
+                    blurRadius: 14,
+                    offset: Offset(0, 4),
+                  ),
+                ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
