@@ -90,7 +90,7 @@ class ClimateDashboardPage extends StatelessWidget {
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           const Text('RINGKASAN SAAT INI', style: _section),
           const SizedBox(height: AppSpacing.sm),
-          Text(safe ? 'Rantai dingin dalam kondisi aman.' : 'Perlu pemeriksaan kondisi gudang.', style: const TextStyle(fontSize: 21, height: 1.2, fontWeight: FontWeight.w800, color: AppColors.textDark)),
+          Text(safe ? 'Suhu penyimpanan vaksin aman.' : 'Perlu pemeriksaan kondisi gudang.', style: const TextStyle(fontSize: 21, height: 1.2, fontWeight: FontWeight.w800, color: AppColors.textDark)),
           const SizedBox(height: AppSpacing.md),
           Row(children: [
             Expanded(child: _smallStat('Batas suhu', '${p.tempMin.toStringAsFixed(0)}-${p.tempMax.toStringAsFixed(0)}°C')),
