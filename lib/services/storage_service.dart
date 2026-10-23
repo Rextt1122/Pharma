@@ -14,8 +14,8 @@ class StorageService {
   static const String _keyHumidityMax = 'threshold_humidity_max';
   static const String _keyGasMax = 'threshold_gas_max';
 
-  // IP VirtualBox Host-Only (192.168.33.x).
-  static const String defaultIp = '192.168.1.100';
+  // IP VirtualBox Host-Only (192.168.33.10).
+  static const String defaultIp = '192.168.33.10';
 
   // Port untuk REST API FastAPI
   static const int apiPort = 8001;

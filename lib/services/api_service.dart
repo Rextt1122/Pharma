@@ -9,31 +9,47 @@ class ApiService {
   final StorageService _storageService = StorageService();
 
   Future<List<SensorModel>> fetchSensorHistory() async {
-    final ip = await _storageService.getServerIp();
-    final url = Uri.parse('http://$ip:8001/sensor');
+    final savedIp = await _storageService.getServerIp();
+    final candidates = <String>{
+      savedIp,
+      '192.168.33.10',
+      '127.0.0.1',
+      '192.168.137.1',
+    }.where((ip) => ip.isNotEmpty && ip != '192.168.1.100').toList();
 
-    try {
-      final response = await http.get(url).timeout(const Duration(seconds: 10));
+    Object? lastError;
 
-      if (response.statusCode == 200) {
-        final dynamic decodedData = jsonDecode(response.body);
+    for (final ip in candidates) {
+      final url = Uri.parse('http://$ip:8001/sensor');
+      try {
+        final response = await http.get(url).timeout(const Duration(milliseconds: 2500));
 
-        if (decodedData is List) {
-          return decodedData
-              .map((item) => SensorModel.fromJson(item as Map<String, dynamic>))
-              .toList();
-        } else if (decodedData is Map<String, dynamic>) {
-          return [SensorModel.fromJson(decodedData)];
+        if (response.statusCode == 200) {
+          if (ip != savedIp) {
+            await _storageService.saveServerIp(ip);
+          }
+          final dynamic decodedData = jsonDecode(response.body);
+
+          if (decodedData is List) {
+            return decodedData
+                .map((item) => SensorModel.fromJson(item as Map<String, dynamic>))
+                .toList();
+          } else if (decodedData is Map<String, dynamic>) {
+            return [SensorModel.fromJson(decodedData)];
+          } else {
+            throw const FormatException('Format data JSON tidak valid');
+          }
         } else {
-          throw Exception('Format data JSON tidak valid');
+          lastError = Exception(
+            'Gagal mengambil data. Status code: ${response.statusCode}',
+          );
         }
-      } else {
-        throw Exception(
-          'Gagal mengambil data. Status code: ${response.statusCode}',
-        );
+      } catch (e) {
+        if (e is FormatException) rethrow;
+        lastError = e;
       }
-    } catch (e) {
-      throw Exception('Gagal terhubung ke server: $e');
     }
+
+    throw Exception('Gagal terhubung ke server: $lastError');
   }
 }
