@@ -20,36 +20,51 @@ class HistoryPage extends StatelessWidget {
             onRefresh: () => provider.fetchHistory(),
             child: _buildBody(context, provider),
           ),
-          floatingActionButton: FloatingActionButton.extended(
-            onPressed: provider.historyList.isEmpty
-                ? null
-                : () async {
-                    try {
-                      final path = await provider.exportToCsv();
-                      if (path != null && context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Berhasil diexport ke:\n$path'),
-                            duration: const Duration(seconds: 4),
-                            backgroundColor: AppColors.pharmaNavy,
-                          ),
-                        );
+          floatingActionButton: SizedBox(
+            height: 38,
+            child: FloatingActionButton.extended(
+              onPressed: provider.historyList.isEmpty
+                  ? null
+                  : () async {
+                      try {
+                        final path = await provider.exportToCsv();
+                        if (path != null && context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Berhasil diexport ke:\n$path'),
+                              duration: const Duration(seconds: 4),
+                              backgroundColor: AppColors.pharmaNavy,
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(e.toString()),
+                              backgroundColor: Colors.red.shade700,
+                            ),
+                          );
+                        }
                       }
-                    } catch (e) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(e.toString()),
-                            backgroundColor: Colors.red.shade700,
-                          ),
-                        );
-                      }
-                    }
-                  },
-            icon: const Icon(Icons.file_download_outlined, color: Colors.white),
-            label: const Text('Export CSV Log', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-            backgroundColor: AppColors.pharmaNavy,
-            elevation: 4,
+                    },
+              elevation: 2,
+              highlightElevation: 3,
+              backgroundColor: AppColors.pharmaNavy,
+              icon: const Icon(Icons.file_download_outlined, color: Colors.white, size: 16),
+              label: const Text(
+                'Export CSV',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                  letterSpacing: 0.2,
+                ),
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+              ),
+            ),
           ),
         );
       },
