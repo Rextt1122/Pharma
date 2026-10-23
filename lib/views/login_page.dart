@@ -25,6 +25,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
   bool _isSignUp = false;
   bool _obscurePassword = true;
+  bool _isSubmitting = false;
 
   @override
   void initState() {
@@ -36,30 +37,58 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
     _entranceController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 850),
+      duration: const Duration(milliseconds: 950),
     )..forward();
 
     _headerFade = CurvedAnimation(
       parent: _entranceController,
-      curve: const Interval(0.0, 0.65, curve: Curves.easeOut),
+      curve: const Interval(0.0, 0.55, curve: Curves.easeOutCubic),
     );
     _sheetSlide = Tween<Offset>(
-      begin: const Offset(0, 0.12),
+      begin: const Offset(0, 0.16),
       end: Offset.zero,
     ).animate(
       CurvedAnimation(
         parent: _entranceController,
-        curve: const Interval(0.15, 0.85, curve: Curves.easeOutCubic),
+        curve: const Interval(0.05, 0.70, curve: Curves.easeOutCubic),
       ),
     );
     _plantScale = CurvedAnimation(
       parent: _entranceController,
-      curve: const Interval(0.25, 1.0, curve: Curves.easeOutBack),
+      curve: const Interval(0.15, 0.95, curve: Curves.easeOutBack),
+    );
+  }
+
+  Widget _buildStaggered(int step, Widget child) {
+    final double start = (0.12 + step * 0.08).clamp(0.0, 0.75);
+    final double end = (start + 0.42).clamp(0.0, 1.0);
+    return AnimatedBuilder(
+      animation: _entranceController,
+      child: child,
+      builder: (context, ch) {
+        final double raw =
+            ((_entranceController.value - start) / (end - start)).clamp(
+              0.0,
+              1.0,
+            );
+        final double curved = Curves.easeOutCubic.transform(raw);
+        final double scale = 0.94 + (0.06 * curved);
+        return Opacity(
+          opacity: curved,
+          child: Transform.translate(
+            offset: Offset(0, 26 * (1.0 - curved)),
+            child: Transform.scale(scale: scale, child: ch),
+          ),
+        );
+      },
     );
   }
 
   Future<void> _handleSubmit() async {
+    if (_isSubmitting) return;
     if (_formKey.currentState!.validate()) {
+      setState(() => _isSubmitting = true);
+      await Future.delayed(const Duration(milliseconds: 450));
       final rawInput = _usernameController.text.trim();
       final isEmail = rawInput.contains('@');
       final displayName = isEmail
@@ -74,6 +103,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       );
       await StorageService().setLoggedIn(true);
       if (mounted) {
+        setState(() => _isSubmitting = false);
         Navigator.pushReplacementNamed(context, '/main');
       }
     }
@@ -447,6 +477,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       _isSignUp = signUp;
       _formKey.currentState?.reset();
     });
+    _entranceController.forward(from: 0.0);
   }
 
   @override
@@ -599,124 +630,144 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                   crossAxisAlignment:
                                       CrossAxisAlignment.stretch,
                                   children: [
-                                    Text(
-                                      _isSignUp ? 'Sign Up' : 'Login',
-                                      style: const TextStyle(
-                                        fontSize: 28,
-                                        fontWeight: FontWeight.w800,
-                                        color: AppColors.pharmaNavy,
-                                        letterSpacing: -0.5,
+                                    _buildStaggered(
+                                      0,
+                                      Text(
+                                        _isSignUp ? 'Sign Up' : 'Login',
+                                        style: const TextStyle(
+                                          fontSize: 28,
+                                          fontWeight: FontWeight.w800,
+                                          color: AppColors.pharmaNavy,
+                                          letterSpacing: -0.5,
+                                        ),
                                       ),
                                     ),
                                     const SizedBox(height: AppSpacing.lg),
 
                                     // Username / Email input
-                                    _buildCleanInputField(
-                                      controller: _usernameController,
-                                      hintText: 'Email or Username',
-                                      icon: Icons.mail_outline_rounded,
-                                      validator: (value) {
-                                        if (value == null ||
-                                            value.trim().isEmpty) {
-                                          return 'Username / Email tidak boleh kosong';
-                                        }
-                                        return null;
-                                      },
-                                    ),
-                                    const SizedBox(height: AppSpacing.md),
-
-                                    // Password input
-                                    _buildCleanInputField(
-                                      controller: _passwordController,
-                                      hintText: 'Password',
-                                      icon: Icons.lock_outline_rounded,
-                                      obscureText: _obscurePassword,
-                                      suffixIcon: IconButton(
-                                        icon: Icon(
-                                          _obscurePassword
-                                              ? Icons.visibility_off_outlined
-                                              : Icons.visibility_outlined,
-                                          size: 18,
-                                          color: AppColors.textMuted,
-                                        ),
-                                        onPressed: () {
-                                          setState(() {
-                                            _obscurePassword =
-                                                !_obscurePassword;
-                                          });
-                                        },
-                                      ),
-                                      validator: (value) {
-                                        if (value == null ||
-                                            value.trim().isEmpty) {
-                                          return 'Password tidak boleh kosong';
-                                        }
-                                        return null;
-                                      },
-                                    ),
-
-                                    if (_isSignUp) ...[
-                                      const SizedBox(height: AppSpacing.md),
+                                    _buildStaggered(
+                                      1,
                                       _buildCleanInputField(
-                                        controller: _confirmPasswordController,
-                                        hintText: 'Confirm password',
-                                        icon: Icons.lock_reset_rounded,
-                                        obscureText: _obscurePassword,
+                                        controller: _usernameController,
+                                        hintText: 'Email or Username',
+                                        icon: Icons.mail_outline_rounded,
                                         validator: (value) {
                                           if (value == null ||
                                               value.trim().isEmpty) {
-                                            return 'Konfirmasi password wajib diisi';
-                                          }
-                                          if (value !=
-                                              _passwordController.text) {
-                                            return 'Password tidak sama';
+                                            return 'Username / Email tidak boleh kosong';
                                           }
                                           return null;
                                         },
                                       ),
-                                      const SizedBox(height: AppSpacing.md),
+                                    ),
+                                    const SizedBox(height: AppSpacing.md),
+
+                                    // Password input
+                                    _buildStaggered(
+                                      2,
                                       _buildCleanInputField(
-                                        controller: _phoneController,
-                                        hintText: 'Phone',
-                                        icon: Icons.phone_outlined,
-                                        keyboardType: TextInputType.phone,
+                                        controller: _passwordController,
+                                        hintText: 'Password',
+                                        icon: Icons.lock_outline_rounded,
+                                        obscureText: _obscurePassword,
+                                        suffixIcon: IconButton(
+                                          icon: Icon(
+                                            _obscurePassword
+                                                ? Icons.visibility_off_outlined
+                                                : Icons.visibility_outlined,
+                                            size: 18,
+                                            color: AppColors.textMuted,
+                                          ),
+                                          onPressed: () {
+                                            setState(() {
+                                              _obscurePassword =
+                                                  !_obscurePassword;
+                                            });
+                                          },
+                                        ),
+                                        validator: (value) {
+                                          if (value == null ||
+                                              value.trim().isEmpty) {
+                                            return 'Password tidak boleh kosong';
+                                          }
+                                          return null;
+                                        },
+                                      ),
+                                    ),
+
+                                    if (_isSignUp) ...[
+                                      const SizedBox(height: AppSpacing.md),
+                                      _buildStaggered(
+                                        3,
+                                        _buildCleanInputField(
+                                          controller:
+                                              _confirmPasswordController,
+                                          hintText: 'Confirm password',
+                                          icon: Icons.lock_reset_rounded,
+                                          obscureText: _obscurePassword,
+                                          validator: (value) {
+                                            if (value == null ||
+                                                value.trim().isEmpty) {
+                                              return 'Konfirmasi password wajib diisi';
+                                            }
+                                            if (value !=
+                                                _passwordController.text) {
+                                              return 'Password tidak sama';
+                                            }
+                                            return null;
+                                          },
+                                        ),
+                                      ),
+                                      const SizedBox(height: AppSpacing.md),
+                                      _buildStaggered(
+                                        4,
+                                        _buildCleanInputField(
+                                          controller: _phoneController,
+                                          hintText: 'Phone',
+                                          icon: Icons.phone_outlined,
+                                          keyboardType: TextInputType.phone,
+                                        ),
                                       ),
                                       const SizedBox(height: AppSpacing.lg + 4),
                                     ] else ...[
-                                      Align(
-                                        alignment: Alignment.centerRight,
-                                        child: TextButton(
-                                          onPressed: () {
-                                            ScaffoldMessenger.of(
-                                              context,
-                                            ).showSnackBar(
-                                              const SnackBar(
-                                                content: Text(
-                                                  'Hubungi admin gudang untuk reset kredensial.',
+                                      _buildStaggered(
+                                        3,
+                                        Align(
+                                          alignment: Alignment.centerRight,
+                                          child: TextButton(
+                                            onPressed: () {
+                                              ScaffoldMessenger.of(
+                                                context,
+                                              ).showSnackBar(
+                                                const SnackBar(
+                                                  content: Text(
+                                                    'Hubungi admin gudang untuk reset kredensial.',
+                                                  ),
+                                                  backgroundColor:
+                                                      AppColors.pharmaNavy,
                                                 ),
-                                                backgroundColor:
-                                                    AppColors.pharmaNavy,
-                                              ),
-                                            );
-                                          },
-                                          style: TextButton.styleFrom(
-                                            foregroundColor:
-                                                AppColors.pharmaNavy,
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 4,
-                                              vertical: 8,
+                                              );
+                                            },
+                                            style: TextButton.styleFrom(
+                                              foregroundColor:
+                                                  AppColors.pharmaNavy,
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 4,
+                                                    vertical: 8,
+                                                  ),
+                                              minimumSize: Size.zero,
+                                              tapTargetSize:
+                                                  MaterialTapTargetSize
+                                                      .shrinkWrap,
                                             ),
-                                            minimumSize: Size.zero,
-                                            tapTargetSize:
-                                                MaterialTapTargetSize
-                                                    .shrinkWrap,
-                                          ),
-                                          child: const Text(
-                                            'Forgot Password',
-                                            style: TextStyle(
-                                              fontSize: 12.5,
-                                              fontWeight: FontWeight.w700,
-                                              color: AppColors.pharmaNavy,
+                                            child: const Text(
+                                              'Forgot Password',
+                                              style: TextStyle(
+                                                fontSize: 12.5,
+                                                fontWeight: FontWeight.w700,
+                                                color: AppColors.pharmaNavy,
+                                              ),
                                             ),
                                           ),
                                         ),
@@ -725,156 +776,204 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                     ],
 
                                     // Primary Submit Button
-                                    SizedBox(
-                                      height: 52,
-                                      child: ElevatedButton(
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: AppColors.pharmaNavy,
-                                          foregroundColor: Colors.white,
-                                          elevation: 2,
-                                          shadowColor: AppColors.pharmaNavy
-                                              .withAlpha(60),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              AppSpacing.radiusMd,
+                                    _buildStaggered(
+                                      _isSignUp ? 5 : 4,
+                                      SizedBox(
+                                        height: 52,
+                                        child: ElevatedButton(
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor:
+                                                AppColors.pharmaNavy,
+                                            foregroundColor: Colors.white,
+                                            elevation: 2,
+                                            shadowColor: AppColors.pharmaNavy
+                                                .withAlpha(60),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                    AppSpacing.radiusMd,
+                                                  ),
                                             ),
                                           ),
-                                        ),
-                                        onPressed: _handleSubmit,
-                                        child: Text(
-                                          _isSignUp ? 'Sign Up' : 'Login',
-                                          style: const TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w800,
-                                            letterSpacing: 0.3,
-                                          ),
+                                          onPressed: _isSubmitting
+                                              ? null
+                                              : _handleSubmit,
+                                          child: _isSubmitting
+                                              ? const SizedBox(
+                                                  width: 22,
+                                                  height: 22,
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                        strokeWidth: 2.4,
+                                                        color: Colors.white,
+                                                      ),
+                                                )
+                                              : Text(
+                                                  _isSignUp
+                                                      ? 'Sign Up'
+                                                      : 'Login',
+                                                  style: const TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.w800,
+                                                    letterSpacing: 0.3,
+                                                  ),
+                                                ),
                                         ),
                                       ),
                                     ),
 
                                     if (!_isSignUp) ...[
                                       const SizedBox(height: AppSpacing.lg + 2),
-                                      Row(
-                                        children: [
-                                          const Expanded(
-                                            child: Divider(
-                                              color: AppColors.containerHigh,
-                                              thickness: 1,
-                                            ),
-                                          ),
-                                          Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 12,
-                                            ),
-                                            child: Text(
-                                              'Or login with',
-                                              style: AppTypography.caption
-                                                  .copyWith(
-                                                    fontSize: 12,
-                                                    color: AppColors.textMuted,
+                                      _buildStaggered(
+                                        5,
+                                        Column(
+                                          children: [
+                                            Row(
+                                              children: [
+                                                const Expanded(
+                                                  child: Divider(
+                                                    color:
+                                                        AppColors.containerHigh,
+                                                    thickness: 1,
                                                   ),
+                                                ),
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 12,
+                                                      ),
+                                                  child: Text(
+                                                    'Or login with',
+                                                    style: AppTypography.caption
+                                                        .copyWith(
+                                                          fontSize: 12,
+                                                          color: AppColors
+                                                              .textMuted,
+                                                        ),
+                                                  ),
+                                                ),
+                                                const Expanded(
+                                                  child: Divider(
+                                                    color:
+                                                        AppColors.containerHigh,
+                                                    thickness: 1,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
-                                          ),
-                                          const Expanded(
-                                            child: Divider(
-                                              color: AppColors.containerHigh,
-                                              thickness: 1,
+                                            const SizedBox(
+                                              height: AppSpacing.md + 4,
                                             ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: AppSpacing.md + 4),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          _buildSocialButton(
-                                            onTap: () => _showSsoAccountPicker(
-                                              'Facebook',
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                _buildSocialButton(
+                                                  onTap: () =>
+                                                      _showSsoAccountPicker(
+                                                        'Facebook',
+                                                      ),
+                                                  child: const Icon(
+                                                    Icons.facebook_rounded,
+                                                    color: Color(0xFF1877F2),
+                                                    size: 26,
+                                                  ),
+                                                ),
+                                                const SizedBox(
+                                                  width: AppSpacing.md,
+                                                ),
+                                                _buildSocialButton(
+                                                  onTap: () =>
+                                                      _showSsoAccountPicker(
+                                                        'Google',
+                                                      ),
+                                                  child: CustomPaint(
+                                                    size: const Size(22, 22),
+                                                    painter:
+                                                        _GoogleLogoPainter(),
+                                                  ),
+                                                ),
+                                                const SizedBox(
+                                                  width: AppSpacing.md,
+                                                ),
+                                                _buildSocialButton(
+                                                  onTap: () =>
+                                                      _showSsoAccountPicker(
+                                                        'Apple',
+                                                      ),
+                                                  child: const Icon(
+                                                    Icons.apple_rounded,
+                                                    color: Colors.black87,
+                                                    size: 26,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
-                                            child: const Icon(
-                                              Icons.facebook_rounded,
-                                              color: Color(0xFF1877F2),
-                                              size: 26,
-                                            ),
-                                          ),
-                                          const SizedBox(width: AppSpacing.md),
-                                          _buildSocialButton(
-                                            onTap: () => _showSsoAccountPicker(
-                                              'Google',
-                                            ),
-                                            child: CustomPaint(
-                                              size: const Size(22, 22),
-                                              painter: _GoogleLogoPainter(),
-                                            ),
-                                          ),
-                                          const SizedBox(width: AppSpacing.md),
-                                          _buildSocialButton(
-                                            onTap: () => _showSsoAccountPicker(
-                                              'Apple',
-                                            ),
-                                            child: const Icon(
-                                              Icons.apple_rounded,
-                                              color: Colors.black87,
-                                              size: 26,
-                                            ),
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
                                       const Spacer(),
                                       const SizedBox(height: AppSpacing.lg),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            "Don't have account? ",
-                                            style: AppTypography.caption
-                                                .copyWith(
+                                      _buildStaggered(
+                                        6,
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              "Don't have account? ",
+                                              style: AppTypography.caption
+                                                  .copyWith(
+                                                    fontSize: 13,
+                                                    color: AppColors.textMuted,
+                                                  ),
+                                            ),
+                                            GestureDetector(
+                                              onTap: () =>
+                                                  _toggleAuthMode(true),
+                                              child: const Text(
+                                                'Sign Up',
+                                                style: TextStyle(
                                                   fontSize: 13,
-                                                  color: AppColors.textMuted,
+                                                  fontWeight: FontWeight.w800,
+                                                  color: AppColors.pharmaNavy,
                                                 ),
-                                          ),
-                                          GestureDetector(
-                                            onTap: () => _toggleAuthMode(true),
-                                            child: const Text(
-                                              'Sign Up',
-                                              style: TextStyle(
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w800,
-                                                color: AppColors.pharmaNavy,
                                               ),
                                             ),
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
                                     ] else ...[
                                       const Spacer(),
                                       const SizedBox(height: AppSpacing.md),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            'Already have an account? ',
-                                            style: AppTypography.caption
-                                                .copyWith(
+                                      _buildStaggered(
+                                        6,
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              'Already have an account? ',
+                                              style: AppTypography.caption
+                                                  .copyWith(
+                                                    fontSize: 13,
+                                                    color: AppColors.textMuted,
+                                                  ),
+                                            ),
+                                            GestureDetector(
+                                              onTap: () =>
+                                                  _toggleAuthMode(false),
+                                              child: const Text(
+                                                'Login',
+                                                style: TextStyle(
                                                   fontSize: 13,
-                                                  color: AppColors.textMuted,
+                                                  fontWeight: FontWeight.w800,
+                                                  color: AppColors.pharmaNavy,
                                                 ),
-                                          ),
-                                          GestureDetector(
-                                            onTap: () => _toggleAuthMode(false),
-                                            child: const Text(
-                                              'Login',
-                                              style: TextStyle(
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w800,
-                                                color: AppColors.pharmaNavy,
                                               ),
                                             ),
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
                                     ],
                                     const SizedBox(height: AppSpacing.sm),
@@ -887,12 +986,18 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                       ],
                     ),
 
-                    // Overlapping botanical/pharma illustration on the right boundary
-                    if (!_isSignUp)
-                      Positioned(
-                        top: headerHeight - 108,
-                        right: 24,
-                        child: IgnorePointer(
+                    // Overlapping botanical/pharma illustration on the right boundary (both Login & Sign Up)
+                    AnimatedPositioned(
+                      duration: const Duration(milliseconds: 360),
+                      curve: Curves.easeOutBack,
+                      top: headerHeight - (_isSignUp ? 92 : 108),
+                      right: _isSignUp ? 18 : 24,
+                      child: IgnorePointer(
+                        child: AnimatedScale(
+                          duration: const Duration(milliseconds: 360),
+                          curve: Curves.easeOutBack,
+                          scale: _isSignUp ? 0.82 : 1.0,
+                          alignment: Alignment.bottomCenter,
                           child: ScaleTransition(
                             scale: _plantScale,
                             alignment: Alignment.bottomCenter,
@@ -910,6 +1015,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                           ),
                         ),
                       ),
+                    ),
                     ],
                   ),
                 ),
