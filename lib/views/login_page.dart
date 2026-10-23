@@ -75,7 +75,7 @@ class _LoginPageState extends State<LoginPage> {
                   padding: const EdgeInsets.all(AppSpacing.lg + 4),
                   decoration: BoxDecoration(
                     color: AppColors.cardWhite,
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                     border: Border.all(color: const Color(0xFFCBD5E1), width: 1.0),
                     boxShadow: [
                       BoxShadow(

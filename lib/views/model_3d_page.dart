@@ -78,15 +78,15 @@ class _Model3dPageState extends State<Model3dPage> {
             left: AppSpacing.md,
             right: AppSpacing.md,
             top: AppSpacing.sm + 4,
-            bottom: AppSpacing.md,
+            bottom: AppSpacing.lg,
           ),
           children: [
             Container(
               padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
                 color: AppColors.cardWhite,
-                borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                border: Border.all(color: const Color(0xFFCBD5E1), width: 1.0),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                border: Border.all(color: AppColors.containerHigh, width: 1.0),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -142,7 +142,7 @@ class _Model3dPageState extends State<Model3dPage> {
                     decoration: BoxDecoration(
                       color: AppColors.inputBg,
                       borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
-                      border: Border.all(color: const Color(0xFFCBD5E1), width: 0.8),
+                      border: Border.all(color: AppColors.containerHigh, width: 0.8),
                     ),
                     child: Row(
                       children: [
@@ -214,11 +214,10 @@ class _Model3dPageState extends State<Model3dPage> {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.sm + 4),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    physics: const BouncingScrollPhysics(),
-                    child: Row(
-                      children: _views.map((viewMode) {
+                  Wrap(
+                    spacing: AppSpacing.xs,
+                    runSpacing: AppSpacing.xs,
+                    children: _views.map((viewMode) {
                         final isSelected = _selectedView == viewMode;
                         return Padding(
                           padding: const EdgeInsets.only(right: AppSpacing.sm),
@@ -242,27 +241,26 @@ class _Model3dPageState extends State<Model3dPage> {
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
                               side: BorderSide(
-                                color: isSelected ? AppColors.pharmaNavy : const Color(0xFFCBD5E1),
+                                color: isSelected ? AppColors.pharmaNavy : AppColors.containerHigh,
                               ),
                             ),
                           ),
                         );
                       }).toList(),
-                    ),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: AppSpacing.md - 2),
             Container(
-              height: 340,
+              height: 400,
               decoration: BoxDecoration(
-                color: const Color(0xFF0F172A),
-                borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                color: const Color(0xFFE9E1DB),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 border: Border.all(color: AppColors.pharmaNavy, width: 1.0),
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 child: Stack(
                   children: [
                     if (_is3dModel)
@@ -275,8 +273,8 @@ class _Model3dPageState extends State<Model3dPage> {
                         cameraControls: true,
                         cameraOrbit: _getCameraOrbit(),
                         cameraTarget: _getCameraTarget(),
-                        fieldOfView: '28deg',
-                        backgroundColor: const Color(0xFF0F172A),
+                        fieldOfView: '20deg',
+                        backgroundColor: const Color(0xFFE9E1DB),
                       )
                     else
                       CustomPaint(
@@ -438,8 +436,8 @@ class _Model3dPageState extends State<Model3dPage> {
               padding: const EdgeInsets.all(AppSpacing.lg),
               decoration: BoxDecoration(
                 color: AppColors.cardWhite,
-                borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                border: Border.all(color: const Color(0xFFCBD5E1), width: 1.0),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                border: Border.all(color: AppColors.containerHigh, width: 1.0),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -474,7 +472,7 @@ class _Model3dPageState extends State<Model3dPage> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
                           side: BorderSide(
-                            color: isSelected ? AppColors.pharmaNavy : const Color(0xFFCBD5E1),
+                            color: isSelected ? AppColors.pharmaNavy : AppColors.containerHigh,
                           ),
                         ),
                       );
@@ -488,8 +486,8 @@ class _Model3dPageState extends State<Model3dPage> {
               padding: const EdgeInsets.all(AppSpacing.lg),
               decoration: BoxDecoration(
                 color: AppColors.cardWhite,
-                borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                border: Border.all(color: const Color(0xFFCBD5E1), width: 1.0),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                border: Border.all(color: AppColors.containerHigh, width: 1.0),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -531,15 +529,15 @@ class _Model3dPageState extends State<Model3dPage> {
         left: AppSpacing.md,
         right: AppSpacing.md,
         top: AppSpacing.sm + 4,
-        bottom: AppSpacing.md,
+        bottom: AppSpacing.lg,
       ),
       children: [
         Container(
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             color: AppColors.cardWhite,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-            border: Border.all(color: const Color(0xFFCBD5E1), width: 1.0),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            border: Border.all(color: AppColors.containerHigh, width: 1.0),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -584,14 +582,14 @@ class _Model3dPageState extends State<Model3dPage> {
           ),
         ),
         const SizedBox(height: AppSpacing.md - 2),
-        const ShimmerLoading(height: 280, radius: AppSpacing.radiusLg),
+        const ShimmerLoading(height: 280, radius: AppSpacing.radiusMd),
         const SizedBox(height: AppSpacing.md - 2),
         Container(
           padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
             color: AppColors.cardWhite,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-            border: Border.all(color: const Color(0xFFCBD5E1), width: 1.0),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            border: Border.all(color: AppColors.containerHigh, width: 1.0),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -617,8 +615,8 @@ class _Model3dPageState extends State<Model3dPage> {
           padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
             color: AppColors.cardWhite,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-            border: Border.all(color: const Color(0xFFCBD5E1), width: 1.0),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            border: Border.all(color: AppColors.containerHigh, width: 1.0),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

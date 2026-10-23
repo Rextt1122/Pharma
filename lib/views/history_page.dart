@@ -239,9 +239,9 @@ class HistoryPage extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: AppColors.cardWhite,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         border: Border.all(
-          color: isWarning ? AppColors.alertRed.withAlpha(120) : const Color(0xFFCBD5E1),
+          color: isWarning ? AppColors.alertRed.withAlpha(120) : AppColors.containerHigh,
           width: 1.0,
         ),
         boxShadow: [
@@ -463,7 +463,7 @@ class HistoryPage extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.cardWhite,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(color: const Color(0xFFCBD5E1), width: 1.0),
+        border: Border.all(color: AppColors.containerHigh, width: 1.0),
       ),
       child: Column(
         children: [
@@ -517,11 +517,11 @@ class HistoryPage extends StatelessWidget {
           ],
         ),
         const SizedBox(height: AppSpacing.sm),
-        const ShimmerLoading(height: 104, radius: AppSpacing.radiusLg),
+        const ShimmerLoading(height: 104, radius: AppSpacing.radiusMd),
         const SizedBox(height: AppSpacing.md),
-        const ShimmerLoading(height: 104, radius: AppSpacing.radiusLg),
+        const ShimmerLoading(height: 104, radius: AppSpacing.radiusMd),
         const SizedBox(height: AppSpacing.md),
-        const ShimmerLoading(height: 104, radius: AppSpacing.radiusLg),
+        const ShimmerLoading(height: 104, radius: AppSpacing.radiusMd),
       ],
     );
   }

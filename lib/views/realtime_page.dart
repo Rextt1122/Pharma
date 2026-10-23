@@ -71,12 +71,15 @@ class RealtimePage extends StatelessWidget {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    isConnected ? 'Terhubung ke Broker MQTT' : 'Mode Offline / Data Terakhir',
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.textMuted,
+                    isConnected
+                        ? 'ONLINE · terhubung ke MQTT'
+                        : 'OFFLINE · data terakhir ${_formatLastUpdate(sensor.waktu)}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: isConnected ? AppColors.activeGreen : AppColors.alertRed,
                     ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const Spacer(),
                   Text(
@@ -102,6 +105,13 @@ class RealtimePage extends StatelessWidget {
     );
   }
 
+  String _formatLastUpdate(String? value) {
+    if (value == null || value.isEmpty) return '--:--';
+    final parsed = DateTime.tryParse(value)?.toLocal();
+    if (parsed == null) return value;
+    return '${parsed.hour.toString().padLeft(2, '0')}:${parsed.minute.toString().padLeft(2, '0')}';
+  }
+
   Widget _buildLoadingSkeleton() {
     return ListView(
       physics: const BouncingScrollPhysics(),
@@ -109,7 +119,7 @@ class RealtimePage extends StatelessWidget {
         left: AppSpacing.md,
         right: AppSpacing.md,
         top: AppSpacing.sm,
-        bottom: AppSpacing.md,
+        bottom: AppSpacing.lg,
       ),
       children: [
         const ShimmerLoading(height: 100, radius: AppSpacing.radiusLg),
@@ -142,7 +152,7 @@ class RealtimePage extends StatelessWidget {
         left: AppSpacing.md,
         right: AppSpacing.md,
         top: AppSpacing.sm,
-        bottom: AppSpacing.md,
+        bottom: AppSpacing.lg,
       ),
       children: [
         // 1. Gas Metric Card (Clean & uncluttered)
@@ -153,7 +163,7 @@ class RealtimePage extends StatelessWidget {
             color: sensor.isGasBahaya ? AppColors.alertRed : AppColors.cardWhite,
             borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
             border: Border.all(
-              color: sensor.isGasBahaya ? AppColors.alertRed : const Color(0xFFCBD5E1),
+              color: sensor.isGasBahaya ? AppColors.alertRed : AppColors.containerHigh,
               width: 1.0,
             ),
           ),
@@ -294,7 +304,7 @@ class RealtimePage extends StatelessWidget {
           decoration: BoxDecoration(
             color: AppColors.cardWhite,
             borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-            border: Border.all(color: const Color(0xFFCBD5E1), width: 1.0),
+            border: Border.all(color: AppColors.containerHigh, width: 1.0),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -328,12 +338,13 @@ class RealtimePage extends StatelessWidget {
                 ],
               ),
               SizedBox(
-                height: 115,
+                height: 88,
                 child: SfRadialGauge(
                   axes: <RadialAxis>[
                     RadialAxis(
-                      minimum: -10,
-                      maximum: 50,
+                      minimum: 0,
+                      maximum: 12,
+                      interval: 2,
                       startAngle: 180,
                       endAngle: 0,
                       canScaleToFit: true,
@@ -346,7 +357,7 @@ class RealtimePage extends StatelessWidget {
                       ),
                       ranges: <GaugeRange>[
                         GaugeRange(
-                          startValue: -10,
+                          startValue: 0,
                           endValue: provider.tempMin,
                           color: const Color(0xFF94BBE9),
                           startWidth: 0.12,
@@ -363,7 +374,7 @@ class RealtimePage extends StatelessWidget {
                         ),
                         GaugeRange(
                           startValue: provider.tempMax,
-                          endValue: 50,
+                          endValue: 12,
                           color: AppColors.tempRed,
                           startWidth: 0.12,
                           endWidth: 0.12,
@@ -412,7 +423,7 @@ class RealtimePage extends StatelessWidget {
           decoration: BoxDecoration(
             color: AppColors.cardWhite,
             borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-            border: Border.all(color: const Color(0xFFCBD5E1), width: 1.0),
+            border: Border.all(color: AppColors.containerHigh, width: 1.0),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -551,7 +562,7 @@ class RealtimePage extends StatelessWidget {
           color: isSelected ? AppColors.pharmaNavy : AppColors.cardWhite,
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
           border: Border.all(
-            color: isSelected ? AppColors.pharmaNavy : const Color(0xFFCBD5E1),
+            color: isSelected ? AppColors.pharmaNavy : AppColors.containerHigh,
             width: 1.0,
           ),
           boxShadow: isSelected
@@ -690,7 +701,7 @@ class RealtimePage extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.cardWhite,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(color: const Color(0xFFCBD5E1), width: 1.0),
+        border: Border.all(color: AppColors.containerHigh, width: 1.0),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

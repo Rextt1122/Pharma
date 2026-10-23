@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  static const Color background = Color(0xFFF1F5F9);
-  // Brand palette: calm, clinical primary with a high-visibility action color.
-  static const Color pharmaNavy = Color(0xFF2C3E50);
-  static const Color pharmaBlue = Color(0xFFE67E22); // Secondary / action amber.
-  static const Color pharmaTeal = Color(0xFF0D9488);
-  static const Color textDark = Color(0xFF0F172A);
-  static const Color textMuted = Color(0xFF64748B);
-  static const Color cardWhite = Colors.white;
-  static const Color inputBg = Color(0xFFF8FAFC);
-  static const Color containerLow = Color(0xFFE2E8F0);
-  static const Color containerHigh = Color(0xFFCBD5E1);
-  static const Color activeGreen = Color(0xFF10B981);
-  static const Color alertRed = Color(0xFFDC2626);
-  static const Color tempRed = Color(0xFFE87A72);
-  static const Color warningAmber = Color(0xFFF59E0B);
-  static const Color humidityBlue = Color(0xFF4A80A0);
-  static const Color uvPurple = Color(0xFF7C3AED);
+  static const Color background = Color(0xFFF7F4F1);
+  // Warm, calm palette inspired by the provided ClimateSync reference.
+  static const Color pharmaNavy = Color(0xFFB84D40);
+  static const Color pharmaBlue = Color(0xFFCC5848);
+  static const Color pharmaTeal = Color(0xFF56796C);
+  static const Color textDark = Color(0xFF352724);
+  static const Color textMuted = Color(0xFF766763);
+  static const Color cardWhite = Color(0xFFFFFEFC);
+  static const Color inputBg = Color(0xFFF1ECE8);
+  static const Color containerLow = Color(0xFFF0E9E4);
+  static const Color containerHigh = Color(0xFFE2D7D0);
+  static const Color activeGreen = Color(0xFF3D8063);
+  static const Color alertRed = Color(0xFFB83E35);
+  static const Color tempRed = Color(0xFFD66A5D);
+  static const Color warningAmber = Color(0xFFB9782E);
+  static const Color humidityBlue = Color(0xFF547B8A);
+  static const Color uvPurple = Color(0xFF806277);
 }
 
 class AppSpacing {
@@ -28,10 +28,10 @@ class AppSpacing {
   static const double xl = 32.0;
 
   // Unified shape radii:
-  static const double radiusSm = 8.0;   // Inner tags, chips, sub-elements
-  static const double radiusMd = 14.0;  // Buttons, text inputs, metric tiles
-  static const double radiusLg = 20.0;  // All primary cards & containers
-  static const double radiusPill = 999.0; // Clean rounded badges & pills
+  static const double radiusSm = 10.0;  // Small inner controls and tags
+  static const double radiusMd = 18.0;  // Inputs and compact tiles
+  static const double radiusLg = 24.0;  // Primary cards and containers
+  static const double radiusPill = 999.0; // Rounded actions and status chips
 }
 
 class AppTypography {
@@ -49,13 +49,13 @@ class AppTypography {
   );
 
   static const TextStyle body = TextStyle(
-    fontSize: 13.0,
+    fontSize: 14.0,
     fontWeight: FontWeight.normal,
     color: AppColors.textDark,
   );
 
   static const TextStyle caption = TextStyle(
-    fontSize: 11.0,
+    fontSize: 12.0,
     fontWeight: FontWeight.normal,
     color: AppColors.textMuted,
   );

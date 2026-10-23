@@ -39,7 +39,9 @@ class HistoryProvider extends ChangeNotifier {
     try {
       _historyList = await _apiService.fetchSensorHistory();
     } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _errorMessage = e is FormatException
+          ? 'Data riwayat tidak dapat dibaca. Coba muat ulang.'
+          : 'Riwayat belum dapat dimuat. Periksa koneksi, lalu coba lagi.';
     } finally {
       final elapsed = stopwatch.elapsedMilliseconds;
       if (elapsed < 600) {

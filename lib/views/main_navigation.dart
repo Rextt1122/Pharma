@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/sensor_provider.dart';
 import '../theme/app_theme.dart';
-import 'realtime_page.dart';
+import 'climate_dashboard_page.dart';
 import 'model_3d_page.dart';
 import 'history_page.dart';
 import 'settings_page.dart';
@@ -29,7 +29,7 @@ class _MainNavigationState extends State<MainNavigation> {
       context: context,
       backgroundColor: AppColors.background,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppSpacing.radiusLg)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppSpacing.radiusMd)),
       ),
       builder: (context) {
         return Consumer<SensorProvider>(
@@ -120,6 +120,7 @@ class _MainNavigationState extends State<MainNavigation> {
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         titleSpacing: AppSpacing.md,
+        toolbarHeight: 72,
         title: SafeArea(
           bottom: false,
           child: Row(
@@ -150,7 +151,7 @@ class _MainNavigationState extends State<MainNavigation> {
                     ),
                     const SizedBox(height: 2),
                     const Text(
-                      'Smart Pharma Warehouse • 30 Sep 2026',
+                      'Pemantauan rantai dingin',
                       style: AppTypography.caption,
                       overflow: TextOverflow.ellipsis,
                       maxLines: 1,
@@ -212,7 +213,7 @@ class _MainNavigationState extends State<MainNavigation> {
         child: IndexedStack(
           index: _selectedIndex,
           children: [
-            const RealtimePage(),
+            const ClimateDashboardPage(),
             Model3dPage(key: ValueKey('model_3d_view_$_selectedIndex')),
             const HistoryPage(),
             const SettingsPage(),
@@ -228,21 +229,21 @@ class _MainNavigationState extends State<MainNavigation> {
           ),
           decoration: BoxDecoration(
             color: AppColors.cardWhite,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
-            border: Border.all(color: const Color(0xFFE2E8F0), width: 1.0),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            border: Border.all(color: AppColors.containerLow, width: 1.0),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withAlpha(8),
-                blurRadius: 12,
-                offset: const Offset(0, 3),
+                color: AppColors.pharmaNavy.withAlpha(12),
+                blurRadius: 18,
+                offset: const Offset(0, 5),
               ),
             ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
             child: NavigationBarTheme(
               data: NavigationBarThemeData(
-                height: 52,
+                height: 62,
                 labelTextStyle: WidgetStateProperty.resolveWith((states) {
                   final isSelected = states.contains(WidgetState.selected);
                   return TextStyle(
@@ -253,7 +254,7 @@ class _MainNavigationState extends State<MainNavigation> {
                 }),
               ),
               child: NavigationBar(
-                height: 52,
+                height: 62,
                 elevation: 0,
                 selectedIndex: _selectedIndex,
                 onDestinationSelected: (index) {
