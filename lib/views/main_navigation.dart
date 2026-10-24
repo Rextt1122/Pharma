@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/sensor_provider.dart';
+import '../services/update_service.dart';
 import '../theme/app_theme.dart';
 import 'climate_dashboard_page.dart';
 import 'model_3d_page.dart';
@@ -55,6 +56,15 @@ class _MainNavigationState extends State<MainNavigation>
       if (mounted) {
         _timeNotifier.value = DateTime.now();
       }
+    });
+
+    // Check GitHub Releases for in-app OTA update smoothly on launch
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted) {
+          UpdateService.checkAndPromptAutoUpdate(context);
+        }
+      });
     });
   }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../services/storage_service.dart';
+import '../services/update_service.dart';
 import '../providers/sensor_provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shimmer_loading.dart';
@@ -30,6 +31,7 @@ class _SettingsPageState extends State<SettingsPage> {
   String _authProvider = 'Smart Pharma';
   bool _isSaving = false;
   bool _isLoading = true;
+  bool _isCheckingUpdate = false;
 
   @override
   void initState() {
@@ -642,6 +644,98 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                   ),
                 ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md - 2),
+        Container(
+          padding: const EdgeInsets.all(AppSpacing.md + 2),
+          decoration: BoxDecoration(
+            color: AppColors.cardWhite,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            border: Border.all(color: AppColors.containerLow, width: 1.0),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x140E555A),
+                blurRadius: 14,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.sm),
+                decoration: const BoxDecoration(
+                  color: AppColors.containerLow,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.system_update_alt_rounded,
+                  color: AppColors.pharmaNavy,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Pembaruan Aplikasi', style: AppTypography.subtitle),
+                    SizedBox(height: 1),
+                    Text('In-App OTA via GitHub Releases', style: AppTypography.caption),
+                  ],
+                ),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.pharmaNavy,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  minimumSize: const Size(0, 36),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                  ),
+                ),
+                onPressed: _isCheckingUpdate
+                    ? null
+                    : () async {
+                        setState(() => _isCheckingUpdate = true);
+                        final info = await UpdateService.checkForUpdate();
+                        if (!mounted) return;
+                        setState(() => _isCheckingUpdate = false);
+                        if (!context.mounted) return;
+                        if (info.hasUpdate) {
+                          UpdateService.showUpdateDialog(context, info);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Aplikasi sudah versi terbaru (v${info.currentVersion})',
+                              ),
+                              backgroundColor: AppColors.pharmaNavy,
+                            ),
+                          );
+                        }
+                      },
+                child: _isCheckingUpdate
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text(
+                        'Periksa',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
               ),
             ],
           ),
