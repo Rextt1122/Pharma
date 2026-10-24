@@ -199,18 +199,28 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
                     sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 22,
-                      interval: (items.length / 5).clamp(1.0, 50.0),
+                      interval: (items.length <= 4)
+                          ? 1.0
+                          : (items.length / 4).clamp(1.0, 50.0),
                       getTitlesWidget: (value, meta) {
-                        final idx = value.toInt();
+                        final idx = value.round();
                         if (idx >= 0 && idx < items.length) {
+                          // Only show title on integer steps
+                          if ((value - idx).abs() > 0.05) return const SizedBox.shrink();
                           final timeStr = items[idx].waktu ?? '';
                           final parts = timeStr.split(' ');
-                          final displayTime = parts.length > 1 ? parts[1].substring(0, 5) : 'T$idx';
+                          String displayTime = parts.length > 1 ? parts[1] : timeStr;
+                          if (displayTime.length >= 8) {
+                            displayTime = displayTime.substring(0, 8); // HH:mm:ss
+                          } else if (displayTime.length >= 5) {
+                            displayTime = displayTime.substring(0, 5);
+                          }
                           return Text(
                             displayTime,
                             style: const TextStyle(
                               color: AppColors.textMuted,
                               fontSize: 9,
+                              fontWeight: FontWeight.w500,
                             ),
                           );
                         }

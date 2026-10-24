@@ -205,7 +205,7 @@ class HistoryPage extends StatelessWidget {
             Row(
               children: [
                 const Text(
-                  'Riwayat Log Gudang',
+                  'Catatan Terkini',
                   style: AppTypography.subtitle,
                 ),
                 const Spacer(),
@@ -252,20 +252,20 @@ class HistoryPage extends StatelessWidget {
         || item.suhu < minT;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.sm + 2),
-      padding: const EdgeInsets.all(AppSpacing.md),
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
       decoration: BoxDecoration(
         color: AppColors.cardWhite,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         border: Border.all(
-          color: isWarning ? AppColors.alertRed.withAlpha(90) : AppColors.containerLow,
-          width: 1.0,
+          color: isWarning ? AppColors.alertRed.withAlpha(70) : AppColors.containerLow,
+          width: 0.9,
         ),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x100E555A),
-            blurRadius: 10,
-            offset: Offset(0, 3),
+            color: Color(0x0C0E555A),
+            blurRadius: 8,
+            offset: Offset(0, 2),
           ),
         ],
       ),
@@ -277,7 +277,7 @@ class HistoryPage extends StatelessWidget {
               Text(
                 'Log #$logNumber',
                 style: const TextStyle(
-                  fontSize: 13,
+                  fontSize: 12.5,
                   fontWeight: FontWeight.w800,
                   color: AppColors.pharmaNavy,
                 ),
@@ -294,36 +294,52 @@ class HistoryPage extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: (isWarning ? AppColors.alertRed : AppColors.activeGreen).withAlpha(22),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                ),
-                child: Text(
-                  item.status,
+              if (isWarning)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.alertRed.withAlpha(20),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                  ),
+                  child: const Text(
+                    'Peringatan',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.alertRed,
+                    ),
+                  ),
+                )
+              else
+                const Text(
+                  'Aman',
                   style: TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w800,
-                    color: isWarning ? AppColors.alertRed : AppColors.activeGreen,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.activeGreen,
                   ),
                 ),
-              ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           Row(
             children: [
+              // Suhu
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: [
-                    const Text('Suhu', style: TextStyle(fontSize: 10.5, color: AppColors.textMuted)),
-                    const SizedBox(height: 2),
+                    Icon(
+                      Icons.thermostat_rounded,
+                      size: 15,
+                      color: (item.suhu > maxT || item.suhu < minT)
+                          ? AppColors.alertRed
+                          : AppColors.pharmaBlue,
+                    ),
+                    const SizedBox(width: 4),
                     Text(
                       '${item.suhu.toStringAsFixed(1)}°C',
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 13.5,
                         fontWeight: FontWeight.w800,
                         color: (item.suhu > maxT || item.suhu < minT)
                             ? AppColors.alertRed
@@ -333,16 +349,16 @@ class HistoryPage extends StatelessWidget {
                   ],
                 ),
               ),
+              // Kelembapan
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: [
-                    const Text('Kelembapan', style: TextStyle(fontSize: 10.5, color: AppColors.textMuted)),
-                    const SizedBox(height: 2),
+                    const Icon(Icons.water_drop_outlined, size: 15, color: AppColors.humidityBlue),
+                    const SizedBox(width: 4),
                     Text(
                       '${item.kelembapan.toStringAsFixed(0)}%',
                       style: const TextStyle(
-                        fontSize: 16,
+                        fontSize: 13.5,
                         fontWeight: FontWeight.w800,
                         color: AppColors.textDark,
                       ),
@@ -350,16 +366,20 @@ class HistoryPage extends StatelessWidget {
                   ],
                 ),
               ),
+              // Kadar Gas
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: [
-                    const Text('Kadar Gas', style: TextStyle(fontSize: 10.5, color: AppColors.textMuted)),
-                    const SizedBox(height: 2),
+                    Icon(
+                      Icons.co2_outlined,
+                      size: 15,
+                      color: item.kadarGas > sensorProvider.gasMax ? AppColors.alertRed : AppColors.textMuted,
+                    ),
+                    const SizedBox(width: 4),
                     Text(
                       '${item.kadarGas.toStringAsFixed(0)} PPM',
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 13.5,
                         fontWeight: FontWeight.w800,
                         color: item.kadarGas > sensorProvider.gasMax ? AppColors.alertRed : AppColors.textDark,
                       ),
@@ -369,36 +389,34 @@ class HistoryPage extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          const Divider(height: 1, color: AppColors.containerLow),
           const SizedBox(height: 6),
           Row(
             children: [
               Icon(
                 item.isPintuTerbuka ? Icons.door_sliding_outlined : Icons.lock_outline,
-                size: 13,
+                size: 12.5,
                 color: item.isPintuTerbuka ? AppColors.alertRed : AppColors.activeGreen,
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: 3.5),
               Text(
-                'Pintu: ${item.isPintuTerbuka ? "Terbuka" : "Tertutup"}',
+                item.isPintuTerbuka ? "Pintu Terbuka" : "Pintu Tertutup",
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: 10.5,
                   fontWeight: FontWeight.w600,
-                  color: item.isPintuTerbuka ? AppColors.alertRed : AppColors.textDark,
+                  color: item.isPintuTerbuka ? AppColors.alertRed : AppColors.textMuted,
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 14),
               Icon(
                 Icons.cleaning_services_outlined,
-                size: 13,
+                size: 12.5,
                 color: item.isUvMenyala ? AppColors.uvPurple : AppColors.textMuted,
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: 3.5),
               Text(
-                'UV: ${item.isUvMenyala ? "Menyala" : "Mati"}',
+                item.isUvMenyala ? "UV Aktif" : "UV Siaga",
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: 10.5,
                   fontWeight: FontWeight.w600,
                   color: item.isUvMenyala ? AppColors.uvPurple : AppColors.textMuted,
                 ),
