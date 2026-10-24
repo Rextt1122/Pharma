@@ -271,9 +271,16 @@ class _Model3dPageState extends State<Model3dPage> {
             Container(
               height: 400,
               decoration: BoxDecoration(
-                color: const Color(0xFFDFECE9),
+                color: const Color(0xFF1E293B),
                 borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                border: Border.all(color: AppColors.pharmaNavy, width: 1.0),
+                border: Border.all(color: AppColors.containerLow, width: 1.0),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x180E555A),
+                    blurRadius: 16,
+                    offset: Offset(0, 4),
+                  ),
+                ],
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -290,7 +297,10 @@ class _Model3dPageState extends State<Model3dPage> {
                         cameraOrbit: _getCameraOrbit(),
                         cameraTarget: _getCameraTarget(),
                         fieldOfView: '20deg',
-                        backgroundColor: const Color(0xFFDFECE9),
+                        shadowIntensity: 1.2,
+                        shadowSoftness: 0.8,
+                        exposure: 1.05,
+                        backgroundColor: const Color(0xFF1E293B),
                       )
                     else
                       CustomPaint(
