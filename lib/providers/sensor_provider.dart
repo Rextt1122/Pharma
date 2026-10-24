@@ -78,6 +78,15 @@ class SensorProvider extends ChangeNotifier {
   double get humidityMax => _humidityMax;
   double get gasMax => _gasMax;
 
+  // Context-aware zone thresholds
+  bool get isVaccineRack => _selectedDeviceId == 'device_1';
+  double get currentTempMin => isVaccineRack ? _tempMin : 15.0;
+  double get currentTempMax => isVaccineRack ? _tempMax : 25.0;
+  double get currentHumidityMin => isVaccineRack ? _humidityMin : 45.0;
+  double get currentHumidityMax => isVaccineRack ? _humidityMax : 60.0;
+  String get currentZoneName =>
+      isVaccineRack ? 'Rak Vaksin (Cold Storage)' : 'Ruang Steril (Cleanroom)';
+
   SensorProvider() {
     _initThresholds();
     _initMqtt();
@@ -187,10 +196,16 @@ class SensorProvider extends ChangeNotifier {
   }
 
   void _checkAndAddNotifications(SensorModel data) {
+    final double minT = data.deviceId == 'device_2' ? 15.0 : _tempMin;
+    final double maxT = data.deviceId == 'device_2' ? 25.0 : _tempMax;
+    final double minH = data.deviceId == 'device_2' ? 45.0 : _humidityMin;
+    final double maxH = data.deviceId == 'device_2' ? 60.0 : _humidityMax;
+    final String zoneLabel = data.deviceId == 'device_2' ? 'Ruang Steril' : 'Rak Vaksin';
+
     if (data.kadarGas > _gasMax) {
       _addNotificationOnce(
         id: 'gas_alert',
-        title: 'Peringatan Gas / Asap',
+        title: 'Peringatan Gas / Asap ($zoneLabel)',
         message: 'Kadar gas tinggi terdeteksi: ${data.kadarGas.toStringAsFixed(1)} PPM',
         isCritical: true,
       );
@@ -198,24 +213,24 @@ class SensorProvider extends ChangeNotifier {
     if (data.isPintuTerbuka) {
       _addNotificationOnce(
         id: 'door_alert',
-        title: 'Pintu Gudang Terbuka',
-        message: 'Pintu gudang dalam keadaan terbuka!',
+        title: 'Pintu $zoneLabel Terbuka',
+        message: 'Pintu $zoneLabel dalam keadaan terbuka!',
         isCritical: false,
       );
     }
-    if (data.suhu < _tempMin || data.suhu > _tempMax) {
+    if (data.suhu < minT || data.suhu > maxT) {
       _addNotificationOnce(
-        id: 'temp_alert',
-        title: 'Suhu Tidak Normal',
-        message: 'Suhu terima ${data.suhu.toStringAsFixed(1)}°C (Batas: ${_tempMin.toStringAsFixed(1)}°C - ${_tempMax.toStringAsFixed(1)}°C)',
+        id: 'temp_alert_${data.deviceId}',
+        title: 'Suhu Tidak Normal ($zoneLabel)',
+        message: 'Suhu terima ${data.suhu.toStringAsFixed(1)}°C (Batas: ${minT.toStringAsFixed(1)}°C - ${maxT.toStringAsFixed(1)}°C)',
         isCritical: false,
       );
     }
-    if (data.kelembapan < _humidityMin || data.kelembapan > _humidityMax) {
+    if (data.kelembapan < minH || data.kelembapan > maxH) {
       _addNotificationOnce(
-        id: 'humidity_alert',
-        title: 'Kelembapan Tidak Normal',
-        message: 'Kelembapan terima ${data.kelembapan.toStringAsFixed(1)}% (Batas: ${_humidityMin.toStringAsFixed(1)}% - ${_humidityMax.toStringAsFixed(1)}%)',
+        id: 'humidity_alert_${data.deviceId}',
+        title: 'Kelembapan Tidak Normal ($zoneLabel)',
+        message: 'Kelembapan terima ${data.kelembapan.toStringAsFixed(1)}% (Batas: ${minH.toStringAsFixed(1)}% - ${maxH.toStringAsFixed(1)}%)',
         isCritical: false,
       );
     }

@@ -33,25 +33,34 @@ class ClimateDashboardPage extends StatelessWidget {
       );
 
   Widget _dashboard(SensorProvider p, SensorModel s) {
-    final tempOk = s.suhu >= p.tempMin && s.suhu <= p.tempMax;
-    final humOk = s.kelembapan >= p.humidityMin && s.kelembapan <= p.humidityMax;
+    final targetMin = p.currentTempMin;
+    final targetMax = p.currentTempMax;
+    final humMin = p.currentHumidityMin;
+    final humMax = p.currentHumidityMax;
+
+    final tempOk = s.suhu >= targetMin && s.suhu <= targetMax;
+    final humOk = s.kelembapan >= humMin && s.kelembapan <= humMax;
     final safe = tempOk && humOk && !s.isGasBahaya && !s.isPintuTerbuka;
+
     return ListView(
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.lg),
       children: [
         _selector(p),
         const SizedBox(height: AppSpacing.md),
-        _insight(safe, s, p),
+        _insight(safe, s, p, targetMin, targetMax),
         const SizedBox(height: AppSpacing.md),
-        _protectionCard(s),
+        _protectionCard(s, p),
         const SizedBox(height: AppSpacing.lg),
-        const Text('KONDISI RUANGAN', style: _section),
+        Text(
+          p.isVaccineRack ? 'KONDISI RAK VAKSIN' : 'KONDISI RUANG STERIL',
+          style: _section,
+        ),
         const SizedBox(height: AppSpacing.sm),
         Row(children: [
-          Expanded(child: _metric(Icons.thermostat_rounded, 'Suhu saat ini', '${s.suhu.toStringAsFixed(1)}°C', 'Target ${p.tempMin.toStringAsFixed(0)}-${p.tempMax.toStringAsFixed(0)}°C', tempOk ? AppColors.pharmaBlue : AppColors.alertRed)),
+          Expanded(child: _metric(Icons.thermostat_rounded, 'Suhu saat ini', '${s.suhu.toStringAsFixed(1)}°C', 'Target ${targetMin.toStringAsFixed(0)}-${targetMax.toStringAsFixed(0)}°C', tempOk ? AppColors.pharmaBlue : AppColors.alertRed)),
           const SizedBox(width: AppSpacing.sm),
-          Expanded(child: _metric(Icons.water_drop_outlined, 'Kelembapan', '${s.kelembapan.toStringAsFixed(0)}%', 'Target ${p.humidityMin.toStringAsFixed(0)}-${p.humidityMax.toStringAsFixed(0)}%', humOk ? AppColors.humidityBlue : AppColors.alertRed)),
+          Expanded(child: _metric(Icons.water_drop_outlined, 'Kelembapan', '${s.kelembapan.toStringAsFixed(0)}%', 'Target ${humMin.toStringAsFixed(0)}-${humMax.toStringAsFixed(0)}%', humOk ? AppColors.humidityBlue : AppColors.alertRed)),
         ]),
         const SizedBox(height: AppSpacing.sm),
         Row(children: [
@@ -60,7 +69,7 @@ class ClimateDashboardPage extends StatelessWidget {
           Expanded(child: _metric(Icons.co2_outlined, 'Gas dan asap', '${s.kadarGas.toStringAsFixed(0)} PPM', 'Batas ${p.gasMax.toStringAsFixed(0)} PPM', s.isGasBahaya ? AppColors.alertRed : AppColors.activeGreen)),
         ]),
         const SizedBox(height: AppSpacing.md),
-        _temperatureGauge(s, p, tempOk),
+        _temperatureGauge(s, p, tempOk, targetMin, targetMax),
         const SizedBox(height: AppSpacing.lg),
         const Text('AUTOMASI CEPAT', style: _section),
         const SizedBox(height: AppSpacing.sm),
@@ -81,37 +90,115 @@ class ClimateDashboardPage extends StatelessWidget {
           boxShadow: _cardShadow,
         ),
         child: Row(children: [
-          _tab('Rak Vaksin', p.selectedDeviceId == 'device_1', () => p.selectDevice('device_1')),
-          _tab('Ruang Steril', p.selectedDeviceId == 'device_2', () => p.selectDevice('device_2')),
+          _tab('Rak Vaksin', '2°C – 8°C', p.isVaccineRack, () => p.selectDevice('device_1')),
+          _tab('Ruang Steril', '15°C – 25°C', !p.isVaccineRack, () => p.selectDevice('device_2')),
         ]),
       );
 
-  Widget _tab(String label, bool on, VoidCallback tap) => Expanded(child: InkWell(onTap: tap, borderRadius: BorderRadius.circular(AppSpacing.radiusSm), child: AnimatedContainer(duration: const Duration(milliseconds: 180), height: 42, alignment: Alignment.center, decoration: BoxDecoration(color: on ? AppColors.pharmaNavy : Colors.transparent, borderRadius: BorderRadius.circular(AppSpacing.radiusSm)), child: Text(label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: on ? Colors.white : AppColors.textMuted)))));
-
-  Widget _insight(bool safe, SensorModel s, SensorProvider p) => Container(
-        padding: const EdgeInsets.all(AppSpacing.md + 4),
-        decoration: BoxDecoration(
-          color: AppColors.cardWhite,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          boxShadow: _cardShadow,
+  Widget _tab(String label, String subtitle, bool on, VoidCallback tap) => Expanded(
+        child: InkWell(
+          onTap: tap,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: on ? AppColors.pharmaNavy : Colors.transparent,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: on ? Colors.white : AppColors.textDark,
+                  ),
+                ),
+                const SizedBox(height: 1),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: on ? Colors.white.withAlpha(210) : AppColors.textMuted,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('RINGKASAN SAAT INI', style: _section),
-          const SizedBox(height: AppSpacing.sm),
-          Text(safe ? 'Suhu penyimpanan vaksin aman.' : 'Perlu pemeriksaan kondisi gudang.', style: const TextStyle(fontSize: 21, height: 1.2, fontWeight: FontWeight.w800, color: AppColors.pharmaNavy)),
-          const SizedBox(height: AppSpacing.md),
-          Row(children: [
-            Expanded(child: _smallStat('Batas suhu', '${p.tempMin.toStringAsFixed(0)}-${p.tempMax.toStringAsFixed(0)}°C')),
-            Container(height: 30, width: 1, color: AppColors.containerHigh),
-            Expanded(child: _smallStat('Status pintu', s.isPintuTerbuka ? 'Terbuka' : 'Tertutup')),
-          ]),
-        ]),
       );
+
+  Widget _insight(bool safe, SensorModel s, SensorProvider p, double targetMin, double targetMax) {
+    final safeText = p.isVaccineRack
+        ? 'Suhu penyimpanan vaksin aman.'
+        : 'Kondisi ruang steril optimal.';
+    final alertText = p.isVaccineRack
+        ? 'Suhu vaksin di luar batas ${targetMin.toStringAsFixed(0)}-${targetMax.toStringAsFixed(0)}°C.'
+        : 'Suhu ruang steril di luar batas ${targetMin.toStringAsFixed(0)}-${targetMax.toStringAsFixed(0)}°C.';
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md + 4),
+      decoration: BoxDecoration(
+        color: AppColors.cardWhite,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        boxShadow: _cardShadow,
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text('RINGKASAN SAAT INI', style: _section),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: (safe ? AppColors.activeGreen : AppColors.alertRed).withAlpha(24),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+              ),
+              child: Text(
+                p.isVaccineRack ? 'COLD STORAGE' : 'CLEANROOM',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  color: safe ? AppColors.activeGreen : AppColors.alertRed,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Text(
+          safe ? safeText : alertText,
+          style: TextStyle(
+            fontSize: 20,
+            height: 1.2,
+            fontWeight: FontWeight.w800,
+            color: safe ? AppColors.pharmaNavy : AppColors.alertRed,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Row(children: [
+          Expanded(child: _smallStat('Target suhu', '${targetMin.toStringAsFixed(0)}-${targetMax.toStringAsFixed(0)}°C')),
+          Container(height: 30, width: 1, color: AppColors.containerHigh),
+          Expanded(child: _smallStat('Status pintu', s.isPintuTerbuka ? 'Terbuka' : 'Tertutup')),
+        ]),
+      ]),
+    );
+  }
 
   Widget _smallStat(String a, String b) => Padding(padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(a, style: AppTypography.caption), const SizedBox(height: 3), Text(b, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.textDark))]));
 
-  Widget _protectionCard(SensorModel s) {
+  Widget _protectionCard(SensorModel s, SensorProvider p) {
     final danger = s.isGasBahaya;
+    final isVaccine = p.isVaccineRack;
+    final infoText = isVaccine
+        ? 'Chiller, sensor rantai dingin, dan notifikasi siaga.'
+        : 'Sistem UV-C sterilisasi, sensor gas, dan alarm siaga.';
+
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md + 4),
       decoration: BoxDecoration(
@@ -131,7 +218,7 @@ class ClimateDashboardPage extends StatelessWidget {
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(danger ? 'Gas atau asap terdeteksi' : 'Sistem perlindungan aktif', style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w800)),
           const SizedBox(height: 3),
-          Text(danger ? 'Periksa ventilasi dan sumber asap.' : 'Sensor, alarm, dan notifikasi siap merespons.', style: TextStyle(color: Colors.white.withAlpha(220), fontSize: 12)),
+          Text(danger ? 'Periksa ventilasi dan sumber asap.' : infoText, style: TextStyle(color: Colors.white.withAlpha(220), fontSize: 12)),
         ])),
       ]),
     );
@@ -155,42 +242,65 @@ class ClimateDashboardPage extends StatelessWidget {
         ]),
       );
 
-  Widget _temperatureGauge(SensorModel s, SensorProvider p, bool safe) => Container(
-        padding: const EdgeInsets.fromLTRB(AppSpacing.md + 4, AppSpacing.md, AppSpacing.md + 4, AppSpacing.md + 4),
-        decoration: BoxDecoration(
-          color: AppColors.cardWhite,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          boxShadow: _cardShadow,
+  Widget _temperatureGauge(SensorModel s, SensorProvider p, bool safe, double targetMin, double targetMax) {
+    final double gaugeMin = p.isVaccineRack ? 0.0 : 10.0;
+    final double gaugeMax = p.isVaccineRack ? 12.0 : 35.0;
+    final double interval = p.isVaccineRack ? 2.0 : 5.0;
+
+    final targetDesc = p.isVaccineRack
+        ? (safe ? 'Suhu berada dalam batas aman vaksin (2-8°C).' : 'Suhu di luar batas aman vaksin (2-8°C)!')
+        : (safe ? 'Suhu berada dalam batas aman ruang steril (15-25°C).' : 'Suhu di luar batas aman ruang steril (15-25°C)!');
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(AppSpacing.md + 4, AppSpacing.md, AppSpacing.md + 4, AppSpacing.md + 4),
+      decoration: BoxDecoration(
+        color: AppColors.cardWhite,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        boxShadow: _cardShadow,
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text('STABILITAS SUHU', style: _section),
+            Text(
+              '${targetMin.toStringAsFixed(0)}°C – ${targetMax.toStringAsFixed(0)}°C',
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textMuted,
+              ),
+            ),
+          ],
         ),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('STABILITAS SUHU', style: _section),
-          SizedBox(
-            height: 150,
-            child: RepaintBoundary(
-              child: SfRadialGauge(axes: [
+        SizedBox(
+          height: 150,
+          child: RepaintBoundary(
+            child: SfRadialGauge(axes: [
               RadialAxis(
-                minimum: 0,
-                maximum: 12,
-                interval: 2,
+                minimum: gaugeMin,
+                maximum: gaugeMax,
+                interval: interval,
                 startAngle: 180,
                 endAngle: 0,
                 showTicks: false,
                 showLabels: true,
                 axisLineStyle: const AxisLineStyle(thickness: 0.14, thicknessUnit: GaugeSizeUnit.factor, color: AppColors.containerLow),
                 ranges: [
-                  GaugeRange(startValue: 0, endValue: p.tempMin, color: const Color(0xFF8CC0D8), startWidth: 0.14, endWidth: 0.14, sizeUnit: GaugeSizeUnit.factor),
-                  GaugeRange(startValue: p.tempMin, endValue: p.tempMax, color: AppColors.pharmaTeal, startWidth: 0.14, endWidth: 0.14, sizeUnit: GaugeSizeUnit.factor),
-                  GaugeRange(startValue: p.tempMax, endValue: 12, color: AppColors.tempRed, startWidth: 0.14, endWidth: 0.14, sizeUnit: GaugeSizeUnit.factor),
+                  GaugeRange(startValue: gaugeMin, endValue: targetMin, color: const Color(0xFF8CC0D8), startWidth: 0.14, endWidth: 0.14, sizeUnit: GaugeSizeUnit.factor),
+                  GaugeRange(startValue: targetMin, endValue: targetMax, color: AppColors.pharmaTeal, startWidth: 0.14, endWidth: 0.14, sizeUnit: GaugeSizeUnit.factor),
+                  GaugeRange(startValue: targetMax, endValue: gaugeMax, color: AppColors.tempRed, startWidth: 0.14, endWidth: 0.14, sizeUnit: GaugeSizeUnit.factor),
                 ],
                 pointers: [NeedlePointer(value: s.suhu, needleColor: AppColors.pharmaNavy, knobStyle: const KnobStyle(color: AppColors.pharmaNavy, borderColor: Colors.white, borderWidth: 0.05))],
                 annotations: [GaugeAnnotation(widget: Text('${s.suhu.toStringAsFixed(1)}°C', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 22, color: AppColors.pharmaNavy)), angle: 90, positionFactor: 0.58)],
               ),
             ]),
-            ),
           ),
-          Center(child: Text(safe ? 'Suhu berada dalam batas penyimpanan vaksin.' : 'Suhu di luar batas penyimpanan.', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: safe ? AppColors.activeGreen : AppColors.alertRed))),
-        ]),
-      );
+        ),
+        Center(child: Text(targetDesc, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: safe ? AppColors.activeGreen : AppColors.alertRed))),
+      ]),
+    );
+  }
 
   Widget _automation(IconData icon, String title, String sub, bool on, Color color, VoidCallback tap) => InkWell(
         onTap: tap,
