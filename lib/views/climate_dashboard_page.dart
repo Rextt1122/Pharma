@@ -198,11 +198,10 @@ class ClimateDashboardPage extends StatelessWidget {
   Widget _temperatureGauge(SensorModel s, SensorProvider p, bool safe, double targetMin, double targetMax) {
     final double gaugeMin = p.isVaccineRack ? 0.0 : 10.0;
     final double gaugeMax = p.isVaccineRack ? 12.0 : 35.0;
-    final double interval = p.isVaccineRack ? 2.0 : 5.0;
 
     final targetDesc = p.isVaccineRack
-        ? (safe ? 'Suhu berada dalam batas aman vaksin (2-8°C).' : 'Suhu di luar batas aman vaksin (2-8°C)!')
-        : (safe ? 'Suhu berada dalam batas aman ruang steril (15-25°C).' : 'Suhu di luar batas aman ruang steril (15-25°C)!');
+        ? (safe ? 'Suhu penyimpanan vaksin dalam batas aman' : 'Peringatan: Suhu vaksin di luar rentang aman!')
+        : (safe ? 'Kondisi suhu ruang steril optimal' : 'Peringatan: Suhu ruang steril di luar batas!');
 
     return Container(
       padding: const EdgeInsets.fromLTRB(AppSpacing.md + 4, AppSpacing.md, AppSpacing.md + 4, AppSpacing.md + 4),
@@ -216,41 +215,169 @@ class ClimateDashboardPage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const Text('STABILITAS SUHU', style: _section),
-            Text(
-              '${targetMin.toStringAsFixed(0)}°C – ${targetMax.toStringAsFixed(0)}°C',
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textMuted,
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: AppColors.inputBg,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                border: Border.all(color: AppColors.containerLow, width: 0.8),
+              ),
+              child: Text(
+                'Target ${targetMin.toStringAsFixed(0)}°C – ${targetMax.toStringAsFixed(0)}°C',
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.pharmaNavy,
+                ),
               ),
             ),
           ],
         ),
+        const SizedBox(height: 10),
         SizedBox(
-          height: 150,
+          height: 160,
           child: RepaintBoundary(
-            child: SfRadialGauge(axes: [
-              RadialAxis(
-                minimum: gaugeMin,
-                maximum: gaugeMax,
-                interval: interval,
-                startAngle: 180,
-                endAngle: 0,
-                showTicks: false,
-                showLabels: true,
-                axisLineStyle: const AxisLineStyle(thickness: 0.14, thicknessUnit: GaugeSizeUnit.factor, color: AppColors.containerLow),
-                ranges: [
-                  GaugeRange(startValue: gaugeMin, endValue: targetMin, color: const Color(0xFF8CC0D8), startWidth: 0.14, endWidth: 0.14, sizeUnit: GaugeSizeUnit.factor),
-                  GaugeRange(startValue: targetMin, endValue: targetMax, color: AppColors.pharmaTeal, startWidth: 0.14, endWidth: 0.14, sizeUnit: GaugeSizeUnit.factor),
-                  GaugeRange(startValue: targetMax, endValue: gaugeMax, color: AppColors.tempRed, startWidth: 0.14, endWidth: 0.14, sizeUnit: GaugeSizeUnit.factor),
-                ],
-                pointers: [NeedlePointer(value: s.suhu, needleColor: AppColors.pharmaNavy, knobStyle: const KnobStyle(color: AppColors.pharmaNavy, borderColor: Colors.white, borderWidth: 0.05))],
-                annotations: [GaugeAnnotation(widget: Text('${s.suhu.toStringAsFixed(1)}°C', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 22, color: AppColors.pharmaNavy)), angle: 90, positionFactor: 0.58)],
-              ),
-            ]),
+            child: SfRadialGauge(
+              axes: [
+                RadialAxis(
+                  minimum: gaugeMin,
+                  maximum: gaugeMax,
+                  startAngle: 170,
+                  endAngle: 10,
+                  showTicks: false,
+                  showLabels: false,
+                  radiusFactor: 0.95,
+                  axisLineStyle: const AxisLineStyle(
+                    thickness: 14,
+                    cornerStyle: CornerStyle.bothCurve,
+                    color: AppColors.containerLow,
+                  ),
+                  ranges: [
+                    // Target safe zone subtle highlight
+                    GaugeRange(
+                      startValue: targetMin,
+                      endValue: targetMax,
+                      color: AppColors.activeGreen.withAlpha(50),
+                      startWidth: 14,
+                      endWidth: 14,
+                      sizeUnit: GaugeSizeUnit.logicalPixel,
+                    ),
+                  ],
+                  pointers: [
+                    // Modern gradient active range fill
+                    RangePointer(
+                      value: s.suhu.clamp(gaugeMin, gaugeMax),
+                      width: 14,
+                      sizeUnit: GaugeSizeUnit.logicalPixel,
+                      cornerStyle: CornerStyle.bothCurve,
+                      color: safe ? AppColors.pharmaNavy : AppColors.alertRed,
+                      gradient: safe
+                          ? const SweepGradient(
+                              colors: [AppColors.pharmaTeal, AppColors.pharmaNavy],
+                            )
+                          : null,
+                    ),
+                    // Elegant circular knob at current value
+                    MarkerPointer(
+                      value: s.suhu.clamp(gaugeMin, gaugeMax),
+                      markerType: MarkerType.circle,
+                      color: Colors.white,
+                      borderColor: safe ? AppColors.pharmaNavy : AppColors.alertRed,
+                      borderWidth: 3.5,
+                      markerWidth: 20,
+                      markerHeight: 20,
+                    ),
+                  ],
+                  annotations: [
+                    GaugeAnnotation(
+                      angle: 90,
+                      positionFactor: 0.22,
+                      widget: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                s.suhu.toStringAsFixed(1),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 34,
+                                  height: 1.0,
+                                  letterSpacing: -1,
+                                  color: AppColors.pharmaNavy,
+                                ),
+                              ),
+                              const SizedBox(width: 2),
+                              const Text(
+                                '°C',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 16,
+                                  color: AppColors.pharmaTeal,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: (safe ? AppColors.activeGreen : AppColors.alertRed).withAlpha(22),
+                              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 6,
+                                  height: 6,
+                                  decoration: BoxDecoration(
+                                    color: safe ? AppColors.activeGreen : AppColors.alertRed,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(width: 5),
+                                Text(
+                                  safe ? 'Suhu Optimal' : 'Suhu Anomali',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w800,
+                                    color: safe ? AppColors.activeGreen : AppColors.alertRed,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
-        Center(child: Text(targetDesc, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: safe ? AppColors.activeGreen : AppColors.alertRed))),
+        const SizedBox(height: 4),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('${gaugeMin.toStringAsFixed(0)}°C', style: AppTypography.caption),
+              Text(
+                targetDesc,
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
+                  color: safe ? AppColors.pharmaNavy.withAlpha(200) : AppColors.alertRed,
+                ),
+              ),
+              Text('${gaugeMax.toStringAsFixed(0)}°C', style: AppTypography.caption),
+            ],
+          ),
+        ),
       ]),
     );
   }
