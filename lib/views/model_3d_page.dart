@@ -271,7 +271,7 @@ class _Model3dPageState extends State<Model3dPage> {
             Container(
               height: 400,
               decoration: BoxDecoration(
-                color: const Color(0xFF1E293B),
+                color: const Color(0xFF263238),
                 borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 border: Border.all(color: AppColors.containerLow, width: 1.0),
                 boxShadow: const [
@@ -297,10 +297,7 @@ class _Model3dPageState extends State<Model3dPage> {
                         cameraOrbit: _getCameraOrbit(),
                         cameraTarget: _getCameraTarget(),
                         fieldOfView: '20deg',
-                        shadowIntensity: 1.2,
-                        shadowSoftness: 0.8,
-                        exposure: 1.05,
-                        backgroundColor: const Color(0xFF1E293B),
+                        backgroundColor: const Color(0xFF263238),
                       )
                     else
                       CustomPaint(
