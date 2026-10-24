@@ -391,26 +391,27 @@ class _MainNavigationState extends State<MainNavigation>
               AppSpacing.md,
               0,
               AppSpacing.md,
-              8,
+              10,
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+            padding: const EdgeInsets.all(5),
             decoration: BoxDecoration(
-              color: AppColors.pharmaNavy,
+              color: AppColors.cardWhite,
               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-              boxShadow: [
+              border: Border.all(color: AppColors.containerLow, width: 1.0),
+              boxShadow: const [
                 BoxShadow(
-                  color: AppColors.pharmaNavy.withAlpha(50),
-                  blurRadius: 18,
-                  offset: const Offset(0, 6),
+                  color: Color(0x140E555A),
+                  blurRadius: 16,
+                  offset: Offset(0, 4),
                 ),
               ],
             ),
             child: Row(
               children: [
-                _buildModernNavItem(0, Icons.sensors_outlined, Icons.sensors, 'Realtime'),
-                _buildModernNavItem(1, Icons.view_in_ar_outlined, Icons.view_in_ar, 'Model 3D'),
-                _buildModernNavItem(2, Icons.show_chart_outlined, Icons.show_chart, 'Riwayat'),
-                _buildModernNavItem(3, Icons.settings_outlined, Icons.settings, 'Pengaturan'),
+                _buildModernNavItem(0, Icons.sensors_outlined, Icons.sensors_rounded, 'Realtime'),
+                _buildModernNavItem(1, Icons.view_in_ar_outlined, Icons.view_in_ar_rounded, 'Model 3D'),
+                _buildModernNavItem(2, Icons.show_chart_rounded, Icons.show_chart_rounded, 'Riwayat'),
+                _buildModernNavItem(3, Icons.settings_outlined, Icons.settings_rounded, 'Pengaturan'),
               ],
             ),
           ),
@@ -438,21 +439,21 @@ class _MainNavigationState extends State<MainNavigation>
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 220),
           curve: Curves.easeOutCubic,
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.symmetric(vertical: 7),
           decoration: BoxDecoration(
-            color: isSelected ? Colors.white.withAlpha(28) : Colors.transparent,
+            color: isSelected ? AppColors.pharmaNavy : Colors.transparent,
             borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               AnimatedScale(
-                scale: isSelected ? 1.08 : 0.95,
+                scale: isSelected ? 1.05 : 0.95,
                 duration: const Duration(milliseconds: 200),
                 child: Icon(
                   isSelected ? selectedIcon : unselectedIcon,
                   size: 20,
-                  color: isSelected ? Colors.white : Colors.white.withAlpha(140),
+                  color: isSelected ? Colors.white : AppColors.textMuted,
                 ),
               ),
               const SizedBox(height: 3),
@@ -460,8 +461,8 @@ class _MainNavigationState extends State<MainNavigation>
                 duration: const Duration(milliseconds: 200),
                 style: TextStyle(
                   fontSize: 10.5,
-                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
-                  color: isSelected ? Colors.white : Colors.white.withAlpha(140),
+                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                  color: isSelected ? Colors.white : AppColors.textMuted,
                 ),
                 child: Text(label),
               ),
