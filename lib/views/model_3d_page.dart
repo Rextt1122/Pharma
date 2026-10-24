@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:model_viewer_plus/model_viewer_plus.dart';
 import 'package:provider/provider.dart';
@@ -283,9 +282,7 @@ class _Model3dPageState extends State<Model3dPage> {
                     if (_is3dModel)
                       ModelViewer(
                         key: ValueKey('3d-model-$_selectedView-$_selectedZone-$_autoRotate'),
-                        src: kIsWeb
-                            ? 'assets/assets/models/gudang_3d.glb'
-                            : 'assets/models/gudang_3d.glb',
+                        src: 'assets/models/gudang_3d.glb',
                         alt: 'Digital Twin Miniatur Gudang Farmasi 3D',
                         autoRotate: _autoRotate,
                         autoRotateDelay: 2000,
