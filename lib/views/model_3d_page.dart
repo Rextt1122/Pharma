@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:model_viewer_plus/model_viewer_plus.dart';
 import 'package:provider/provider.dart';
@@ -282,7 +283,9 @@ class _Model3dPageState extends State<Model3dPage> {
                     if (_is3dModel)
                       ModelViewer(
                         key: ValueKey('3d-model-$_selectedView-$_selectedZone-$_autoRotate'),
-                        src: 'assets/models/gudang_3d.glb',
+                        src: kIsWeb
+                            ? 'assets/assets/models/gudang_3d.glb'
+                            : 'assets/models/gudang_3d.glb',
                         alt: 'Digital Twin Miniatur Gudang Farmasi 3D',
                         autoRotate: _autoRotate,
                         autoRotateDelay: 2000,
@@ -307,6 +310,37 @@ class _Model3dPageState extends State<Model3dPage> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          GestureDetector(
+                            onTap: () => setState(() => _is3dModel = !_is3dModel),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withAlpha(160),
+                                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                                border: Border.all(color: Colors.white24, width: 0.8),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    _is3dModel ? Icons.threed_rotation : Icons.layers_outlined,
+                                    color: Colors.white,
+                                    size: 13,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    _is3dModel ? 'Mode: 3D GLB' : 'Mode: 2D Digital Twin',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
                           if (_is3dModel) ...[
                             GestureDetector(
                               onTap: () => setState(() => _autoRotate = !_autoRotate),
