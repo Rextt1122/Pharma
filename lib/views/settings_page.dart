@@ -45,17 +45,26 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _loadSettings() async {
-    setState(() => _isLoading = true);
-    final ip = await _storageService.getServerIp();
-    final thresholds = await _storageService.getThresholds();
-    final profile = await _storageService.getUserProfile();
-    final isBioEnabled = await _storageService.isBiometricEnabled();
-    final isBioSupported = await _biometricService.isDeviceSupported();
+    try {
+      final results = await Future.wait([
+        _storageService.getServerIp(),
+        _storageService.getThresholds(),
+        _storageService.getUserProfile(),
+        _storageService.isBiometricEnabled(),
+        _biometricService.isDeviceSupported().timeout(
+          const Duration(milliseconds: 500),
+          onTimeout: () => false,
+        ),
+      ]);
 
-    // Smooth skeleton duration so the shimmer is visible and fluid
-    await Future.delayed(const Duration(milliseconds: 600));
+      if (!mounted) return;
 
-    if (mounted) {
+      final ip = results[0] as String;
+      final thresholds = results[1] as Map<String, double>;
+      final profile = results[2] as Map<String, String>;
+      final isBioEnabled = results[3] as bool;
+      final isBioSupported = results[4] as bool;
+
       setState(() {
         _ipController.text = ip;
         _userName = profile['name'] ?? 'Fabian (Admin Farmasi)';
@@ -79,6 +88,10 @@ class _SettingsPageState extends State<SettingsPage> {
         );
         _isLoading = false;
       });
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 

@@ -50,29 +50,20 @@ class ClimateDashboardPage extends StatelessWidget {
         const SizedBox(height: AppSpacing.md),
         _insight(safe, s, p, targetMin, targetMax),
         const SizedBox(height: AppSpacing.md),
-        _protectionCard(s, p),
-        const SizedBox(height: AppSpacing.lg),
-        Text(
-          p.isVaccineRack ? 'KONDISI RAK VAKSIN' : 'KONDISI RUANG STERIL',
-          style: _section,
-        ),
-        const SizedBox(height: AppSpacing.sm),
         Row(children: [
-          Expanded(child: _metric(Icons.thermostat_rounded, 'Suhu saat ini', '${s.suhu.toStringAsFixed(1)}°C', 'Target ${targetMin.toStringAsFixed(0)}-${targetMax.toStringAsFixed(0)}°C', tempOk ? AppColors.pharmaBlue : AppColors.alertRed)),
+          Expanded(child: _metric(Icons.thermostat_rounded, 'Suhu', '${s.suhu.toStringAsFixed(1)}°C', 'Target ${targetMin.toStringAsFixed(0)}-${targetMax.toStringAsFixed(0)}°C', tempOk ? AppColors.pharmaBlue : AppColors.alertRed)),
           const SizedBox(width: AppSpacing.sm),
           Expanded(child: _metric(Icons.water_drop_outlined, 'Kelembapan', '${s.kelembapan.toStringAsFixed(0)}%', 'Target ${humMin.toStringAsFixed(0)}-${humMax.toStringAsFixed(0)}%', humOk ? AppColors.humidityBlue : AppColors.alertRed)),
         ]),
         const SizedBox(height: AppSpacing.sm),
         Row(children: [
-          Expanded(child: _metric(s.isPintuTerbuka ? Icons.door_sliding_outlined : Icons.lock_outline, 'Pintu gudang', s.isPintuTerbuka ? 'Terbuka' : 'Tertutup', s.isPintuTerbuka ? 'Perlu ditutup' : 'Terkunci rapat', s.isPintuTerbuka ? AppColors.alertRed : AppColors.activeGreen)),
+          Expanded(child: _metric(s.isPintuTerbuka ? Icons.door_sliding_outlined : Icons.lock_outline, 'Pintu', s.isPintuTerbuka ? 'Terbuka' : 'Tertutup', s.isPintuTerbuka ? 'Perlu ditutup' : 'Terkunci rapat', s.isPintuTerbuka ? AppColors.alertRed : AppColors.activeGreen)),
           const SizedBox(width: AppSpacing.sm),
-          Expanded(child: _metric(Icons.co2_outlined, 'Gas dan asap', '${s.kadarGas.toStringAsFixed(0)} PPM', 'Batas ${p.gasMax.toStringAsFixed(0)} PPM', s.isGasBahaya ? AppColors.alertRed : AppColors.activeGreen)),
+          Expanded(child: _metric(Icons.co2_outlined, 'Gas/Asap', '${s.kadarGas.toStringAsFixed(0)} PPM', 'Batas ${p.gasMax.toStringAsFixed(0)} PPM', s.isGasBahaya ? AppColors.alertRed : AppColors.activeGreen)),
         ]),
         const SizedBox(height: AppSpacing.md),
         _temperatureGauge(s, p, tempOk, targetMin, targetMax),
-        const SizedBox(height: AppSpacing.lg),
-        const Text('AUTOMASI CEPAT', style: _section),
-        const SizedBox(height: AppSpacing.sm),
+        const SizedBox(height: AppSpacing.md),
         _automation(Icons.cleaning_services_outlined, 'Sterilisasi UV', s.isUvMenyala ? 'Sterilisasi sedang berjalan' : 'Mode siaga', s.isUvMenyala, AppColors.uvPurple, p.toggleUv),
         const SizedBox(height: AppSpacing.sm),
         _automation(Icons.notifications_active_outlined, 'Buzzer dan LED alarm', p.buzzerActive ? 'Alarm aktif' : 'Aktifkan bila diperlukan', p.buzzerActive, AppColors.pharmaBlue, p.toggleBuzzer),
@@ -177,38 +168,6 @@ class ClimateDashboardPage extends StatelessWidget {
   }
 
   Widget _smallStat(String a, String b) => Padding(padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(a, style: AppTypography.caption), const SizedBox(height: 3), Text(b, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.textDark))]));
-
-  Widget _protectionCard(SensorModel s, SensorProvider p) {
-    final danger = s.isGasBahaya;
-    final isVaccine = p.isVaccineRack;
-    final infoText = isVaccine
-        ? 'Chiller, sensor rantai dingin, dan notifikasi siaga.'
-        : 'Sistem UV-C sterilisasi, sensor gas, dan alarm siaga.';
-
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md + 4),
-      decoration: BoxDecoration(
-        color: danger ? AppColors.alertRed : AppColors.pharmaNavy,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        boxShadow: [
-          BoxShadow(
-            color: (danger ? AppColors.alertRed : AppColors.pharmaNavy).withAlpha(45),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Row(children: [
-        const Icon(Icons.shield_outlined, color: Colors.white, size: 34),
-        const SizedBox(width: AppSpacing.md),
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(danger ? 'Gas atau asap terdeteksi' : 'Sistem perlindungan aktif', style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w800)),
-          const SizedBox(height: 3),
-          Text(danger ? 'Periksa ventilasi dan sumber asap.' : infoText, style: TextStyle(color: Colors.white.withAlpha(220), fontSize: 12)),
-        ])),
-      ]),
-    );
-  }
 
   Widget _metric(IconData icon, String label, String value, String detail, Color color) => Container(
         padding: const EdgeInsets.all(AppSpacing.md),

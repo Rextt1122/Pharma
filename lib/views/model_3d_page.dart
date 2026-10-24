@@ -504,17 +504,13 @@ class _Model3dPageState extends State<Model3dPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Spesifikasi Miniatur Gudang', style: AppTypography.subtitle),
-                  const SizedBox(height: AppSpacing.md),
-                  _buildSpecRow('Luas Ruang Storage', '120 m² (Cold Storage Zone A)'),
-                  const Divider(height: 16, color: AppColors.containerLow),
-                  _buildSpecRow('Node Sensor Suhu/Lembap', 'SHT31 (Presisi Tinggi ±0.2°C)'),
-                  const Divider(height: 16, color: AppColors.containerLow),
-                  _buildSpecRow('Sensor Gas/Asap', 'MQ-2 / MQ-135 Gas Detector'),
-                  const Divider(height: 16, color: AppColors.containerLow),
-                  _buildSpecRow('Lampu Sterilisasi UV', 'UV-C Germicidal Lamp (254nm)'),
-                  const Divider(height: 16, color: AppColors.containerLow),
-                  _buildSpecRow('Sensor Pintu Utama', 'Magnetic Contact Switch Node'),
+                  const Text('Spesifikasi Gudang', style: AppTypography.subtitle),
+                  const SizedBox(height: AppSpacing.sm),
+                  _buildSpecItem(Icons.warehouse_outlined, 'Storage', '120 m² • Cold Storage Zone A'),
+                  _buildSpecItem(Icons.thermostat_outlined, 'Sensor Suhu/Lembap', 'SHT31 (Akurasi ±0.2°C)'),
+                  _buildSpecItem(Icons.co2_outlined, 'Detektor Gas/Asap', 'MQ-2 / MQ-135 Gas Sensor'),
+                  _buildSpecItem(Icons.cleaning_services_outlined, 'Lampu UV-C', 'Germicidal Lamp (254nm)'),
+                  _buildSpecItem(Icons.door_sliding_outlined, 'Pintu Utama', 'Magnetic Contact Switch'),
                 ],
               ),
             ),
@@ -566,29 +562,36 @@ class _Model3dPageState extends State<Model3dPage> {
     );
   }
 
-  Widget _buildSpecRow(String title, String value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Flexible(
-          flex: 5,
-          child: Text(title, style: AppTypography.caption),
-        ),
-        const SizedBox(width: AppSpacing.sm),
-        Flexible(
-          flex: 6,
-          child: Text(
-            value,
-            textAlign: TextAlign.right,
+  Widget _buildSpecItem(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.5),
+      child: Row(
+        children: [
+          Icon(icon, size: 15, color: AppColors.pharmaNavy),
+          const SizedBox(width: 8),
+          Text(
+            label,
             style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textDark,
+              fontSize: 11.5,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textMuted,
             ),
           ),
-        ),
-      ],
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.end,
+              style: const TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textDark,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
