@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import '../services/biometric_service.dart';
 import '../services/storage_service.dart';
 import '../theme/app_theme.dart';
 
@@ -27,9 +28,14 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   bool _obscurePassword = true;
   bool _isSubmitting = false;
 
+  final BiometricService _biometricService = BiometricService();
+  bool _canUseBiometrics = false;
+  bool _isAuthenticatingBiometric = false;
+
   @override
   void initState() {
     super.initState();
+    _checkBiometrics();
     _ambientController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 4200),
@@ -82,6 +88,58 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         );
       },
     );
+  }
+
+  Future<void> _checkBiometrics() async {
+    final supported = await _biometricService.isDeviceSupported();
+    if (mounted) {
+      setState(() => _canUseBiometrics = supported);
+    }
+  }
+
+  Future<void> _handleBiometricLogin() async {
+    if (_isAuthenticatingBiometric) return;
+    setState(() => _isAuthenticatingBiometric = true);
+    try {
+      final authenticated = await _biometricService.authenticate(
+        reason: 'Pindai sidik jari untuk masuk ke Smart Pharma',
+      );
+      if (authenticated) {
+        final profile = await StorageService().getUserProfile();
+        await StorageService().setLoggedIn(true);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Selamat datang kembali, ${profile['name']}'),
+              backgroundColor: AppColors.pharmaNavy,
+            ),
+          );
+          Navigator.pushReplacementNamed(context, '/main');
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Autentikasi biometrik dibatalkan atau tidak cocok'),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Biometrik error: $e'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isAuthenticatingBiometric = false);
+      }
+    }
   }
 
   Future<void> _handleSubmit() async {
@@ -780,47 +838,93 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                     // Primary Submit Button
                                     _buildStaggered(
                                       _isSignUp ? 5 : 4,
-                                      SizedBox(
-                                        height: 52,
-                                        child: ElevatedButton(
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor:
-                                                AppColors.pharmaNavy,
-                                            foregroundColor: Colors.white,
-                                            elevation: 2,
-                                            shadowColor: AppColors.pharmaNavy
-                                                .withAlpha(60),
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(
-                                                    AppSpacing.radiusMd,
-                                                  ),
-                                            ),
-                                          ),
-                                          onPressed: _isSubmitting
-                                              ? null
-                                              : _handleSubmit,
-                                          child: _isSubmitting
-                                              ? const SizedBox(
-                                                  width: 22,
-                                                  height: 22,
-                                                  child:
-                                                      CircularProgressIndicator(
-                                                        strokeWidth: 2.4,
-                                                        color: Colors.white,
-                                                      ),
-                                                )
-                                              : Text(
-                                                  _isSignUp
-                                                      ? 'Sign Up'
-                                                      : 'Login',
-                                                  style: const TextStyle(
-                                                    fontSize: 16,
-                                                    fontWeight: FontWeight.w800,
-                                                    letterSpacing: 0.3,
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: SizedBox(
+                                              height: 52,
+                                              child: ElevatedButton(
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor:
+                                                      AppColors.pharmaNavy,
+                                                  foregroundColor: Colors.white,
+                                                  elevation: 2,
+                                                  shadowColor: AppColors.pharmaNavy
+                                                      .withAlpha(60),
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          AppSpacing.radiusMd,
+                                                        ),
                                                   ),
                                                 ),
-                                        ),
+                                                onPressed: _isSubmitting
+                                                    ? null
+                                                    : _handleSubmit,
+                                                child: _isSubmitting
+                                                    ? const SizedBox(
+                                                        width: 22,
+                                                        height: 22,
+                                                        child:
+                                                            CircularProgressIndicator(
+                                                              strokeWidth: 2.4,
+                                                              color: Colors.white,
+                                                            ),
+                                                      )
+                                                    : Text(
+                                                        _isSignUp
+                                                            ? 'Sign Up'
+                                                            : 'Login',
+                                                        style: const TextStyle(
+                                                          fontSize: 16,
+                                                          fontWeight: FontWeight.w800,
+                                                          letterSpacing: 0.3,
+                                                        ),
+                                                      ),
+                                              ),
+                                            ),
+                                          ),
+                                          if (!_isSignUp && _canUseBiometrics) ...[
+                                            const SizedBox(width: AppSpacing.sm + 2),
+                                            SizedBox(
+                                              height: 52,
+                                              width: 52,
+                                              child: OutlinedButton(
+                                                style: OutlinedButton.styleFrom(
+                                                  padding: EdgeInsets.zero,
+                                                  side: const BorderSide(
+                                                    color: AppColors.pharmaNavy,
+                                                    width: 1.5,
+                                                  ),
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          AppSpacing.radiusMd,
+                                                        ),
+                                                  ),
+                                                  backgroundColor: AppColors.cardWhite,
+                                                ),
+                                                onPressed: _isAuthenticatingBiometric
+                                                    ? null
+                                                    : _handleBiometricLogin,
+                                                child: _isAuthenticatingBiometric
+                                                    ? const SizedBox(
+                                                        width: 20,
+                                                        height: 20,
+                                                        child: CircularProgressIndicator(
+                                                          strokeWidth: 2,
+                                                          color: AppColors.pharmaNavy,
+                                                        ),
+                                                      )
+                                                    : const Icon(
+                                                        Icons.fingerprint_rounded,
+                                                        color: AppColors.pharmaNavy,
+                                                        size: 28,
+                                                      ),
+                                              ),
+                                            ),
+                                          ],
+                                        ],
                                       ),
                                     ),
 
@@ -909,6 +1013,30 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                                     size: 26,
                                                   ),
                                                 ),
+                                                if (_canUseBiometrics) ...[
+                                                  const SizedBox(
+                                                    width: AppSpacing.md,
+                                                  ),
+                                                  _buildSocialButton(
+                                                    onTap: _isAuthenticatingBiometric
+                                                        ? () {}
+                                                        : _handleBiometricLogin,
+                                                    child: _isAuthenticatingBiometric
+                                                        ? const SizedBox(
+                                                            width: 18,
+                                                            height: 18,
+                                                            child: CircularProgressIndicator(
+                                                              strokeWidth: 2,
+                                                              color: AppColors.pharmaNavy,
+                                                            ),
+                                                          )
+                                                        : const Icon(
+                                                            Icons.fingerprint_rounded,
+                                                            color: AppColors.pharmaNavy,
+                                                            size: 26,
+                                                          ),
+                                                  ),
+                                                ],
                                               ],
                                             ),
                                           ],

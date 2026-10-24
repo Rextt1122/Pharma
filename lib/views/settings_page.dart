@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../services/biometric_service.dart';
 import '../services/storage_service.dart';
 import '../services/update_service.dart';
 import '../providers/sensor_provider.dart';
@@ -33,6 +34,10 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _isLoading = true;
   bool _isCheckingUpdate = false;
 
+  final BiometricService _biometricService = BiometricService();
+  bool _isBiometricSupported = false;
+  bool _isBiometricEnabled = false;
+
   @override
   void initState() {
     super.initState();
@@ -44,6 +49,8 @@ class _SettingsPageState extends State<SettingsPage> {
     final ip = await _storageService.getServerIp();
     final thresholds = await _storageService.getThresholds();
     final profile = await _storageService.getUserProfile();
+    final isBioEnabled = await _storageService.isBiometricEnabled();
+    final isBioSupported = await _biometricService.isDeviceSupported();
 
     // Smooth skeleton duration so the shimmer is visible and fluid
     await Future.delayed(const Duration(milliseconds: 600));
@@ -54,6 +61,8 @@ class _SettingsPageState extends State<SettingsPage> {
         _userName = profile['name'] ?? 'Fabian (Admin Farmasi)';
         _userEmail = profile['email'] ?? 'fabian.pharma@smartpharma.id';
         _authProvider = profile['provider'] ?? 'Smart Pharma';
+        _isBiometricEnabled = isBioEnabled;
+        _isBiometricSupported = isBioSupported;
         _tempMin = (thresholds['tempMin'] ?? StorageService.defaultTempMin)
             .clamp(-20.0, 30.0);
         _tempMax = (thresholds['tempMax'] ?? StorageService.defaultTempMax)
@@ -122,6 +131,40 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
         );
       }
+    }
+  }
+
+  Future<void> _toggleBiometric(bool value) async {
+    if (value) {
+      final authenticated = await _biometricService.authenticate(
+        reason: 'Pindai sidik jari untuk mengaktifkan login biometrik',
+      );
+      if (!authenticated) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Verifikasi sidik jari tidak cocok / dibatalkan'),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
+        return;
+      }
+    }
+
+    await _storageService.setBiometricEnabled(value);
+    if (mounted) {
+      setState(() => _isBiometricEnabled = value);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            value
+                ? 'Login biometrik aktif'
+                : 'Login biometrik dinonaktifkan',
+          ),
+          backgroundColor: AppColors.pharmaNavy,
+        ),
+      );
     }
   }
 
@@ -286,6 +329,64 @@ class _SettingsPageState extends State<SettingsPage> {
                   'SSO $_authProvider',
                   style: AppTypography.badge.copyWith(fontSize: 10),
                 ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md - 2),
+        Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.md,
+          ),
+          decoration: BoxDecoration(
+            color: AppColors.cardWhite,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            border: Border.all(color: AppColors.containerLow, width: 1.0),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x140E555A),
+                blurRadius: 14,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.sm + 2),
+                decoration: const BoxDecoration(
+                  color: AppColors.containerLow,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.fingerprint_rounded,
+                  color: AppColors.pharmaNavy,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm + 4),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Login Biometrik',
+                      style: AppTypography.subtitle,
+                    ),
+                    Text(
+                      _isBiometricSupported
+                          ? 'Akses cepat dengan sidik jari / Face ID'
+                          : 'Perangkat belum mendukung biometrik',
+                      style: AppTypography.caption,
+                    ),
+                  ],
+                ),
+              ),
+              Switch(
+                value: _isBiometricEnabled,
+                onChanged: _isBiometricSupported ? _toggleBiometric : null,
+                activeThumbColor: AppColors.pharmaNavy,
               ),
             ],
           ),

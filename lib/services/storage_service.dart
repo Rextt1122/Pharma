@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class StorageService {
   static const String _keyServerIp = 'server_ip';
   static const String _keyIsLoggedIn = 'is_logged_in';
+  static const String _keyBiometricEnabled = 'biometric_enabled';
   static const String _keyUserName = 'user_name';
   static const String _keyUserEmail = 'user_email';
   static const String _keyAuthProvider = 'auth_provider';
@@ -49,6 +50,17 @@ class StorageService {
   Future<bool> isLoggedIn() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_keyIsLoggedIn) ?? false;
+  }
+
+  // Biometric preference
+  Future<void> setBiometricEnabled(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyBiometricEnabled, value);
+  }
+
+  Future<bool> isBiometricEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_keyBiometricEnabled) ?? false;
   }
 
   Future<void> saveUserProfile({
