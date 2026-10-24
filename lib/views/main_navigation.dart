@@ -387,110 +387,85 @@ class _MainNavigationState extends State<MainNavigation>
         child: SafeArea(
           top: false,
           child: Container(
-            margin: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: 6,
+            margin: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              0,
+              AppSpacing.md,
+              8,
             ),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
             decoration: BoxDecoration(
-              color: AppColors.cardWhite,
+              color: AppColors.pharmaNavy,
               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.pharmaNavy.withAlpha(16),
+                  color: AppColors.pharmaNavy.withAlpha(50),
                   blurRadius: 18,
-                  offset: const Offset(0, 5),
+                  offset: const Offset(0, 6),
                 ),
               ],
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-              child: NavigationBarTheme(
-                data: NavigationBarThemeData(
-                  height: 62,
-                  labelTextStyle: WidgetStateProperty.resolveWith((states) {
-                    final isSelected = states.contains(WidgetState.selected);
-                    return TextStyle(
-                      fontSize: 10.5,
-                      fontWeight: isSelected
-                          ? FontWeight.w800
-                          : FontWeight.w500,
-                      color: isSelected
-                          ? AppColors.pharmaNavy
-                          : AppColors.textMuted,
-                    );
-                  }),
-                ),
-                child: NavigationBar(
-                  height: 62,
-                  elevation: 0,
-                  selectedIndex: _selectedIndex,
-                  onDestinationSelected: (index) {
-                    if (_selectedIndex != index) {
-                      setState(() {
-                        _selectedIndex = index;
-                      });
-                      _tabTransitionController.forward(from: 0.0);
-                    }
-                  },
-                  backgroundColor: AppColors.cardWhite,
-                  indicatorColor: AppColors.pharmaTeal.withAlpha(35),
-                  destinations: const [
-                    NavigationDestination(
-                      icon: Icon(
-                        Icons.sensors_outlined,
-                        size: 19,
-                        color: AppColors.textMuted,
-                      ),
-                      selectedIcon: Icon(
-                        Icons.sensors,
-                        size: 19,
-                        color: AppColors.pharmaNavy,
-                      ),
-                      label: 'Realtime',
-                    ),
-                    NavigationDestination(
-                      icon: Icon(
-                        Icons.view_in_ar_outlined,
-                        size: 19,
-                        color: AppColors.textMuted,
-                      ),
-                      selectedIcon: Icon(
-                        Icons.view_in_ar,
-                        size: 19,
-                        color: AppColors.pharmaNavy,
-                      ),
-                      label: 'Model 3D',
-                    ),
-                    NavigationDestination(
-                      icon: Icon(
-                        Icons.show_chart_outlined,
-                        size: 19,
-                        color: AppColors.textMuted,
-                      ),
-                      selectedIcon: Icon(
-                        Icons.show_chart,
-                        size: 19,
-                        color: AppColors.pharmaNavy,
-                      ),
-                      label: 'Riwayat',
-                    ),
-                    NavigationDestination(
-                      icon: Icon(
-                        Icons.settings_outlined,
-                        size: 19,
-                        color: AppColors.textMuted,
-                      ),
-                      selectedIcon: Icon(
-                        Icons.settings,
-                        size: 19,
-                        color: AppColors.pharmaNavy,
-                      ),
-                      label: 'Pengaturan',
-                    ),
-                  ],
+            child: Row(
+              children: [
+                _buildModernNavItem(0, Icons.sensors_outlined, Icons.sensors, 'Realtime'),
+                _buildModernNavItem(1, Icons.view_in_ar_outlined, Icons.view_in_ar, 'Model 3D'),
+                _buildModernNavItem(2, Icons.show_chart_outlined, Icons.show_chart, 'Riwayat'),
+                _buildModernNavItem(3, Icons.settings_outlined, Icons.settings, 'Pengaturan'),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModernNavItem(
+    int index,
+    IconData unselectedIcon,
+    IconData selectedIcon,
+    String label,
+  ) {
+    final isSelected = _selectedIndex == index;
+    return Expanded(
+      child: InkWell(
+        onTap: () {
+          if (_selectedIndex != index) {
+            setState(() => _selectedIndex = index);
+            _tabTransitionController.forward(from: 0.0);
+          }
+        },
+        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? Colors.white.withAlpha(28) : Colors.transparent,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AnimatedScale(
+                scale: isSelected ? 1.08 : 0.95,
+                duration: const Duration(milliseconds: 200),
+                child: Icon(
+                  isSelected ? selectedIcon : unselectedIcon,
+                  size: 20,
+                  color: isSelected ? Colors.white : Colors.white.withAlpha(140),
                 ),
               ),
-            ),
+              const SizedBox(height: 3),
+              AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 200),
+                style: TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
+                  color: isSelected ? Colors.white : Colors.white.withAlpha(140),
+                ),
+                child: Text(label),
+              ),
+            ],
           ),
         ),
       ),
