@@ -259,19 +259,19 @@ class HistoryPage extends StatelessWidget {
     }
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 7),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      margin: const EdgeInsets.only(bottom: 9),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: AppColors.cardWhite,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         border: Border.all(
-          color: isWarning ? AppColors.alertRed.withAlpha(70) : AppColors.containerLow,
-          width: 0.9,
+          color: isWarning ? AppColors.alertRed.withAlpha(80) : AppColors.containerLow,
+          width: 1.0,
         ),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x0A0E555A),
-            blurRadius: 6,
+            color: Color(0x0C0E555A),
+            blurRadius: 8,
             offset: Offset(0, 2),
           ),
         ],
@@ -284,7 +284,7 @@ class HistoryPage extends StatelessWidget {
               Text(
                 'Log #$logNumber',
                 style: const TextStyle(
-                  fontSize: 12.5,
+                  fontSize: 14,
                   fontWeight: FontWeight.w800,
                   color: AppColors.pharmaNavy,
                 ),
@@ -294,22 +294,35 @@ class HistoryPage extends StatelessWidget {
                 child: Text(
                   displayTime,
                   style: const TextStyle(
-                    fontSize: 11,
+                    fontSize: 12,
                     color: AppColors.textMuted,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
+              // Ikon status pintu & UV di baris atas
+              Icon(
+                doorAlert ? Icons.door_sliding_outlined : Icons.lock_outline,
+                size: 15,
+                color: doorAlert ? AppColors.alertRed : AppColors.activeGreen,
+              ),
+              const SizedBox(width: 6),
+              Icon(
+                Icons.cleaning_services_outlined,
+                size: 15,
+                color: item.isUvMenyala ? AppColors.uvPurple : AppColors.textMuted.withAlpha(120),
+              ),
+              const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: (isWarning ? AppColors.alertRed : AppColors.activeGreen).withAlpha(18),
+                  color: (isWarning ? AppColors.alertRed : AppColors.activeGreen).withAlpha(20),
                   borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                 ),
                 child: Text(
                   isWarning ? 'Peringatan' : 'Aman',
                   style: TextStyle(
-                    fontSize: 10,
+                    fontSize: 11,
                     fontWeight: FontWeight.w800,
                     color: isWarning ? AppColors.alertRed : AppColors.activeGreen,
                   ),
@@ -317,25 +330,29 @@ class HistoryPage extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 7),
+          const SizedBox(height: 10),
           Row(
             children: [
               // Suhu
               Expanded(
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      Icons.thermostat_rounded,
-                      size: 15,
-                      color: tempAlert ? AppColors.alertRed : AppColors.pharmaBlue,
+                    const Text(
+                      'Suhu',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textMuted,
+                      ),
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(height: 2),
                     Text(
                       '${item.suhu.toStringAsFixed(1)}°C',
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 15.5,
                         fontWeight: FontWeight.w800,
-                        color: tempAlert ? AppColors.alertRed : AppColors.textDark,
+                        color: tempAlert ? AppColors.alertRed : AppColors.pharmaNavy,
                       ),
                     ),
                   ],
@@ -343,14 +360,22 @@ class HistoryPage extends StatelessWidget {
               ),
               // Kelembapan
               Expanded(
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.water_drop_outlined, size: 15, color: AppColors.humidityBlue),
-                    const SizedBox(width: 4),
+                    const Text(
+                      'Kelembapan',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
                     Text(
                       '${item.kelembapan.toStringAsFixed(0)}%',
                       style: const TextStyle(
-                        fontSize: 13,
+                        fontSize: 15.5,
                         fontWeight: FontWeight.w800,
                         color: AppColors.textDark,
                       ),
@@ -360,40 +385,28 @@ class HistoryPage extends StatelessWidget {
               ),
               // Kadar Gas
               Expanded(
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      Icons.co2_outlined,
-                      size: 15,
-                      color: gasAlert ? AppColors.alertRed : AppColors.textMuted,
+                    const Text(
+                      'Kadar Gas',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textMuted,
+                      ),
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(height: 2),
                     Text(
                       '${item.kadarGas.toStringAsFixed(0)} PPM',
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 15.5,
                         fontWeight: FontWeight.w800,
                         color: gasAlert ? AppColors.alertRed : AppColors.textDark,
                       ),
                     ),
                   ],
                 ),
-              ),
-              // Ikon Status Minimalis
-              Row(
-                children: [
-                  Icon(
-                    doorAlert ? Icons.door_sliding_outlined : Icons.lock_outline,
-                    size: 14,
-                    color: doorAlert ? AppColors.alertRed : AppColors.activeGreen,
-                  ),
-                  const SizedBox(width: 6),
-                  Icon(
-                    Icons.cleaning_services_outlined,
-                    size: 14,
-                    color: item.isUvMenyala ? AppColors.uvPurple : AppColors.textMuted.withAlpha(120),
-                  ),
-                ],
               ),
             ],
           ),

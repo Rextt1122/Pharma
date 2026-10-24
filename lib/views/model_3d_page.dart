@@ -506,23 +506,15 @@ class _Model3dPageState extends State<Model3dPage> {
                 children: [
                   const Text('Spesifikasi Gudang', style: AppTypography.subtitle),
                   const SizedBox(height: AppSpacing.md),
-                  Row(
-                    children: [
-                      Expanded(child: _buildSpecGridItem(Icons.warehouse_outlined, 'Storage', '120 m² • Zone A')),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(child: _buildSpecGridItem(Icons.thermostat_outlined, 'Suhu & Lembap', 'SHT31 (±0.2°C)')),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Row(
-                    children: [
-                      Expanded(child: _buildSpecGridItem(Icons.co2_outlined, 'Detektor Gas', 'MQ-2 / MQ-135')),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(child: _buildSpecGridItem(Icons.cleaning_services_outlined, 'Sterilisasi', 'UV-C (254nm)')),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  _buildSpecGridItem(Icons.door_sliding_outlined, 'Sensor Akses', 'Magnetic Contact Switch (Pintu Utama)'),
+                  _buildSpecRow(Icons.warehouse_outlined, 'Storage', '120 m² (Cold Storage Zone A)'),
+                  const Divider(height: 18, thickness: 0.7, color: AppColors.containerLow),
+                  _buildSpecRow(Icons.thermostat_outlined, 'Sensor Suhu/Lembap', 'SHT31 (Akurasi ±0.2°C)'),
+                  const Divider(height: 18, thickness: 0.7, color: AppColors.containerLow),
+                  _buildSpecRow(Icons.co2_outlined, 'Detektor Gas/Asap', 'MQ-2 / MQ-135 Gas Sensor'),
+                  const Divider(height: 18, thickness: 0.7, color: AppColors.containerLow),
+                  _buildSpecRow(Icons.cleaning_services_outlined, 'Sterilisasi Ruang', 'UV-C Germicidal (254nm)'),
+                  const Divider(height: 18, thickness: 0.7, color: AppColors.containerLow),
+                  _buildSpecRow(Icons.door_sliding_outlined, 'Akses Pintu', 'Magnetic Contact Switch'),
                 ],
               ),
             ),
@@ -574,46 +566,32 @@ class _Model3dPageState extends State<Model3dPage> {
     );
   }
 
-  Widget _buildSpecGridItem(IconData icon, String label, String value) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: AppColors.inputBg,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-        border: Border.all(color: AppColors.containerLow, width: 0.8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 14, color: AppColors.pharmaNavy),
-              const SizedBox(width: 5),
-              Expanded(
-                child: Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textMuted,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
+  Widget _buildSpecRow(IconData icon, String label, String value) {
+    return Row(
+      children: [
+        Icon(icon, size: 17, color: AppColors.pharmaNavy),
+        const SizedBox(width: 10),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textMuted,
           ),
-          const SizedBox(height: 3),
-          Text(
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
             value,
+            textAlign: TextAlign.end,
             style: const TextStyle(
-              fontSize: 11.5,
+              fontSize: 13,
               fontWeight: FontWeight.w700,
               color: AppColors.textDark,
             ),
-            overflow: TextOverflow.ellipsis,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
