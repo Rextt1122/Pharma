@@ -82,7 +82,7 @@ flutter run --release
 
 File APK versi rilis yang sudah dioptimasi (22 MB, arsitektur `arm64-v8a`) dapat diunduh langsung:
 
-**[Download Pharma.apk (v1.0.0)](https://github.com/Rextt1122/Pharma/releases/latest)**
+👉 **[Download Pharma.apk (v1.0.1)](https://github.com/Rextt1122/Pharma/releases/latest)**
 
 ---
 
