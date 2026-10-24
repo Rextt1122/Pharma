@@ -14,9 +14,9 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   final _usernameController = TextEditingController();
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  final _phoneController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
   late final AnimationController _ambientController;
@@ -152,11 +152,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
       try {
         if (_isSignUp) {
-          final fullName = username.contains('@')
-              ? username.split('@').first.replaceAll('.', ' ')
-              : username;
-          final email =
-              username.contains('@') ? username : '$username@smartpharma.id';
+          final email = _emailController.text.trim();
+          final fullName = username;
 
           final res = await ApiService().register(
             username: username,
@@ -188,10 +185,11 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         } else {
           final res = await ApiService().login(username, password);
           final user = (res['user'] as Map<String, dynamic>?) ?? {};
+          final userEmail = user['email']?.toString() ?? (username.contains('@') ? username : '$username@smartpharma.id');
 
           await StorageService().saveUserProfile(
-            name: user['name']?.toString() ?? 'Admin Farmasi',
-            email: user['email']?.toString() ?? '$username@smartpharma.id',
+            name: user['name']?.toString() ?? username,
+            email: userEmail,
             provider: 'Database MySQL (${user['role'] ?? 'operator'})',
           );
           await StorageService().setLoggedIn(true);
@@ -603,9 +601,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     _ambientController.dispose();
     _entranceController.dispose();
     _usernameController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
-    _phoneController.dispose();
     super.dispose();
   }
 
@@ -764,27 +762,50 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                     ),
                                     const SizedBox(height: AppSpacing.lg),
 
-                                    // Username / Email input
+                                    // Username input (Login: Username/Email, SignUp: Username)
                                     _buildStaggered(
                                       1,
                                       _buildCleanInputField(
                                         controller: _usernameController,
-                                        hintText: 'Email or Username',
-                                        icon: Icons.mail_outline_rounded,
+                                        hintText: _isSignUp ? 'Username' : 'Username or Email',
+                                        icon: Icons.person_outline_rounded,
                                         validator: (value) {
                                           if (value == null ||
                                               value.trim().isEmpty) {
-                                            return 'Username / Email tidak boleh kosong';
+                                            return 'Username tidak boleh kosong';
                                           }
                                           return null;
                                         },
                                       ),
                                     ),
+                                    if (_isSignUp) ...[
+                                      const SizedBox(height: AppSpacing.md),
+                                      _buildStaggered(
+                                        2,
+                                        _buildCleanInputField(
+                                          controller: _emailController,
+                                          hintText: 'Email (contoh: nama@domain.com)',
+                                          icon: Icons.mail_outline_rounded,
+                                          keyboardType: TextInputType.emailAddress,
+                                          validator: (value) {
+                                            if (value == null ||
+                                                value.trim().isEmpty) {
+                                              return 'Email wajib diisi';
+                                            }
+                                            if (!value.contains('@') ||
+                                                !value.contains('.')) {
+                                              return 'Format email tidak valid';
+                                            }
+                                            return null;
+                                          },
+                                        ),
+                                      ),
+                                    ],
                                     const SizedBox(height: AppSpacing.md),
 
                                     // Password input
                                     _buildStaggered(
-                                      2,
+                                      _isSignUp ? 3 : 2,
                                       _buildCleanInputField(
                                         controller: _passwordController,
                                         hintText: 'Password',
@@ -818,7 +839,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                     if (_isSignUp) ...[
                                       const SizedBox(height: AppSpacing.md),
                                       _buildStaggered(
-                                        3,
+                                        4,
                                         _buildCleanInputField(
                                           controller:
                                               _confirmPasswordController,
@@ -836,16 +857,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                             }
                                             return null;
                                           },
-                                        ),
-                                      ),
-                                      const SizedBox(height: AppSpacing.md),
-                                      _buildStaggered(
-                                        4,
-                                        _buildCleanInputField(
-                                          controller: _phoneController,
-                                          hintText: 'Phone',
-                                          icon: Icons.phone_outlined,
-                                          keyboardType: TextInputType.phone,
                                         ),
                                       ),
                                       const SizedBox(height: AppSpacing.lg + 4),
