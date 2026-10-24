@@ -246,14 +246,21 @@ class HistoryPage extends StatelessWidget {
   Widget _buildLogCard(SensorModel item, int logNumber, SensorProvider sensorProvider) {
     final double minT = sensorProvider.currentTempMin;
     final double maxT = sensorProvider.currentTempMax;
-    final bool isWarning = item.kadarGas > sensorProvider.gasMax 
-        || item.isPintuTerbuka 
-        || item.suhu > maxT 
-        || item.suhu < minT;
+    final bool tempAlert = item.suhu > maxT || item.suhu < minT;
+    final bool gasAlert = item.kadarGas > sensorProvider.gasMax;
+    final bool doorAlert = item.isPintuTerbuka;
+    final bool isWarning = tempAlert || gasAlert || doorAlert;
+
+    // Format cleaner time: only HH:mm:ss if today
+    String displayTime = item.waktu ?? 'N/A';
+    final parts = displayTime.split(' ');
+    if (parts.length > 1) {
+      displayTime = parts[1]; // show HH:mm:ss
+    }
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+      margin: const EdgeInsets.only(bottom: 7),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: AppColors.cardWhite,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -263,8 +270,8 @@ class HistoryPage extends StatelessWidget {
         ),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x0C0E555A),
-            blurRadius: 8,
+            color: Color(0x0A0E555A),
+            blurRadius: 6,
             offset: Offset(0, 2),
           ),
         ],
@@ -285,43 +292,32 @@ class HistoryPage extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  item.waktu ?? 'Waktu N/A',
+                  displayTime,
                   style: const TextStyle(
                     fontSize: 11,
                     color: AppColors.textMuted,
                     fontWeight: FontWeight.w500,
                   ),
-                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              if (isWarning)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: AppColors.alertRed.withAlpha(20),
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                  ),
-                  child: const Text(
-                    'Peringatan',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.alertRed,
-                    ),
-                  ),
-                )
-              else
-                const Text(
-                  'Aman',
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                decoration: BoxDecoration(
+                  color: (isWarning ? AppColors.alertRed : AppColors.activeGreen).withAlpha(18),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                ),
+                child: Text(
+                  isWarning ? 'Peringatan' : 'Aman',
                   style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.activeGreen,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    color: isWarning ? AppColors.alertRed : AppColors.activeGreen,
                   ),
                 ),
+              ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 7),
           Row(
             children: [
               // Suhu
@@ -331,19 +327,15 @@ class HistoryPage extends StatelessWidget {
                     Icon(
                       Icons.thermostat_rounded,
                       size: 15,
-                      color: (item.suhu > maxT || item.suhu < minT)
-                          ? AppColors.alertRed
-                          : AppColors.pharmaBlue,
+                      color: tempAlert ? AppColors.alertRed : AppColors.pharmaBlue,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       '${item.suhu.toStringAsFixed(1)}°C',
                       style: TextStyle(
-                        fontSize: 13.5,
+                        fontSize: 13,
                         fontWeight: FontWeight.w800,
-                        color: (item.suhu > maxT || item.suhu < minT)
-                            ? AppColors.alertRed
-                            : AppColors.textDark,
+                        color: tempAlert ? AppColors.alertRed : AppColors.textDark,
                       ),
                     ),
                   ],
@@ -358,7 +350,7 @@ class HistoryPage extends StatelessWidget {
                     Text(
                       '${item.kelembapan.toStringAsFixed(0)}%',
                       style: const TextStyle(
-                        fontSize: 13.5,
+                        fontSize: 13,
                         fontWeight: FontWeight.w800,
                         color: AppColors.textDark,
                       ),
@@ -373,53 +365,35 @@ class HistoryPage extends StatelessWidget {
                     Icon(
                       Icons.co2_outlined,
                       size: 15,
-                      color: item.kadarGas > sensorProvider.gasMax ? AppColors.alertRed : AppColors.textMuted,
+                      color: gasAlert ? AppColors.alertRed : AppColors.textMuted,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       '${item.kadarGas.toStringAsFixed(0)} PPM',
                       style: TextStyle(
-                        fontSize: 13.5,
+                        fontSize: 13,
                         fontWeight: FontWeight.w800,
-                        color: item.kadarGas > sensorProvider.gasMax ? AppColors.alertRed : AppColors.textDark,
+                        color: gasAlert ? AppColors.alertRed : AppColors.textDark,
                       ),
                     ),
                   ],
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Row(
-            children: [
-              Icon(
-                item.isPintuTerbuka ? Icons.door_sliding_outlined : Icons.lock_outline,
-                size: 12.5,
-                color: item.isPintuTerbuka ? AppColors.alertRed : AppColors.activeGreen,
-              ),
-              const SizedBox(width: 3.5),
-              Text(
-                item.isPintuTerbuka ? "Pintu Terbuka" : "Pintu Tertutup",
-                style: TextStyle(
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w600,
-                  color: item.isPintuTerbuka ? AppColors.alertRed : AppColors.textMuted,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Icon(
-                Icons.cleaning_services_outlined,
-                size: 12.5,
-                color: item.isUvMenyala ? AppColors.uvPurple : AppColors.textMuted,
-              ),
-              const SizedBox(width: 3.5),
-              Text(
-                item.isUvMenyala ? "UV Aktif" : "UV Siaga",
-                style: TextStyle(
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w600,
-                  color: item.isUvMenyala ? AppColors.uvPurple : AppColors.textMuted,
-                ),
+              // Ikon Status Minimalis
+              Row(
+                children: [
+                  Icon(
+                    doorAlert ? Icons.door_sliding_outlined : Icons.lock_outline,
+                    size: 14,
+                    color: doorAlert ? AppColors.alertRed : AppColors.activeGreen,
+                  ),
+                  const SizedBox(width: 6),
+                  Icon(
+                    Icons.cleaning_services_outlined,
+                    size: 14,
+                    color: item.isUvMenyala ? AppColors.uvPurple : AppColors.textMuted.withAlpha(120),
+                  ),
+                ],
               ),
             ],
           ),

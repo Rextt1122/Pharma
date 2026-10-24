@@ -505,12 +505,24 @@ class _Model3dPageState extends State<Model3dPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text('Spesifikasi Gudang', style: AppTypography.subtitle),
+                  const SizedBox(height: AppSpacing.md),
+                  Row(
+                    children: [
+                      Expanded(child: _buildSpecGridItem(Icons.warehouse_outlined, 'Storage', '120 m² • Zone A')),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(child: _buildSpecGridItem(Icons.thermostat_outlined, 'Suhu & Lembap', 'SHT31 (±0.2°C)')),
+                    ],
+                  ),
                   const SizedBox(height: AppSpacing.sm),
-                  _buildSpecItem(Icons.warehouse_outlined, 'Storage', '120 m² • Cold Storage Zone A'),
-                  _buildSpecItem(Icons.thermostat_outlined, 'Sensor Suhu/Lembap', 'SHT31 (Akurasi ±0.2°C)'),
-                  _buildSpecItem(Icons.co2_outlined, 'Detektor Gas/Asap', 'MQ-2 / MQ-135 Gas Sensor'),
-                  _buildSpecItem(Icons.cleaning_services_outlined, 'Lampu UV-C', 'Germicidal Lamp (254nm)'),
-                  _buildSpecItem(Icons.door_sliding_outlined, 'Pintu Utama', 'Magnetic Contact Switch'),
+                  Row(
+                    children: [
+                      Expanded(child: _buildSpecGridItem(Icons.co2_outlined, 'Detektor Gas', 'MQ-2 / MQ-135')),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(child: _buildSpecGridItem(Icons.cleaning_services_outlined, 'Sterilisasi', 'UV-C (254nm)')),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  _buildSpecGridItem(Icons.door_sliding_outlined, 'Sensor Akses', 'Magnetic Contact Switch (Pintu Utama)'),
                 ],
               ),
             ),
@@ -562,33 +574,43 @@ class _Model3dPageState extends State<Model3dPage> {
     );
   }
 
-  Widget _buildSpecItem(IconData icon, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.5),
-      child: Row(
+  Widget _buildSpecGridItem(IconData icon, String label, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.inputBg,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+        border: Border.all(color: AppColors.containerLow, width: 0.8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 15, color: AppColors.pharmaNavy),
-          const SizedBox(width: 8),
+          Row(
+            children: [
+              Icon(icon, size: 14, color: AppColors.pharmaNavy),
+              const SizedBox(width: 5),
+              Expanded(
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textMuted,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 3),
           Text(
-            label,
+            value,
             style: const TextStyle(
               fontSize: 11.5,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textMuted,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textDark,
             ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              value,
-              textAlign: TextAlign.end,
-              style: const TextStyle(
-                fontSize: 11.5,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textDark,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
