@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import '../services/api_service.dart';
 import '../services/biometric_service.dart';
 import '../services/storage_service.dart';
 import '../theme/app_theme.dart';
@@ -146,23 +147,82 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     if (_isSubmitting) return;
     if (_formKey.currentState!.validate()) {
       setState(() => _isSubmitting = true);
-      await Future.delayed(const Duration(milliseconds: 450));
-      final rawInput = _usernameController.text.trim();
-      final isEmail = rawInput.contains('@');
-      final displayName = isEmail
-          ? rawInput.split('@').first.replaceAll('.', ' ')
-          : rawInput;
-      final email = isEmail ? rawInput : '$rawInput@smartpharma.id';
+      final username = _usernameController.text.trim();
+      final password = _passwordController.text;
 
-      await StorageService().saveUserProfile(
-        name: displayName.isNotEmpty ? displayName : 'Admin Farmasi',
-        email: email,
-        provider: 'Smart Pharma',
-      );
-      await StorageService().setLoggedIn(true);
-      if (mounted) {
-        setState(() => _isSubmitting = false);
-        Navigator.pushReplacementNamed(context, '/main');
+      try {
+        if (_isSignUp) {
+          final fullName = username.contains('@')
+              ? username.split('@').first.replaceAll('.', ' ')
+              : username;
+          final email =
+              username.contains('@') ? username : '$username@smartpharma.id';
+
+          final res = await ApiService().register(
+            username: username,
+            password: password,
+            fullName: fullName.isNotEmpty ? fullName : 'Petugas Farmasi',
+            email: email,
+            role: 'operator',
+          );
+          final user = (res['user'] as Map<String, dynamic>?) ?? {};
+
+          await StorageService().saveUserProfile(
+            name: user['name']?.toString() ?? fullName,
+            email: user['email']?.toString() ?? email,
+            provider: 'Database MySQL',
+          );
+          await StorageService().setLoggedIn(true);
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Registrasi berhasil! Selamat datang, ${user['name'] ?? username}',
+                ),
+                backgroundColor: AppColors.pharmaNavy,
+              ),
+            );
+            Navigator.pushReplacementNamed(context, '/main');
+          }
+        } else {
+          final res = await ApiService().login(username, password);
+          final user = (res['user'] as Map<String, dynamic>?) ?? {};
+
+          await StorageService().saveUserProfile(
+            name: user['name']?.toString() ?? 'Admin Farmasi',
+            email: user['email']?.toString() ?? '$username@smartpharma.id',
+            provider: 'Database MySQL (${user['role'] ?? 'operator'})',
+          );
+          await StorageService().setLoggedIn(true);
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Login berhasil. Selamat datang, ${user['name'] ?? username}!',
+                ),
+                backgroundColor: AppColors.pharmaNavy,
+              ),
+            );
+            Navigator.pushReplacementNamed(context, '/main');
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          final cleanMsg = e.toString().replaceAll('Exception: ', '');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(cleanMsg),
+              backgroundColor: Colors.redAccent,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isSubmitting = false);
+        }
       }
     }
   }

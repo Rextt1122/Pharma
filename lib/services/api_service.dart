@@ -129,4 +129,77 @@ class ApiService {
       throw Exception('Gagal terhubung ke server: $e');
     }
   }
+
+  Future<Map<String, dynamic>> login(String username, String password) async {
+    final ip = await resolveReachableIp();
+    final url = Uri.parse('http://$ip:8001/login');
+
+    try {
+      final response = await http
+          .post(
+            url,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'username': username.trim(),
+              'password': password,
+            }),
+          )
+          .timeout(const Duration(seconds: 5));
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+
+      if (response.statusCode == 200) {
+        return data;
+      } else {
+        final errorMsg = data['detail'] ?? 'Autentikasi gagal';
+        throw Exception(errorMsg);
+      }
+    } catch (e) {
+      if (e is Exception && !e.toString().contains('ClientException')) {
+        rethrow;
+      }
+      throw Exception('Gagal menghubungi server database: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> register({
+    required String username,
+    required String password,
+    required String fullName,
+    required String email,
+    String role = 'operator',
+  }) async {
+    final ip = await resolveReachableIp();
+    final url = Uri.parse('http://$ip:8001/register');
+
+    try {
+      final response = await http
+          .post(
+            url,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'username': username.trim(),
+              'password': password,
+              'full_name': fullName.trim(),
+              'email': email.trim(),
+              'role': role,
+            }),
+          )
+          .timeout(const Duration(seconds: 5));
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+
+      if (response.statusCode == 200) {
+        return data;
+      } else {
+        final errorMsg = data['detail'] ?? 'Registrasi gagal';
+        throw Exception(errorMsg);
+      }
+    } catch (e) {
+      if (e is Exception && !e.toString().contains('ClientException')) {
+        rethrow;
+      }
+      throw Exception('Gagal menghubungi server database: $e');
+    }
+  }
 }
