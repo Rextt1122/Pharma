@@ -90,44 +90,30 @@ class ClimateDashboardPage extends StatelessWidget {
           boxShadow: _cardShadow,
         ),
         child: Row(children: [
-          _tab('Rak Vaksin', '2°C – 8°C', p.isVaccineRack, () => p.selectDevice('device_1')),
-          _tab('Ruang Steril', '15°C – 25°C', !p.isVaccineRack, () => p.selectDevice('device_2')),
+          _tab('Rak Vaksin', p.isVaccineRack, () => p.selectDevice('device_1')),
+          _tab('Ruang Steril', !p.isVaccineRack, () => p.selectDevice('device_2')),
         ]),
       );
 
-  Widget _tab(String label, String subtitle, bool on, VoidCallback tap) => Expanded(
+  Widget _tab(String label, bool on, VoidCallback tap) => Expanded(
         child: InkWell(
           onTap: tap,
           borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 180),
-            padding: const EdgeInsets.symmetric(vertical: 8),
+            height: 42,
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: on ? AppColors.pharmaNavy : Colors.transparent,
               borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: on ? Colors.white : AppColors.textDark,
-                  ),
-                ),
-                const SizedBox(height: 1),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: on ? Colors.white.withAlpha(210) : AppColors.textMuted,
-                  ),
-                ),
-              ],
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: on ? Colors.white : AppColors.textMuted,
+              ),
             ),
           ),
         ),
