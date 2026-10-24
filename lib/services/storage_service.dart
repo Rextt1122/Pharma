@@ -48,8 +48,13 @@ class StorageService {
   // Auth persistence: token sesi disimpan terenkripsi (Keystore / Keychain)
   static const FlutterSecureStorage _secure = FlutterSecureStorage();
 
-  Future<void> saveAuthToken(String token) =>
-      _secure.write(key: _keyAuthToken, value: token);
+  Future<void> saveAuthToken(String token) async {
+    await _secure.write(key: _keyAuthToken, value: token);
+    // Login password baru: segarkan token biometrik kalau fitur aktif.
+    if (await isBiometricEnabled()) {
+      await _secure.write(key: _keyBiometricToken, value: token);
+    }
+  }
 
   Future<String?> getAuthToken() async {
     final token = await _secure.read(key: _keyAuthToken);

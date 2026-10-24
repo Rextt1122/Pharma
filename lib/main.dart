@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'providers/sensor_provider.dart';
 import 'providers/history_provider.dart';
+import 'services/navigation_service.dart';
 import 'theme/app_theme.dart';
 import 'views/login_page.dart';
 import 'views/main_navigation.dart';
@@ -23,6 +24,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => HistoryProvider()),
       ],
       child: MaterialApp(
+        navigatorKey: appNavigatorKey,
         title: 'Pharma Medic',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,

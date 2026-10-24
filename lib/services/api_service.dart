@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../models/sensor_model.dart';
+import 'navigation_service.dart';
 import 'storage_service.dart';
 import 'subnet_ips_io.dart'
     if (dart.library.js_interop) 'subnet_ips_web.dart'
@@ -104,7 +105,10 @@ class ApiService {
 
     try {
       final token = await _storageService.getAuthToken();
-      if (token == null) throw Exception('Sesi berakhir, silakan login ulang');
+      if (token == null) {
+        redirectToLogin();
+        throw Exception('Sesi berakhir, silakan login ulang');
+      }
 
       final response = await http
           .get(url, headers: {'Authorization': 'Bearer $token'})
@@ -112,6 +116,7 @@ class ApiService {
 
       if (response.statusCode == 401) {
         await _storageService.invalidateSession();
+        redirectToLogin();
         throw Exception('Sesi berakhir, silakan login ulang');
       }
 
