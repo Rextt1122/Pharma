@@ -117,22 +117,25 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
                 ],
               ),
               Text(
-                '${items.length} Data Titik',
+                '${items.length} Titik Data',
                 style: AppTypography.caption,
               ),
             ],
           ),
           const SizedBox(height: AppSpacing.md),
-          // Metric Selector Chips
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
+          // Metric Selector Segmented Box
+          Container(
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              color: AppColors.inputBg,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+              border: Border.all(color: AppColors.containerLow, width: 0.8),
+            ),
             child: Row(
               children: [
-                _buildFilterChip('Suhu', ChartMetric.suhu, AppColors.tempRed),
-                const SizedBox(width: AppSpacing.xs + 2),
-                _buildFilterChip('Kelembapan', ChartMetric.kelembapan, AppColors.humidityBlue),
-                const SizedBox(width: AppSpacing.xs + 2),
-                _buildFilterChip('Kadar Gas', ChartMetric.gas, AppColors.warningAmber),
+                _buildSegmentItem('Suhu (°C)', ChartMetric.suhu),
+                _buildSegmentItem('Kelembapan (%)', ChartMetric.kelembapan),
+                _buildSegmentItem('Kadar Gas', ChartMetric.gas),
               ],
             ),
           ),
@@ -280,28 +283,26 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
     );
   }
 
-  Widget _buildFilterChip(String label, ChartMetric metric, Color color) {
+  Widget _buildSegmentItem(String label, ChartMetric metric) {
     final isSelected = _selectedMetric == metric;
-    return InkWell(
-      onTap: () => setState(() => _selectedMetric = metric),
-      borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected ? color : color.withAlpha(20),
-          borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
-          border: Border.all(
-            color: isSelected ? color : color.withAlpha(60),
-            width: 1,
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _selectedMetric = metric),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(vertical: 7),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.pharmaNavy : Colors.transparent,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
           ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? Colors.white : color,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-            fontSize: 12,
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? Colors.white : AppColors.textMuted,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+              fontSize: 11.5,
+            ),
           ),
         ),
       ),

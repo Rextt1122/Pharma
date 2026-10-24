@@ -99,32 +99,39 @@ class _Model3dPageState extends State<Model3dPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(AppSpacing.sm),
-                            decoration: const BoxDecoration(
-                              color: AppColors.containerLow,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.view_in_ar_outlined,
-                              color: AppColors.pharmaNavy,
-                              size: 20,
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.sm + 4),
-                          const Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Digital Twin Miniatur 3D', style: AppTypography.subtitle),
-                              Text('Simulasi Layout & Posisi Sensor', style: AppTypography.caption),
-                            ],
-                          ),
-                        ],
+                      Container(
+                        padding: const EdgeInsets.all(AppSpacing.sm),
+                        decoration: const BoxDecoration(
+                          color: AppColors.containerLow,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.view_in_ar_outlined,
+                          color: AppColors.pharmaNavy,
+                          size: 20,
+                        ),
                       ),
+                      const SizedBox(width: AppSpacing.sm + 4),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Digital Twin Miniatur 3D',
+                              style: AppTypography.subtitle,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            SizedBox(height: 1),
+                            Text(
+                              'Simulasi Layout & Posisi Sensor',
+                              style: AppTypography.caption,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
                       Container(
                         alignment: Alignment.center,
                         padding: const EdgeInsets.symmetric(
@@ -221,39 +228,40 @@ class _Model3dPageState extends State<Model3dPage> {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.sm + 4),
-                  Wrap(
-                    spacing: AppSpacing.xs,
-                    runSpacing: AppSpacing.xs,
-                    children: _views.map((viewMode) {
+                  Container(
+                    padding: const EdgeInsets.all(3),
+                    decoration: BoxDecoration(
+                      color: AppColors.inputBg,
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                      border: Border.all(color: AppColors.containerLow, width: 0.8),
+                    ),
+                    child: Row(
+                      children: _views.map((viewMode) {
                         final isSelected = _selectedView == viewMode;
-                        return Padding(
-                          padding: const EdgeInsets.only(right: AppSpacing.sm),
-                          child: ChoiceChip(
-                            label: Text(viewMode),
-                            selected: isSelected,
-                            onSelected: (selected) {
-                              if (selected) {
-                                setState(() {
-                                  _selectedView = viewMode;
-                                });
-                              }
-                            },
-                            selectedColor: AppColors.pharmaNavy,
-                            backgroundColor: AppColors.inputBg,
-                            labelStyle: TextStyle(
-                              color: isSelected ? Colors.white : AppColors.textDark,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                              fontSize: 12,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                              side: BorderSide(
-                                color: isSelected ? AppColors.pharmaNavy : AppColors.containerHigh,
+                        return Expanded(
+                          child: GestureDetector(
+                            onTap: () => setState(() => _selectedView = viewMode),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 180),
+                              padding: const EdgeInsets.symmetric(vertical: 7),
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: isSelected ? AppColors.pharmaNavy : Colors.transparent,
+                                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                              ),
+                              child: Text(
+                                viewMode,
+                                style: TextStyle(
+                                  color: isSelected ? Colors.white : AppColors.textMuted,
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                                  fontSize: 11.5,
+                                ),
                               ),
                             ),
                           ),
                         );
                       }).toList(),
+                    ),
                   ),
                 ],
               ),
@@ -458,39 +466,22 @@ class _Model3dPageState extends State<Model3dPage> {
                 children: [
                   const Text('Fokus Lokasi Sensor', style: AppTypography.subtitle),
                   const SizedBox(height: AppSpacing.sm),
-                  Wrap(
-                    spacing: AppSpacing.sm,
-                    runSpacing: AppSpacing.xs,
-                    children: _zones.asMap().entries.map((entry) {
-                      final idx = entry.key;
-                      final label = entry.value;
-                      final isSelected = _selectedZone == idx;
-
-                      return ChoiceChip(
-                        label: Text(label),
-                        selected: isSelected,
-                        onSelected: (selected) {
-                          if (selected) {
-                            setState(() {
-                              _selectedZone = idx;
-                            });
-                          }
-                        },
-                        selectedColor: AppColors.pharmaNavy,
-                        backgroundColor: AppColors.inputBg,
-                        labelStyle: TextStyle(
-                          color: isSelected ? Colors.white : AppColors.textDark,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                          fontSize: 11,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                          side: BorderSide(
-                            color: isSelected ? AppColors.pharmaNavy : AppColors.containerHigh,
-                          ),
-                        ),
-                      );
-                    }).toList(),
+                  _buildZoneButton(0, 'Semua Zona (Tinjauan Menyeluruh)'),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Expanded(child: _buildZoneButton(1, 'Cold Storage (2-8°C)')),
+                      const SizedBox(width: 6),
+                      Expanded(child: _buildZoneButton(2, 'Kamar UV Steril')),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Expanded(child: _buildZoneButton(3, 'Pintu Utama')),
+                      const SizedBox(width: 6),
+                      Expanded(child: _buildZoneButton(4, 'Detektor Gas')),
+                    ],
                   ),
                 ],
               ),
@@ -530,6 +521,48 @@ class _Model3dPageState extends State<Model3dPage> {
           ],
         );
       },
+    );
+  }
+
+  Widget _buildZoneButton(int idx, String label) {
+    final isSelected = _selectedZone == idx;
+    return InkWell(
+      onTap: () => setState(() => _selectedZone = idx),
+      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.pharmaNavy : AppColors.inputBg,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+          border: Border.all(
+            color: isSelected ? AppColors.pharmaNavy : AppColors.containerLow,
+            width: 1.0,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (isSelected) ...[
+              const Icon(Icons.check_circle_rounded, size: 13, color: Colors.white),
+              const SizedBox(width: 5),
+            ],
+            Flexible(
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: isSelected ? Colors.white : AppColors.textDark,
+                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                  fontSize: 11.5,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
