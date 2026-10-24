@@ -77,8 +77,8 @@ class StorageService {
   Future<Map<String, String>> getUserProfile() async {
     final prefs = await SharedPreferences.getInstance();
     return {
-      'name': prefs.getString(_keyUserName) ?? 'Fabian (Admin Farmasi)',
-      'email': prefs.getString(_keyUserEmail) ?? 'fabian.pharma@smartpharma.id',
+      'name': prefs.getString(_keyUserName) ?? 'Pengguna Farmasi',
+      'email': prefs.getString(_keyUserEmail) ?? 'user@smartpharma.id',
       'provider': prefs.getString(_keyAuthProvider) ?? 'Smart Pharma',
     };
   }

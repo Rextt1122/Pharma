@@ -28,8 +28,8 @@ class _SettingsPageState extends State<SettingsPage> {
   double _humidityMin = StorageService.defaultHumidityMin;
   double _humidityMax = StorageService.defaultHumidityMax;
   double _gasMax = StorageService.defaultGasMax;
-  String _userName = 'Fabian (Admin Farmasi)';
-  String _userEmail = 'fabian.pharma@smartpharma.id';
+  String _userName = 'Pengguna Farmasi';
+  String _userEmail = 'user@smartpharma.id';
   String _authProvider = 'Smart Pharma';
   bool _isSaving = false;
   bool _isLoading = true;
@@ -68,8 +68,8 @@ class _SettingsPageState extends State<SettingsPage> {
 
       setState(() {
         _ipController.text = ip;
-        _userName = profile['name'] ?? 'Fabian (Admin Farmasi)';
-        _userEmail = profile['email'] ?? 'fabian.pharma@smartpharma.id';
+        _userName = profile['name'] ?? 'Pengguna Farmasi';
+        _userEmail = profile['email'] ?? 'user@smartpharma.id';
         _authProvider = profile['provider'] ?? 'Smart Pharma';
         _isBiometricEnabled = isBioEnabled;
         _isBiometricSupported = isBioSupported;
@@ -94,6 +94,183 @@ class _SettingsPageState extends State<SettingsPage> {
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  void _showEditProfileDialog() {
+    final nameCtrl = TextEditingController(text: _userName);
+    final emailCtrl = TextEditingController(text: _userEmail);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.cardWhite,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetCtx) => Padding(
+        padding: EdgeInsets.only(
+          left: AppSpacing.lg,
+          right: AppSpacing.lg,
+          top: AppSpacing.md + 4,
+          bottom: MediaQuery.of(sheetCtx).viewInsets.bottom + AppSpacing.lg,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                width: 38,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.containerHigh,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.sm),
+                  decoration: BoxDecoration(
+                    color: AppColors.pharmaNavy.withAlpha(20),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                  ),
+                  child: const Icon(
+                    Icons.edit_note_rounded,
+                    color: AppColors.pharmaNavy,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                const Text(
+                  'Edit Profil Pengguna',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.pharmaNavy,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md + 2),
+            const Text(
+              'Nama Pengguna',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textDark,
+              ),
+            ),
+            const SizedBox(height: 6),
+            TextField(
+              controller: nameCtrl,
+              decoration: InputDecoration(
+                hintText: 'Nama lengkap / username',
+                floatingLabelBehavior: FloatingLabelBehavior.never,
+                filled: true,
+                fillColor: AppColors.inputBg,
+                prefixIcon: const Icon(Icons.person_outline_rounded, size: 18),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                  borderSide: const BorderSide(color: AppColors.containerHigh),
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            const Text(
+              'Alamat Email',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textDark,
+              ),
+            ),
+            const SizedBox(height: 6),
+            TextField(
+              controller: emailCtrl,
+              keyboardType: TextInputType.emailAddress,
+              decoration: InputDecoration(
+                hintText: 'email@domain.com',
+                floatingLabelBehavior: FloatingLabelBehavior.never,
+                filled: true,
+                fillColor: AppColors.inputBg,
+                prefixIcon: const Icon(Icons.mail_outline_rounded, size: 18),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                  borderSide: const BorderSide(color: AppColors.containerHigh),
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.textMuted,
+                      side: const BorderSide(color: AppColors.containerHigh),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                      ),
+                    ),
+                    onPressed: () => Navigator.pop(sheetCtx),
+                    child: const Text('Batal'),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  flex: 2,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.pharmaNavy,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                      ),
+                    ),
+                    onPressed: () async {
+                      final newName = nameCtrl.text.trim();
+                      final newEmail = emailCtrl.text.trim();
+                      if (newName.isEmpty || newEmail.isEmpty) {
+                        return;
+                      }
+                      await _storageService.saveUserProfile(
+                        name: newName,
+                        email: newEmail,
+                        provider: _authProvider,
+                      );
+                      if (!mounted) return;
+                      setState(() {
+                        _userName = newName;
+                        _userEmail = newEmail;
+                      });
+                      if (sheetCtx.mounted) {
+                        Navigator.pop(sheetCtx);
+                      }
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Profil berhasil diperbarui'),
+                          backgroundColor: AppColors.pharmaNavy,
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    },
+                    child: const Text(
+                      'Simpan Profil',
+                      style: TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _saveSettings() async {
@@ -331,22 +508,30 @@ class _SettingsPageState extends State<SettingsPage> {
                           style: AppTypography.caption,
                           overflow: TextOverflow.ellipsis,
                         ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _authProvider,
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.pharmaNavy.withAlpha(180),
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ],
                     ),
                   ),
                   const SizedBox(width: AppSpacing.sm),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.pharmaNavy,
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                    ),
-                    child: Text(
-                      'SSO $_authProvider',
-                      style: AppTypography.badge.copyWith(fontSize: 10),
+                  IconButton(
+                    onPressed: _showEditProfileDialog,
+                    icon: const Icon(Icons.edit_outlined, size: 20),
+                    color: AppColors.pharmaNavy,
+                    tooltip: 'Edit Profil',
+                    style: IconButton.styleFrom(
+                      backgroundColor: AppColors.containerLow,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                      ),
                     ),
                   ),
                 ],

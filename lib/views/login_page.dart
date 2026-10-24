@@ -170,10 +170,11 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         } else {
           final res = await ApiService().login(username, password);
           final user = (res['user'] as Map<String, dynamic>?) ?? {};
+          final userName = user['name']?.toString() ?? user['full_name']?.toString() ?? username;
           final userEmail = user['email']?.toString() ?? (username.contains('@') ? username : '$username@smartpharma.id');
 
           await StorageService().saveUserProfile(
-            name: user['name']?.toString() ?? username,
+            name: userName,
             email: userEmail,
             provider: 'Database MySQL (${user['role'] ?? 'operator'})',
           );
