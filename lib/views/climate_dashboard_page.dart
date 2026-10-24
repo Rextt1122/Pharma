@@ -5,6 +5,7 @@ import 'package:syncfusion_flutter_gauges/gauges.dart';
 import '../models/sensor_model.dart';
 import '../providers/sensor_provider.dart';
 import '../theme/app_theme.dart';
+import '../widgets/botanic_vector_decor.dart';
 import '../widgets/shimmer_loading.dart';
 
 class ClimateDashboardPage extends StatelessWidget {
@@ -119,51 +120,58 @@ class ClimateDashboardPage extends StatelessWidget {
         : 'Suhu ruang steril di luar batas ${targetMin.toStringAsFixed(0)}-${targetMax.toStringAsFixed(0)}°C.';
 
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md + 4),
       decoration: BoxDecoration(
         color: AppColors.cardWhite,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         boxShadow: _cardShadow,
       ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text('RINGKASAN SAAT INI', style: _section),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: (safe ? AppColors.activeGreen : AppColors.alertRed).withAlpha(24),
-                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-              ),
-              child: Text(
-                p.isVaccineRack ? 'COLD STORAGE' : 'CLEANROOM',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w800,
-                  color: safe ? AppColors.activeGreen : AppColors.alertRed,
+      child: BotanicVectorCardWatermark(
+        size: 130,
+        opacity: 0.045,
+        alignment: Alignment.topRight,
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.md + 4),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('RINGKASAN SAAT INI', style: _section),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: (safe ? AppColors.activeGreen : AppColors.alertRed).withAlpha(24),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                  ),
+                  child: Text(
+                    p.isVaccineRack ? 'COLD STORAGE' : 'CLEANROOM',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: safe ? AppColors.activeGreen : AppColors.alertRed,
+                    ),
+                  ),
                 ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              safe ? safeText : alertText,
+              style: TextStyle(
+                fontSize: 20,
+                height: 1.2,
+                fontWeight: FontWeight.w800,
+                color: safe ? AppColors.pharmaNavy : AppColors.alertRed,
               ),
             ),
-          ],
+            const SizedBox(height: AppSpacing.md),
+            Row(children: [
+              Expanded(child: _smallStat('Target suhu', '${targetMin.toStringAsFixed(0)}-${targetMax.toStringAsFixed(0)}°C')),
+              Container(height: 30, width: 1, color: AppColors.containerHigh),
+              Expanded(child: _smallStat('Status pintu', s.isPintuTerbuka ? 'Terbuka' : 'Tertutup')),
+            ]),
+          ]),
         ),
-        const SizedBox(height: AppSpacing.sm),
-        Text(
-          safe ? safeText : alertText,
-          style: TextStyle(
-            fontSize: 20,
-            height: 1.2,
-            fontWeight: FontWeight.w800,
-            color: safe ? AppColors.pharmaNavy : AppColors.alertRed,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Row(children: [
-          Expanded(child: _smallStat('Target suhu', '${targetMin.toStringAsFixed(0)}-${targetMax.toStringAsFixed(0)}°C')),
-          Container(height: 30, width: 1, color: AppColors.containerHigh),
-          Expanded(child: _smallStat('Status pintu', s.isPintuTerbuka ? 'Terbuka' : 'Tertutup')),
-        ]),
-      ]),
+      ),
     );
   }
 

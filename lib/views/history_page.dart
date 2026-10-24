@@ -4,6 +4,7 @@ import '../models/sensor_model.dart';
 import '../providers/history_provider.dart';
 import '../providers/sensor_provider.dart';
 import '../theme/app_theme.dart';
+import '../widgets/botanic_vector_decor.dart';
 import '../widgets/sensor_trend_chart.dart';
 import '../widgets/shimmer_loading.dart';
 
@@ -200,7 +201,12 @@ class HistoryPage extends StatelessWidget {
               ],
             ),
             const SizedBox(height: AppSpacing.md),
-            SensorTrendChart(historyData: provider.historyList),
+            BotanicVectorCardWatermark(
+              size: 140,
+              opacity: 0.035,
+              alignment: Alignment.topRight,
+              child: SensorTrendChart(historyData: provider.historyList),
+            ),
             const SizedBox(height: AppSpacing.md + 2),
             Row(
               children: [

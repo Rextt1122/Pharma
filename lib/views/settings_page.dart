@@ -6,6 +6,7 @@ import '../services/storage_service.dart';
 import '../services/update_service.dart';
 import '../providers/sensor_provider.dart';
 import '../theme/app_theme.dart';
+import '../widgets/botanic_vector_decor.dart';
 import '../widgets/shimmer_loading.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -280,7 +281,6 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
       children: [
         Container(
-          padding: const EdgeInsets.all(AppSpacing.md + 4),
           decoration: BoxDecoration(
             color: AppColors.cardWhite,
             borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -293,57 +293,65 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ],
           ),
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 22,
-                backgroundColor: AppColors.pharmaNavy.withAlpha(24),
-                child: Text(
-                  _userName.isNotEmpty
-                      ? _userName.substring(0, 1).toUpperCase()
-                      : 'A',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.pharmaNavy,
+          child: BotanicVectorCardWatermark(
+            size: 110,
+            opacity: 0.045,
+            alignment: Alignment.topRight,
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.md + 4),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 22,
+                    backgroundColor: AppColors.pharmaNavy.withAlpha(24),
+                    child: Text(
+                      _userName.isNotEmpty
+                          ? _userName.substring(0, 1).toUpperCase()
+                          : 'A',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.pharmaNavy,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _userName,
-                      style: AppTypography.subtitle,
-                      overflow: TextOverflow.ellipsis,
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _userName,
+                          style: AppTypography.subtitle,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          _userEmail,
+                          style: AppTypography.caption,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      _userEmail,
-                      style: AppTypography.caption,
-                      overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
                     ),
-                  ],
-                ),
+                    decoration: BoxDecoration(
+                      color: AppColors.pharmaNavy,
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                    ),
+                    child: Text(
+                      'SSO $_authProvider',
+                      style: AppTypography.badge.copyWith(fontSize: 10),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: AppSpacing.sm),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.pharmaNavy,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                ),
-                child: Text(
-                  'SSO $_authProvider',
-                  style: AppTypography.badge.copyWith(fontSize: 10),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
         const SizedBox(height: AppSpacing.md - 2),

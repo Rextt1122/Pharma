@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../models/sensor_model.dart';
 import '../providers/sensor_provider.dart';
 import '../theme/app_theme.dart';
+import '../widgets/botanic_vector_decor.dart';
 import '../widgets/shimmer_loading.dart';
 
 class Model3dPage extends StatefulWidget {
@@ -488,7 +489,6 @@ class _Model3dPageState extends State<Model3dPage> {
             ),
             const SizedBox(height: AppSpacing.md - 2),
             Container(
-              padding: const EdgeInsets.all(AppSpacing.lg),
               decoration: BoxDecoration(
                 color: AppColors.cardWhite,
                 borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -501,21 +501,29 @@ class _Model3dPageState extends State<Model3dPage> {
                   ),
                 ],
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Spesifikasi Gudang', style: AppTypography.subtitle),
-                  const SizedBox(height: AppSpacing.md),
-                  _buildSpecRow(Icons.warehouse_outlined, 'Storage', '120 m² (Cold Storage Zone A)'),
-                  const Divider(height: 18, thickness: 0.7, color: AppColors.containerLow),
-                  _buildSpecRow(Icons.thermostat_outlined, 'Sensor Suhu/Lembap', 'SHT31 (Akurasi ±0.2°C)'),
-                  const Divider(height: 18, thickness: 0.7, color: AppColors.containerLow),
-                  _buildSpecRow(Icons.co2_outlined, 'Detektor Gas/Asap', 'MQ-2 / MQ-135 Gas Sensor'),
-                  const Divider(height: 18, thickness: 0.7, color: AppColors.containerLow),
-                  _buildSpecRow(Icons.cleaning_services_outlined, 'Sterilisasi Ruang', 'UV-C Germicidal (254nm)'),
-                  const Divider(height: 18, thickness: 0.7, color: AppColors.containerLow),
-                  _buildSpecRow(Icons.door_sliding_outlined, 'Akses Pintu', 'Magnetic Contact Switch'),
-                ],
+              child: BotanicVectorCardWatermark(
+                size: 110,
+                opacity: 0.045,
+                alignment: Alignment.topRight,
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.md + 4),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Spesifikasi Gudang', style: AppTypography.subtitle),
+                      const SizedBox(height: AppSpacing.md),
+                      _buildSpecRow(Icons.warehouse_outlined, 'Storage', '120 m² (Cold Storage Zone A)'),
+                      const Divider(height: 18, thickness: 0.7, color: AppColors.containerLow),
+                      _buildSpecRow(Icons.thermostat_outlined, 'Sensor Suhu/Lembap', 'SHT31 (Akurasi ±0.2°C)'),
+                      const Divider(height: 18, thickness: 0.7, color: AppColors.containerLow),
+                      _buildSpecRow(Icons.co2_outlined, 'Detektor Gas/Asap', 'MQ-2 / MQ-135 Gas Sensor'),
+                      const Divider(height: 18, thickness: 0.7, color: AppColors.containerLow),
+                      _buildSpecRow(Icons.cleaning_services_outlined, 'Sterilisasi Ruang', 'UV-C Germicidal (254nm)'),
+                      const Divider(height: 18, thickness: 0.7, color: AppColors.containerLow),
+                      _buildSpecRow(Icons.door_sliding_outlined, 'Akses Pintu', 'Magnetic Contact Switch'),
+                    ],
+                  ),
+                ),
               ),
             ),
           ],
