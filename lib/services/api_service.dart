@@ -103,9 +103,17 @@ class ApiService {
     final url = Uri.parse('http://$ip:8001/sensor');
 
     try {
+      final token = await _storageService.getAuthToken();
+      if (token == null) throw Exception('Sesi berakhir, silakan login ulang');
+
       final response = await http
-          .get(url)
+          .get(url, headers: {'Authorization': 'Bearer $token'})
           .timeout(const Duration(milliseconds: 3000));
+
+      if (response.statusCode == 401) {
+        await _storageService.invalidateSession();
+        throw Exception('Sesi berakhir, silakan login ulang');
+      }
 
       if (response.statusCode == 200) {
         final dynamic decodedData = jsonDecode(response.body);
@@ -126,6 +134,7 @@ class ApiService {
       }
     } catch (e) {
       if (e is FormatException) rethrow;
+      if (e.toString().contains('Sesi berakhir')) rethrow;
       throw Exception('Gagal terhubung ke server: $e');
     }
   }
@@ -149,6 +158,11 @@ class ApiService {
       final data = jsonDecode(response.body) as Map<String, dynamic>;
 
       if (response.statusCode == 200) {
+        final token = data['token'] as String?;
+        if (token == null || token.isEmpty) {
+          throw Exception('Server tidak mengirim token sesi');
+        }
+        await _storageService.saveAuthToken(token);
         return data;
       } else {
         final errorMsg = data['detail'] ?? 'Autentikasi gagal';
@@ -167,7 +181,6 @@ class ApiService {
     required String password,
     required String fullName,
     required String email,
-    String role = 'operator',
   }) async {
     final ip = await resolveReachableIp();
     final url = Uri.parse('http://$ip:8001/register');
@@ -182,7 +195,6 @@ class ApiService {
               'password': password,
               'full_name': fullName.trim(),
               'email': email.trim(),
-              'role': role,
             }),
           )
           .timeout(const Duration(seconds: 5));
@@ -190,6 +202,11 @@ class ApiService {
       final data = jsonDecode(response.body) as Map<String, dynamic>;
 
       if (response.statusCode == 200) {
+        final token = data['token'] as String?;
+        if (token == null || token.isEmpty) {
+          throw Exception('Server tidak mengirim token sesi');
+        }
+        await _storageService.saveAuthToken(token);
         return data;
       } else {
         final errorMsg = data['detail'] ?? 'Registrasi gagal';

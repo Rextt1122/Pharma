@@ -1,8 +1,12 @@
+import 'dart:convert';
+
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class StorageService {
   static const String _keyServerIp = 'server_ip';
-  static const String _keyIsLoggedIn = 'is_logged_in';
+  static const String _keyAuthToken = 'auth_token';
+  static const String _keyBiometricToken = 'biometric_token';
   static const String _keyBiometricEnabled = 'biometric_enabled';
   static const String _keyUserName = 'user_name';
   static const String _keyUserEmail = 'user_email';
@@ -41,15 +45,69 @@ class StorageService {
     return prefs.getString(_keyServerIp) ?? defaultIp;
   }
 
-  // Auth persistence
-  Future<void> setLoggedIn(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_keyIsLoggedIn, value);
+  // Auth persistence: token sesi disimpan terenkripsi (Keystore / Keychain)
+  static const FlutterSecureStorage _secure = FlutterSecureStorage();
+
+  Future<void> saveAuthToken(String token) =>
+      _secure.write(key: _keyAuthToken, value: token);
+
+  Future<String?> getAuthToken() async {
+    final token = await _secure.read(key: _keyAuthToken);
+    if (token == null || _isExpired(token)) return null;
+    return token;
   }
 
-  Future<bool> isLoggedIn() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_keyIsLoggedIn) ?? false;
+  Future<bool> isLoggedIn() async => (await getAuthToken()) != null;
+
+  /// Logout. Token biometrik ikut dihapus kecuali login biometrik aktif.
+  Future<void> clearSession() async {
+    await _secure.delete(key: _keyAuthToken);
+    if (!await isBiometricEnabled()) {
+      await _secure.delete(key: _keyBiometricToken);
+    }
+  }
+
+  /// Sesi tidak valid (401 / kedaluwarsa): hapus semua token.
+  Future<void> invalidateSession() async {
+    await _secure.delete(key: _keyAuthToken);
+    await _secure.delete(key: _keyBiometricToken);
+  }
+
+  Future<void> storeBiometricToken() async {
+    final token = await getAuthToken();
+    if (token != null) {
+      await _secure.write(key: _keyBiometricToken, value: token);
+    }
+  }
+
+  Future<void> removeBiometricToken() =>
+      _secure.delete(key: _keyBiometricToken);
+
+  Future<bool> hasBiometricToken() async {
+    final token = await _secure.read(key: _keyBiometricToken);
+    return token != null && !_isExpired(token);
+  }
+
+  /// Setelah biometrik lolos: pulihkan sesi dari token tersimpan.
+  Future<bool> restoreSessionFromBiometric() async {
+    final token = await _secure.read(key: _keyBiometricToken);
+    if (token == null || _isExpired(token)) return false;
+    await _secure.write(key: _keyAuthToken, value: token);
+    return true;
+  }
+
+  static bool _isExpired(String token) {
+    try {
+      final parts = token.split('.');
+      if (parts.length != 2) return true;
+      final payload = jsonDecode(
+        utf8.decode(base64Url.decode(base64.normalize(parts[0]))),
+      ) as Map<String, dynamic>;
+      final exp = (payload['exp'] as num?)?.toInt() ?? 0;
+      return DateTime.now().millisecondsSinceEpoch ~/ 1000 >= exp;
+    } catch (_) {
+      return true;
+    }
   }
 
   // Biometric preference

@@ -93,8 +93,10 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
   Future<void> _checkBiometrics() async {
     final supported = await _biometricService.isDeviceSupported();
+    final enabled = await StorageService().isBiometricEnabled();
+    final hasToken = await StorageService().hasBiometricToken();
     if (mounted) {
-      setState(() => _canUseBiometrics = supported);
+      setState(() => _canUseBiometrics = supported && enabled && hasToken);
     }
   }
 
@@ -105,27 +107,19 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       final authenticated = await _biometricService.authenticate(
         reason: 'Pindai sidik jari untuk masuk ke Smart Pharma',
       );
-      if (authenticated) {
-        await StorageService().setLoggedIn(true);
-        if (mounted) {
-          Navigator.pushReplacementNamed(context, '/main');
-        }
+      if (!authenticated) return;
+
+      // Biometrik hanya membuka token yang diterbitkan server, bukan login baru.
+      final restored = await StorageService().restoreSessionFromBiometric();
+      if (!mounted) return;
+      if (restored) {
+        Navigator.pushReplacementNamed(context, '/main');
       } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Autentikasi biometrik dibatalkan atau tidak cocok'),
-              backgroundColor: Colors.redAccent,
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
+        setState(() => _canUseBiometrics = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Biometrik error: $e'),
-            backgroundColor: Colors.redAccent,
+          const SnackBar(
+            content: Text('Sesi kedaluwarsa. Login dengan password.'),
+            backgroundColor: AppColors.alertRed,
           ),
         );
       }
@@ -153,7 +147,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             password: password,
             fullName: fullName.isNotEmpty ? fullName : 'Petugas Farmasi',
             email: email,
-            role: 'operator',
           );
           final user = (res['user'] as Map<String, dynamic>?) ?? {};
 
@@ -162,7 +155,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             email: user['email']?.toString() ?? email,
             provider: 'Database MySQL',
           );
-          await StorageService().setLoggedIn(true);
 
           if (mounted) {
             Navigator.pushReplacementNamed(context, '/main');
@@ -178,7 +170,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             email: userEmail,
             provider: 'Database MySQL (${user['role'] ?? 'operator'})',
           );
-          await StorageService().setLoggedIn(true);
 
           if (mounted) {
             Navigator.pushReplacementNamed(context, '/main');
@@ -215,82 +206,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         }
       }
     }
-  }
-
-  Future<void> _completeSsoLogin({
-    required String name,
-    required String email,
-    required String provider,
-  }) async {
-    await StorageService().saveUserProfile(
-      name: name,
-      email: email,
-      provider: provider,
-    );
-    await StorageService().setLoggedIn(true);
-    if (!mounted) return;
-    Navigator.pushReplacementNamed(context, '/main');
-  }
-
-  void _handleQuickSso(String provider) async {
-    final String domain = provider == 'Google'
-        ? 'gmail.com'
-        : (provider == 'Facebook' ? 'facebook.com' : 'icloud.com');
-
-    // Show smooth progress indicator dialog
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => Center(
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-          decoration: BoxDecoration(
-            color: AppColors.cardWhite,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x180E555A),
-                blurRadius: 16,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.5,
-                  color: AppColors.pharmaNavy,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Text(
-                'Menghubungkan akun $provider...',
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textDark,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-
-    await Future.delayed(const Duration(milliseconds: 700));
-
-    if (!mounted) return;
-    Navigator.of(context, rootNavigator: true).pop(); // close dialog
-
-    await _completeSsoLogin(
-      name: 'Fabian (Admin Farmasi)',
-      email: 'fabian.pharma@$domain',
-      provider: provider,
-    );
   }
 
   void _toggleAuthMode(bool signUp) {
@@ -705,119 +620,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                     ),
 
                                     if (!_isSignUp) ...[
-                                      const SizedBox(height: AppSpacing.lg + 2),
-                                      _buildStaggered(
-                                        5,
-                                        Column(
-                                          children: [
-                                            Row(
-                                              children: [
-                                                const Expanded(
-                                                  child: Divider(
-                                                    color:
-                                                        AppColors.containerHigh,
-                                                    thickness: 1,
-                                                  ),
-                                                ),
-                                                Padding(
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                        horizontal: 12,
-                                                      ),
-                                                  child: Text(
-                                                    'Or login with',
-                                                    style: AppTypography.caption
-                                                        .copyWith(
-                                                          fontSize: 12,
-                                                          color: AppColors
-                                                              .textMuted,
-                                                        ),
-                                                  ),
-                                                ),
-                                                const Expanded(
-                                                  child: Divider(
-                                                    color:
-                                                        AppColors.containerHigh,
-                                                    thickness: 1,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            const SizedBox(
-                                              height: AppSpacing.md + 4,
-                                            ),
-                                            Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                _buildSocialButton(
-                                                  onTap: () =>
-                                                      _handleQuickSso(
-                                                        'Facebook',
-                                                      ),
-                                                  child: const Icon(
-                                                    Icons.facebook_rounded,
-                                                    color: Color(0xFF1877F2),
-                                                    size: 26,
-                                                  ),
-                                                ),
-                                                const SizedBox(
-                                                  width: AppSpacing.md,
-                                                ),
-                                                _buildSocialButton(
-                                                  onTap: () =>
-                                                      _handleQuickSso(
-                                                        'Google',
-                                                      ),
-                                                  child: CustomPaint(
-                                                    size: const Size(22, 22),
-                                                    painter:
-                                                        _GoogleLogoPainter(),
-                                                  ),
-                                                ),
-                                                const SizedBox(
-                                                  width: AppSpacing.md,
-                                                ),
-                                                _buildSocialButton(
-                                                  onTap: () =>
-                                                      _handleQuickSso(
-                                                        'Apple',
-                                                      ),
-                                                  child: const Icon(
-                                                    Icons.apple_rounded,
-                                                    color: Colors.black87,
-                                                    size: 26,
-                                                  ),
-                                                ),
-                                                if (_canUseBiometrics) ...[
-                                                  const SizedBox(
-                                                    width: AppSpacing.md,
-                                                  ),
-                                                  _buildSocialButton(
-                                                    onTap: _isAuthenticatingBiometric
-                                                        ? () {}
-                                                        : _handleBiometricLogin,
-                                                    child: _isAuthenticatingBiometric
-                                                        ? const SizedBox(
-                                                            width: 18,
-                                                            height: 18,
-                                                            child: CircularProgressIndicator(
-                                                              strokeWidth: 2,
-                                                              color: AppColors.pharmaNavy,
-                                                            ),
-                                                          )
-                                                        : const Icon(
-                                                            Icons.fingerprint_rounded,
-                                                            color: AppColors.pharmaNavy,
-                                                            size: 26,
-                                                          ),
-                                                  ),
-                                                ],
-                                              ],
-                                            ),
-                                          ],
-                                        ),
-                                      ),
                                       const Spacer(),
                                       const SizedBox(height: AppSpacing.lg),
                                       _buildStaggered(
@@ -1010,32 +812,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildSocialButton({
-    required VoidCallback onTap,
-    required Widget child,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-      child: Container(
-        width: 68,
-        height: 46,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: AppColors.cardWhite,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha(8),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: child,
-      ),
-    );
-  }
 }
 
 class _TopLeftDecorPainter extends CustomPainter {
@@ -1276,48 +1052,4 @@ class _PharmaPlantPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _PharmaPlantPainter oldDelegate) =>
       oldDelegate.progress != progress;
-}
-
-class _GoogleLogoPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final double w = size.width;
-    final double h = size.height;
-    final center = Offset(w / 2, h / 2);
-    final radius = w * 0.42;
-
-    final stroke = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.6
-      ..strokeCap = StrokeCap.butt;
-
-    final rect = Rect.fromCircle(center: center, radius: radius);
-
-    // Red top arc
-    stroke.color = const Color(0xFFEA4335);
-    canvas.drawArc(rect, -2.35, 1.65, false, stroke);
-
-    // Yellow left arc
-    stroke.color = const Color(0xFFFBBC05);
-    canvas.drawArc(rect, 2.25, 1.35, false, stroke);
-
-    // Green bottom arc
-    stroke.color = const Color(0xFF34A853);
-    canvas.drawArc(rect, 0.85, 1.45, false, stroke);
-
-    // Blue right arc + bar
-    stroke.color = const Color(0xFF4285F4);
-    canvas.drawArc(rect, -0.15, 1.05, false, stroke);
-
-    final barPaint = Paint()
-      ..color = const Color(0xFF4285F4)
-      ..style = PaintingStyle.fill;
-    canvas.drawRect(
-      Rect.fromLTWH(center.dx, center.dy - 1.8, radius + 1.5, 3.6),
-      barPaint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

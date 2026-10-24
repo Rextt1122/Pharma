@@ -344,6 +344,11 @@ class _SettingsPageState extends State<SettingsPage> {
     }
 
     await _storageService.setBiometricEnabled(value);
+    if (value) {
+      await _storageService.storeBiometricToken();
+    } else {
+      await _storageService.removeBiometricToken();
+    }
     if (mounted) {
       setState(() => _isBiometricEnabled = value);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1058,7 +1063,7 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ),
           onPressed: () async {
-            await StorageService().setLoggedIn(false);
+            await StorageService().clearSession();
             if (context.mounted) {
               Navigator.pushReplacementNamed(context, '/login');
             }
