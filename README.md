@@ -9,25 +9,25 @@
 
 ---
 
-## 📱 Ringkasan Proyek
+## Ringkasan Proyek
 
-**Pharma Medic** dirancang untuk memastikan keamanan penyimpanan obat dan vaksin yang memerlukan kontrol iklim ketat (*cold chain storage* 2°C – 8°C dan ruang steril 15°C – 25°C). Aplikasi mobile ini terhubung langsung ke sensor mikrokontroler melalui protokol MQTT dan REST API FastAPI untuk memantau metrik lingkungan, memberikan peringatan dini jika suhu/gas melebihi ambang batas, serta mengontrol aktuator sterilisasi secara *real-time*.
+**Pharma Medic** dirancang untuk memastikan keamanan penyimpanan obat dan vaksin yang memerlukan kontrol ketat (*cold chain storage* 2°C – 8°C dan ruang steril 15°C – 25°C). Aplikasi mobile ini terhubung langsung ke sensor mikrokontroler melalui protokol MQTT dan REST API FastAPI untuk memantau lingkungan, memberikan peringatan jika suhu/gas melebihi ambang batas, serta mengontrol aktuator secara *real-time*.
 
 ---
 
-## ✨ Fitur Utama
+## Fitur Utama
 
-- **Real-time Telemetry Dashboard**: Pemantauan suhu presisi (*radial gauge*), kelembapan, status pintu gudang, serta konsentrasi gas/asap (PPM).
+- **Real-time Telemetry Dashboard**: Pemantauan suhu (*radial gauge*), kelembapan, status pintu gudang, serta konsentrasi gas/asap (PPM).
 - **Multi-Device / Rak Storage Switcher**: Pemantauan terpisah antara Rak A (Vaksin 2–8°C) dan Rak B (Steril 15–25°C).
-- **Digital Twin 3D & Denah 2D**: Simulasi visual 3D interaktif layout gudang farmasi dan posisi titik sensor (`gudang_3d.glb`).
-- **Kontrol Aktuator Cepat**: Saklar operasional lampu sterilisasi UV-C dan alarm buzzer secara bidireksional via MQTT.
-- **Riwayat Log & Ekspor CSV**: Penyimpanan riwayat telemetri otomatis dengan grafik tren sensor dan fitur ekspor ke file `.csv`.
+- **Digital Twin 3D & Denah 2D**: Simulasi visual 3D layout gudang farmasi dan posisi sensor (`gudang_3d.glb`).
+- **Kontrol Aktuator Cepat**: Saklar lampu sterilisasi UV-C dan alarm buzzer secara bidireksional via MQTT.
+- **Riwayat Log & Ekspor CSV**: Penyimpanan riwayat telemetri otomatis dengan grafik sensor dan fitur ekspor ke file `.csv`.
 - **Konfigurasi Ambang Batas (*Thresholds*)**: Kustomisasi batas aman suhu, kelembapan, dan gas serta alamat IP server langsung dari aplikasi.
 - **Autentikasi & SSO**: Login/Register dengan verifikasi form serta integrasi profil akun Google, Facebook, dan Apple.
 
 ---
 
-## 🛠️ Tech Stack & Arsitektur
+## Tech Stack & Arsitektur
 
 | Komponen | Teknologi |
 |---|---|
@@ -42,7 +42,7 @@
 
 ---
 
-## 🚀 Panduan Memulai
+## Panduan Instalasi
 
 ### 1. Prasyarat
 - Flutter SDK installed (`flutter doctor`)
@@ -78,16 +78,16 @@ flutter run --release
 
 ---
 
-## 📦 Unduh APK Rilis
+## Unduh APK Rilis
 
 File APK versi rilis yang sudah dioptimasi (22 MB, arsitektur `arm64-v8a`) dapat diunduh langsung:
 
-👉 **[Download Pharma.apk (v1.0.0)](https://github.com/Rextt1122/Pharma/releases/latest)**
+**[Download Pharma.apk (v1.0.0)](https://github.com/Rextt1122/Pharma/releases/latest)**
 
 ---
 
-## 👥 Pengembang
+## Pengembang
 
-- **Pengembang**: Fabian / Tim PBL Smart Pharma
+- **Pengembang**: Fabian Hendriyansah
 - **Repositori**: [https://github.com/Rextt1122/Pharma](https://github.com/Rextt1122/Pharma)
 
