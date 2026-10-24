@@ -23,6 +23,7 @@ dependencies:
   package_info_plus: ^10.2.2
   local_auth: ^3.0.2
   flutter_secure_storage: ^11.2.0
+  ota_update: ^7.1.0
 
 dev_dependencies:
   flutter_test:

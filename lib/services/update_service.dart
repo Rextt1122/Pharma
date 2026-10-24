@@ -1,10 +1,8 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:open_filex/open_filex.dart';
+import 'package:ota_update/ota_update.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:path_provider/path_provider.dart';
 
 import '../theme/app_theme.dart';
 
@@ -150,79 +148,71 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
     setState(() {
       _isDownloading = true;
       _progress = 0.05;
-      _statusText = 'Menghubungkan ke GitHub...';
+      _statusText = 'Mempersiapkan unduhan...';
     });
 
     try {
-      final request = http.Request('GET', Uri.parse(widget.info.downloadUrl));
-      final response = await http.Client().send(request);
-
-      if (response.statusCode == 200) {
-        final totalBytes = response.contentLength ?? widget.info.apkSize;
-        int receivedBytes = 0;
-
-        final dir = await getTemporaryDirectory();
-        final filePath = '${dir.path}/Pharma_v${widget.info.latestVersion}.apk';
-        final file = File(filePath);
-        final sink = file.openWrite();
-
-        await response.stream.listen(
-          (chunk) {
-            receivedBytes += chunk.length;
-            sink.add(chunk);
-            if (totalBytes > 0 && mounted) {
+      OtaUpdate()
+          .execute(
+            widget.info.downloadUrl,
+            destinationFilename: 'Pharma_v${widget.info.latestVersion}.apk',
+          )
+          .listen(
+        (OtaEvent event) {
+          if (!mounted) return;
+          switch (event.status) {
+            case OtaStatus.DOWNLOADING:
               setState(() {
-                _progress = receivedBytes / totalBytes;
-                final mbReceived = (receivedBytes / (1024 * 1024)).toStringAsFixed(1);
-                final mbTotal = (totalBytes / (1024 * 1024)).toStringAsFixed(1);
-                _statusText = 'Mengunduh: $mbReceived MB / $mbTotal MB (${(_progress * 100).toInt()}%)';
+                final percent = int.tryParse(event.value ?? '0') ?? 0;
+                _progress = (percent / 100.0).clamp(0.0, 1.0);
+                _statusText = 'Mengunduh pembaruan ($percent%)...';
               });
-            }
-          },
-          onDone: () async {
-            await sink.flush();
-            await sink.close();
-
-            if (mounted) {
+              break;
+            case OtaStatus.INSTALLING:
               setState(() {
-                _statusText = 'Membuka paket instalasi...';
                 _progress = 1.0;
+                _statusText = 'Memasang paket aplikasi...';
               });
-            }
-
-            final result = await OpenFilex.open(
-              filePath,
-              type: 'application/vnd.android.package-archive',
-            );
-
-            if (mounted) {
-              setState(() => _isDownloading = false);
-              if (result.type != ResultType.done) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Status: ${result.message}'),
-                    backgroundColor: AppColors.alertRed,
-                  ),
-                );
-              } else {
-                Navigator.pop(context);
-              }
-            }
-          },
-          onError: (e) {
-            sink.close();
-            if (mounted) {
+              Future.delayed(const Duration(seconds: 1), () {
+                if (mounted) Navigator.pop(context);
+              });
+              break;
+            case OtaStatus.ALREADY_RUNNING_ERROR:
               setState(() {
                 _isDownloading = false;
-                _statusText = 'Gagal mengunduh: $e';
+                _statusText = 'Pembaruan sedang berjalan di latar belakang.';
               });
-            }
-          },
-          cancelOnError: true,
-        ).asFuture();
-      } else {
-        throw Exception('Server mengembalikan kode: ${response.statusCode}');
-      }
+              break;
+            case OtaStatus.PERMISSION_NOT_GRANTED_ERROR:
+              setState(() {
+                _isDownloading = false;
+                _statusText = 'Izin instalasi tidak diberikan oleh sistem.';
+              });
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Aktifkan izin instalasi aplikasi tidak dikenal di Pengaturan HP'),
+                  backgroundColor: AppColors.alertRed,
+                ),
+              );
+              break;
+            case OtaStatus.INTERNAL_ERROR:
+            default:
+              setState(() {
+                _isDownloading = false;
+                _statusText = 'Gagal memasang pembaruan: ${event.value}';
+              });
+              break;
+          }
+        },
+        onError: (e) {
+          if (mounted) {
+            setState(() {
+              _isDownloading = false;
+              _statusText = 'Error pembaruan: $e';
+            });
+          }
+        },
+      );
     } catch (e) {
       if (mounted) {
         setState(() {
