@@ -35,3 +35,4 @@ flutter:
   assets:
     - assets/models/
     - assets/models/gudang_3d.glb
+    - assets/models/coba_refined_v4_1.glb

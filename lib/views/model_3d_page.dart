@@ -288,8 +288,8 @@ class _Model3dPageState extends State<Model3dPage> {
                   children: [
                     if (_is3dModel)
                       ModelViewer(
-                        key: ValueKey('3d-model-$_selectedView-$_selectedZone-$_autoRotate'),
-                        src: 'assets/models/gudang_3d.glb',
+                        key: ValueKey('3d-model-$_selectedView-$_selectedZone-$_autoRotate-v4'),
+                        src: 'assets/models/coba_refined_v4_1.glb',
                         alt: 'Digital Twin Miniatur Gudang Farmasi 3D',
                         autoRotate: _autoRotate,
                         autoRotateDelay: 2000,
