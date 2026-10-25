@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:ota_update/ota_update.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../theme/app_theme.dart';
 
@@ -144,6 +145,13 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
   double _progress = 0.0;
   String _statusText = '';
 
+  Future<void> _openDirectDownload() async {
+    final uri = Uri.parse(widget.info.downloadUrl);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
   Future<void> _startDownloadAndInstall() async {
     setState(() {
       _isDownloading = true;
@@ -155,7 +163,8 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
       OtaUpdate()
           .execute(
             widget.info.downloadUrl,
-            destinationFilename: 'Pharma_v${widget.info.latestVersion}.apk',
+            destinationFilename: 'Pharma_update.apk',
+            androidProviderAuthority: 'com.example.smart_greenhouse_pbl.ota_update_provider',
           )
           .listen(
         (OtaEvent event) {
@@ -171,11 +180,14 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
             case OtaStatus.INSTALLING:
               setState(() {
                 _progress = 1.0;
-                _statusText = 'Memasang paket aplikasi...';
+                _statusText = 'Membuka installer paket aplikasi...';
               });
-              Future.delayed(const Duration(seconds: 1), () {
+              Future.delayed(const Duration(seconds: 2), () {
                 if (mounted) Navigator.pop(context);
               });
+              break;
+            case OtaStatus.INSTALLATION_DONE:
+              if (mounted) Navigator.pop(context);
               break;
             case OtaStatus.ALREADY_RUNNING_ERROR:
               setState(() {
@@ -186,20 +198,21 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
             case OtaStatus.PERMISSION_NOT_GRANTED_ERROR:
               setState(() {
                 _isDownloading = false;
-                _statusText = 'Izin instalasi tidak diberikan oleh sistem.';
+                _statusText = 'Izin instalasi aplikasi tidak dikenal belum diaktifkan.';
               });
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('Aktifkan izin instalasi aplikasi tidak dikenal di Pengaturan HP'),
+                  content: Text('Aktifkan izin pasang aplikasi tidak dikenal untuk Pharma di Pengaturan HP'),
                   backgroundColor: AppColors.alertRed,
                 ),
               );
               break;
+            case OtaStatus.INSTALLATION_ERROR:
             case OtaStatus.INTERNAL_ERROR:
             default:
               setState(() {
                 _isDownloading = false;
-                _statusText = 'Gagal memasang pembaruan: ${event.value}';
+                _statusText = 'Gagal memasang otomatis (${event.value}). Silakan unduh via browser.';
               });
               break;
           }
@@ -328,7 +341,15 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
               textAlign: TextAlign.center,
               style: AppTypography.caption.copyWith(fontWeight: FontWeight.w600),
             ),
-            const SizedBox(height: AppSpacing.sm),
+            const SizedBox(height: AppSpacing.xs),
+            Center(
+              child: TextButton.icon(
+                onPressed: _openDirectDownload,
+                icon: const Icon(Icons.open_in_browser_rounded, size: 15),
+                label: const Text('Unduh via Browser jika installer tidak muncul', style: TextStyle(fontSize: 11)),
+                style: TextButton.styleFrom(foregroundColor: AppColors.pharmaNavy),
+              ),
+            ),
           ] else ...[
             Row(
               children: [
@@ -366,6 +387,15 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 4),
+            Center(
+              child: TextButton.icon(
+                onPressed: _openDirectDownload,
+                icon: const Icon(Icons.open_in_browser_rounded, size: 14),
+                label: const Text('Unduh manual file APK via Browser', style: TextStyle(fontSize: 11)),
+                style: TextButton.styleFrom(foregroundColor: AppColors.textMuted),
+              ),
             ),
           ],
         ],

@@ -25,6 +25,7 @@ dependencies:
   flutter_secure_storage: ^11.2.0
   ota_update: ^7.1.0
   image_picker: ^1.2.4
+  url_launcher: ^6.3.3
 
 dev_dependencies:
   flutter_test:
