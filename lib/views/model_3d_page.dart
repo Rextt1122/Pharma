@@ -47,9 +47,10 @@ class _Model3dPageState extends State<Model3dPage> {
               ),
             ],
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
+          child: ModalSheetTopDecor(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 10, 8),
                 child: Row(
@@ -92,7 +93,8 @@ class _Model3dPageState extends State<Model3dPage> {
           ),
         ),
       ),
-    );
+    ),
+  );
   }
 
   String _getCameraOrbit() {
