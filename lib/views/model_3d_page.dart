@@ -294,42 +294,44 @@ class _Model3dPageState extends State<Model3dPage> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.sm + 4),
-                  Container(
-                    padding: const EdgeInsets.all(3),
-                    decoration: BoxDecoration(
-                      color: AppColors.inputBg,
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                      border: Border.all(color: AppColors.containerLow, width: 0.8),
-                    ),
-                    child: Row(
-                      children: _views.map((viewMode) {
-                        final isSelected = _selectedView == viewMode;
-                        return Expanded(
-                          child: GestureDetector(
-                            onTap: () => setState(() => _selectedView = viewMode),
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 180),
-                              padding: const EdgeInsets.symmetric(vertical: 7),
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                color: isSelected ? AppColors.pharmaNavy : Colors.transparent,
-                                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                              ),
-                              child: Text(
-                                viewMode,
-                                style: TextStyle(
-                                  color: isSelected ? Colors.white : AppColors.textMuted,
-                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                                  fontSize: 11.5,
+                  if (_is3dModel) ...[
+                    const SizedBox(height: AppSpacing.sm + 4),
+                    Container(
+                      padding: const EdgeInsets.all(3),
+                      decoration: BoxDecoration(
+                        color: AppColors.inputBg,
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                        border: Border.all(color: AppColors.containerLow, width: 0.8),
+                      ),
+                      child: Row(
+                        children: _views.map((viewMode) {
+                          final isSelected = _selectedView == viewMode;
+                          return Expanded(
+                            child: GestureDetector(
+                              onTap: () => setState(() => _selectedView = viewMode),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 180),
+                                padding: const EdgeInsets.symmetric(vertical: 7),
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: isSelected ? AppColors.pharmaNavy : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                                ),
+                                child: Text(
+                                  viewMode,
+                                  style: TextStyle(
+                                    color: isSelected ? Colors.white : AppColors.textMuted,
+                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                                    fontSize: 11.5,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        );
-                      }).toList(),
+                          );
+                        }).toList(),
+                      ),
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),
