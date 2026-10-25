@@ -29,6 +29,72 @@ class _Model3dPageState extends State<Model3dPage> {
     'Detektor Gas',
   ];
 
+  void _openFullScreenDenah() {
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 24),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 20,
+                offset: Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 10, 8),
+                child: Row(
+                  children: [
+                    const Icon(Icons.map_outlined, color: AppColors.pharmaNavy, size: 20),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text(
+                        'Denah Ruang Vaksin & Legenda (12x8m)',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.pharmaNavy,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded, size: 20),
+                      onPressed: () => Navigator.pop(ctx),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1, color: AppColors.containerLow),
+              Flexible(
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: InteractiveViewer(
+                    minScale: 0.8,
+                    maxScale: 5.0,
+                    child: Image.asset(
+                      'assets/images/denah_ruang_vaksin.png',
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   String _getCameraOrbit() {
     if (_selectedZone == 1) return '35deg 65deg 55%';
     if (_selectedZone == 2) return '130deg 65deg 55%';
@@ -271,7 +337,7 @@ class _Model3dPageState extends State<Model3dPage> {
             Container(
               height: 400,
               decoration: BoxDecoration(
-                color: const Color(0xFF263238),
+                color: _is3dModel ? const Color(0xFF263238) : Colors.white,
                 borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 border: Border.all(color: AppColors.containerLow, width: 1.0),
                 boxShadow: const [
@@ -300,12 +366,19 @@ class _Model3dPageState extends State<Model3dPage> {
                         backgroundColor: const Color(0xFF263238),
                       )
                     else
-                      CustomPaint(
-                        size: Size.infinite,
-                        painter: Warehouse3dPainter(
-                          viewMode: _selectedView,
-                          sensorMode: sensor,
-                          selectedZone: _selectedZone,
+                      InteractiveViewer(
+                        minScale: 0.8,
+                        maxScale: 4.5,
+                        child: Container(
+                          color: Colors.white,
+                          width: double.infinity,
+                          height: double.infinity,
+                          child: Center(
+                            child: Image.asset(
+                              'assets/images/denah_ruang_vaksin.png',
+                              fit: BoxFit.contain,
+                            ),
+                          ),
                         ),
                       ),
                     Positioned(
@@ -327,13 +400,13 @@ class _Model3dPageState extends State<Model3dPage> {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Icon(
-                                    _is3dModel ? Icons.threed_rotation : Icons.layers_outlined,
+                                    _is3dModel ? Icons.threed_rotation : Icons.map_outlined,
                                     color: Colors.white,
                                     size: 13,
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
-                                    _is3dModel ? 'Mode: 3D GLB' : 'Mode: 2D Digital Twin',
+                                    _is3dModel ? 'Mode: 3D GLB' : 'Mode: 2D Denah',
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 10,
@@ -395,24 +468,34 @@ class _Model3dPageState extends State<Model3dPage> {
                                 child: const Icon(Icons.refresh, color: Colors.white, size: 14),
                               ),
                             ),
-                          ] else
-                            Container(
-                              padding: const EdgeInsets.all(AppSpacing.sm),
-                              decoration: BoxDecoration(
-                                color: Colors.black.withAlpha(100),
-                                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                              ),
-                              child: const Column(
-                                children: [
-                                  Icon(Icons.threed_rotation, color: Colors.white, size: 18),
-                                  SizedBox(height: 2),
-                                  Text(
-                                    'Skematik 2D',
-                                    style: TextStyle(color: Colors.white70, fontSize: 9),
-                                  ),
-                                ],
+                          ] else ...[
+                            GestureDetector(
+                              onTap: _openFullScreenDenah,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withAlpha(160),
+                                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                                  border: Border.all(color: Colors.white24, width: 0.8),
+                                ),
+                                child: const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.fullscreen_rounded, color: Colors.white, size: 15),
+                                    SizedBox(width: 4),
+                                    Text(
+                                      'Perbesar',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
+                          ],
                         ],
                       ),
                     ),
@@ -446,7 +529,9 @@ class _Model3dPageState extends State<Model3dPage> {
                                   const SizedBox(width: 6),
                                   Flexible(
                                     child: Text(
-                                      'Kamera: $_selectedView ${_selectedZone > 0 ? "(${_zones[_selectedZone]})" : ""}',
+                                      _is3dModel
+                                          ? 'Kamera: $_selectedView ${_selectedZone > 0 ? "(${_zones[_selectedZone]})" : ""}'
+                                          : 'Denah: Ruang Vaksin & Kontrol (12x8m)',
                                       overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(
                                         color: Colors.white,
@@ -472,7 +557,7 @@ class _Model3dPageState extends State<Model3dPage> {
                                 const Icon(Icons.touch_app_outlined, color: Colors.white70, size: 12),
                                 const SizedBox(width: 4),
                                 Text(
-                                  _is3dModel ? 'Geser/Cubit 360°' : 'Layout Denah',
+                                  _is3dModel ? 'Geser/Cubit 360°' : 'Cubit untuk Zoom',
                                   style: const TextStyle(color: Colors.white70, fontSize: 9),
                                 ),
                               ],
