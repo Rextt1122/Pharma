@@ -361,19 +361,25 @@ class ClimateDashboardPage extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('${gaugeMin.toStringAsFixed(0)}°C', style: AppTypography.caption),
-              Text(
-                targetDesc,
-                style: TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w600,
-                  color: safe ? AppColors.pharmaNavy.withAlpha(200) : AppColors.alertRed,
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  targetDesc,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
+                    color: safe ? AppColors.pharmaNavy.withAlpha(200) : AppColors.alertRed,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
+              const SizedBox(width: 8),
               Text('${gaugeMax.toStringAsFixed(0)}°C', style: AppTypography.caption),
             ],
           ),
