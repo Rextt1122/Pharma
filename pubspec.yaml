@@ -24,6 +24,7 @@ dependencies:
   local_auth: ^3.0.2
   flutter_secure_storage: ^11.2.0
   ota_update: ^7.1.0
+  image_picker: ^1.2.4
 
 dev_dependencies:
   flutter_test:

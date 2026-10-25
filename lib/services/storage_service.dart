@@ -11,6 +11,7 @@ class StorageService {
   static const String _keyUserName = 'user_name';
   static const String _keyUserEmail = 'user_email';
   static const String _keyAuthProvider = 'auth_provider';
+  static const String _keyUserAvatar = 'user_avatar';
 
   // Threshold keys
   static const String _keyTempMin = 'threshold_temp_min';
@@ -130,11 +131,20 @@ class StorageService {
     required String name,
     required String email,
     required String provider,
+    String? avatar,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_keyUserName, name.trim());
     await prefs.setString(_keyUserEmail, email.trim());
     await prefs.setString(_keyAuthProvider, provider.trim());
+    if (avatar != null) {
+      await prefs.setString(_keyUserAvatar, avatar);
+    }
+  }
+
+  Future<void> saveUserAvatar(String avatarData) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyUserAvatar, avatarData);
   }
 
   Future<Map<String, String>> getUserProfile() async {
@@ -143,6 +153,7 @@ class StorageService {
       'name': prefs.getString(_keyUserName) ?? 'Pengguna Farmasi',
       'email': prefs.getString(_keyUserEmail) ?? 'user@smartpharma.id',
       'provider': prefs.getString(_keyAuthProvider) ?? 'Smart Pharma',
+      'avatar': prefs.getString(_keyUserAvatar) ?? '',
     };
   }
 

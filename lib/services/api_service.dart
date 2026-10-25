@@ -224,4 +224,74 @@ class ApiService {
       throw Exception('Gagal menghubungi server database: $e');
     }
   }
+
+  Future<Map<String, dynamic>> updateProfile({
+    required String fullName,
+    required String email,
+  }) async {
+    final ip = await resolveReachableIp();
+    final url = Uri.parse('http://$ip:8001/update-profile');
+    final token = await _storageService.getAuthToken();
+
+    try {
+      final response = await http
+          .post(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              if (token != null) 'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode({
+              'full_name': fullName.trim(),
+              'email': email.trim(),
+            }),
+          )
+          .timeout(const Duration(seconds: 5));
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode == 200) {
+        return data;
+      } else {
+        throw Exception(data['detail'] ?? 'Gagal memperbarui profil di server');
+      }
+    } catch (e) {
+      if (e is Exception && !e.toString().contains('ClientException')) rethrow;
+      throw Exception('Gagal menghubungi server: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  }) async {
+    final ip = await resolveReachableIp();
+    final url = Uri.parse('http://$ip:8001/change-password');
+    final token = await _storageService.getAuthToken();
+
+    try {
+      final response = await http
+          .post(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              if (token != null) 'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode({
+              'old_password': oldPassword,
+              'new_password': newPassword,
+            }),
+          )
+          .timeout(const Duration(seconds: 5));
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode == 200) {
+        return data;
+      } else {
+        throw Exception(data['detail'] ?? 'Gagal mengubah password');
+      }
+    } catch (e) {
+      if (e is Exception && !e.toString().contains('ClientException')) rethrow;
+      throw Exception('Gagal menghubungi server: $e');
+    }
+  }
 }

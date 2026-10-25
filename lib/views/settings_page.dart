@@ -1,6 +1,9 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
+import '../services/api_service.dart';
 import '../services/biometric_service.dart';
 import '../services/storage_service.dart';
 import '../services/update_service.dart';
@@ -31,9 +34,19 @@ class _SettingsPageState extends State<SettingsPage> {
   String _userName = 'Pengguna Farmasi';
   String _userEmail = 'user@smartpharma.id';
   String _authProvider = 'Smart Pharma';
+  String _userAvatar = '';
   bool _isSaving = false;
   bool _isLoading = true;
   bool _isCheckingUpdate = false;
+
+  ImageProvider? _getAvatarImage(String base64Str) {
+    if (base64Str.isEmpty) return null;
+    try {
+      return MemoryImage(base64Decode(base64Str));
+    } catch (_) {
+      return null;
+    }
+  }
 
   final BiometricService _biometricService = BiometricService();
   bool _isBiometricSupported = false;
@@ -71,6 +84,7 @@ class _SettingsPageState extends State<SettingsPage> {
         _userName = profile['name'] ?? 'Pengguna Farmasi';
         _userEmail = profile['email'] ?? 'user@smartpharma.id';
         _authProvider = profile['provider'] ?? 'Smart Pharma';
+        _userAvatar = profile['avatar'] ?? '';
         _isBiometricEnabled = isBioEnabled;
         _isBiometricSupported = isBioSupported;
         _tempMin = (thresholds['tempMin'] ?? StorageService.defaultTempMin)
@@ -96,183 +110,666 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
+  void _showSnack(BuildContext ctx, String message, {bool isError = false}) {
+    ScaffoldMessenger.of(ctx).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(
+              isError ? Icons.error_outline_rounded : Icons.check_circle_outline_rounded,
+              color: Colors.white,
+              size: 18,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                message,
+                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12.5),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: isError ? AppColors.alertRed : AppColors.pharmaNavy,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusSm)),
+      ),
+    );
+  }
+
   void _showEditProfileDialog() {
     final nameCtrl = TextEditingController(text: _userName);
     final emailCtrl = TextEditingController(text: _userEmail);
+    final oldPasswordCtrl = TextEditingController();
+    final newPasswordCtrl = TextEditingController();
+    final confirmPasswordCtrl = TextEditingController();
+
+    String tempAvatar = _userAvatar;
+    int activeTab = 0;
+    bool obscureOld = true;
+    bool obscureNew = true;
+    bool obscureConfirm = true;
+    bool isSavingProfile = false;
+    bool isSavingPassword = false;
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: AppColors.cardWhite,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      builder: (sheetCtx) => ModalSheetTopDecor(
-        child: Padding(
-          padding: EdgeInsets.only(
-            left: AppSpacing.lg,
-            right: AppSpacing.lg,
-            top: AppSpacing.md + 4,
-            bottom: MediaQuery.of(sheetCtx).viewInsets.bottom + AppSpacing.lg,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-            Center(
-              child: Container(
-                width: 38,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.containerHigh,
-                  borderRadius: BorderRadius.circular(4),
-                ),
+      builder: (sheetCtx) => StatefulBuilder(
+        builder: (ctx, setModalState) {
+          Future<void> pickAvatar(ImageSource source) async {
+            try {
+              final picker = ImagePicker();
+              final picked = await picker.pickImage(
+                source: source,
+                maxWidth: 512,
+                maxHeight: 512,
+                imageQuality: 80,
+              );
+              if (picked != null) {
+                final bytes = await picked.readAsBytes();
+                setModalState(() {
+                  tempAvatar = base64Encode(bytes);
+                });
+              }
+            } catch (e) {
+              if (mounted) {
+                _showSnack(context, 'Gagal memilih foto: $e', isError: true);
+              }
+            }
+          }
+
+          void showAvatarSourcePicker() {
+            showModalBottomSheet(
+              context: ctx,
+              backgroundColor: AppColors.cardWhite,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
               ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.sm),
-                  decoration: BoxDecoration(
-                    color: AppColors.pharmaNavy.withAlpha(20),
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                  ),
-                  child: const Icon(
-                    Icons.edit_note_rounded,
-                    color: AppColors.pharmaNavy,
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                const Text(
-                  'Edit Profil Pengguna',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.pharmaNavy,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.md + 2),
-            const Text(
-              'Nama Pengguna',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textDark,
-              ),
-            ),
-            const SizedBox(height: 6),
-            TextField(
-              controller: nameCtrl,
-              decoration: InputDecoration(
-                hintText: 'Nama lengkap / username',
-                floatingLabelBehavior: FloatingLabelBehavior.never,
-                filled: true,
-                fillColor: AppColors.inputBg,
-                prefixIcon: const Icon(Icons.person_outline_rounded, size: 18),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                  borderSide: const BorderSide(color: AppColors.containerHigh),
-                ),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            const Text(
-              'Alamat Email',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textDark,
-              ),
-            ),
-            const SizedBox(height: 6),
-            TextField(
-              controller: emailCtrl,
-              keyboardType: TextInputType.emailAddress,
-              decoration: InputDecoration(
-                hintText: 'email@domain.com',
-                floatingLabelBehavior: FloatingLabelBehavior.never,
-                filled: true,
-                fillColor: AppColors.inputBg,
-                prefixIcon: const Icon(Icons.mail_outline_rounded, size: 18),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                  borderSide: const BorderSide(color: AppColors.containerHigh),
-                ),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.textMuted,
-                      side: const BorderSide(color: AppColors.containerHigh),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                      ),
-                    ),
-                    onPressed: () => Navigator.pop(sheetCtx),
-                    child: const Text('Batal'),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  flex: 2,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.pharmaNavy,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                      ),
-                    ),
-                    onPressed: () async {
-                      final newName = nameCtrl.text.trim();
-                      final newEmail = emailCtrl.text.trim();
-                      if (newName.isEmpty || newEmail.isEmpty) {
-                        return;
-                      }
-                      await _storageService.saveUserProfile(
-                        name: newName,
-                        email: newEmail,
-                        provider: _authProvider,
-                      );
-                      if (!mounted) return;
-                      setState(() {
-                        _userName = newName;
-                        _userEmail = newEmail;
-                      });
-                      if (sheetCtx.mounted) {
-                        Navigator.pop(sheetCtx);
-                      }
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Profil berhasil diperbarui'),
-                          backgroundColor: AppColors.pharmaNavy,
-                          behavior: SnackBarBehavior.floating,
+              builder: (pickerCtx) => SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: AppColors.containerHigh,
+                          borderRadius: BorderRadius.circular(4),
                         ),
-                      );
-                    },
-                    child: const Text(
-                      'Simpan Profil',
-                      style: TextStyle(fontWeight: FontWeight.w800),
-                    ),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Pilih Foto Profil',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.pharmaNavy,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      ListTile(
+                        leading: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppColors.pharmaNavy.withAlpha(20),
+                            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                          ),
+                          child: const Icon(Icons.photo_library_rounded, color: AppColors.pharmaNavy, size: 20),
+                        ),
+                        title: const Text('Buka Galeri Foto', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5)),
+                        subtitle: const Text('Pilih foto dari penyimpanan perangkat', style: TextStyle(fontSize: 11)),
+                        onTap: () {
+                          Navigator.pop(pickerCtx);
+                          pickAvatar(ImageSource.gallery);
+                        },
+                      ),
+                      ListTile(
+                        leading: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppColors.pharmaTeal.withAlpha(20),
+                            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                          ),
+                          child: const Icon(Icons.camera_alt_rounded, color: AppColors.pharmaTeal, size: 20),
+                        ),
+                        title: const Text('Gunakan Kamera', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5)),
+                        subtitle: const Text('Ambil foto langsung dari kamera', style: TextStyle(fontSize: 11)),
+                        onTap: () {
+                          Navigator.pop(pickerCtx);
+                          pickAvatar(ImageSource.camera);
+                        },
+                      ),
+                      if (tempAvatar.isNotEmpty) ...[
+                        const Divider(height: 16),
+                        ListTile(
+                          leading: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.alertRed.withAlpha(20),
+                              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                            ),
+                            child: const Icon(Icons.delete_outline_rounded, color: AppColors.alertRed, size: 20),
+                          ),
+                          title: const Text('Hapus Foto Profil', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5, color: AppColors.alertRed)),
+                          onTap: () {
+                            Navigator.pop(pickerCtx);
+                            setModalState(() => tempAvatar = '');
+                          },
+                        ),
+                      ],
+                    ],
                   ),
                 ),
-              ],
+              ),
+            );
+          }
+
+          return ModalSheetTopDecor(
+            child: Padding(
+              padding: EdgeInsets.only(
+                left: AppSpacing.lg,
+                right: AppSpacing.lg,
+                top: AppSpacing.md + 4,
+                bottom: MediaQuery.of(sheetCtx).viewInsets.bottom + AppSpacing.lg,
+              ),
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 38,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: AppColors.containerHigh,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(AppSpacing.sm),
+                          decoration: BoxDecoration(
+                            color: AppColors.pharmaNavy.withAlpha(20),
+                            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                          ),
+                          child: Icon(
+                            activeTab == 0 ? Icons.person_outline_rounded : Icons.lock_outline_rounded,
+                            color: AppColors.pharmaNavy,
+                            size: 22,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: Text(
+                            activeTab == 0 ? 'Edit Profil Pengguna' : 'Ubah Kata Sandi',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.pharmaNavy,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close_rounded, size: 20, color: AppColors.textMuted),
+                          onPressed: () => Navigator.pop(sheetCtx),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Container(
+                      padding: const EdgeInsets.all(3),
+                      decoration: BoxDecoration(
+                        color: AppColors.inputBg,
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                        border: Border.all(color: AppColors.containerLow, width: 0.8),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => setModalState(() => activeTab = 0),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 180),
+                                padding: const EdgeInsets.symmetric(vertical: 7),
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: activeTab == 0 ? AppColors.pharmaNavy : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                                ),
+                                child: Text(
+                                  'Informasi Akun',
+                                  style: TextStyle(
+                                    color: activeTab == 0 ? Colors.white : AppColors.textMuted,
+                                    fontWeight: activeTab == 0 ? FontWeight.bold : FontWeight.w600,
+                                    fontSize: 11.5,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => setModalState(() => activeTab = 1),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 180),
+                                padding: const EdgeInsets.symmetric(vertical: 7),
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: activeTab == 1 ? AppColors.pharmaNavy : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                                ),
+                                child: Text(
+                                  'Ganti Password',
+                                  style: TextStyle(
+                                    color: activeTab == 1 ? Colors.white : AppColors.textMuted,
+                                    fontWeight: activeTab == 1 ? FontWeight.bold : FontWeight.w600,
+                                    fontSize: 11.5,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md + 4),
+
+                    if (activeTab == 0) ...[
+                      Center(
+                        child: Stack(
+                          children: [
+                            GestureDetector(
+                              onTap: showAvatarSourcePicker,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: AppColors.pharmaNavy.withAlpha(50), width: 2),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      color: Color(0x140E555A),
+                                      blurRadius: 12,
+                                      offset: Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: CircleAvatar(
+                                  radius: 42,
+                                  backgroundColor: AppColors.pharmaNavy.withAlpha(24),
+                                  backgroundImage: _getAvatarImage(tempAvatar),
+                                  child: tempAvatar.isEmpty
+                                      ? Text(
+                                          nameCtrl.text.isNotEmpty ? nameCtrl.text[0].toUpperCase() : 'A',
+                                          style: const TextStyle(
+                                            fontSize: 32,
+                                            fontWeight: FontWeight.w800,
+                                            color: AppColors.pharmaNavy,
+                                          ),
+                                        )
+                                      : null,
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: GestureDetector(
+                                onTap: showAvatarSourcePicker,
+                                child: Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.pharmaNavy,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: Colors.white, width: 2),
+                                  ),
+                                  child: const Icon(
+                                    Icons.camera_alt_rounded,
+                                    color: Colors.white,
+                                    size: 15,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Center(
+                        child: TextButton.icon(
+                          onPressed: showAvatarSourcePicker,
+                          icon: const Icon(Icons.edit_outlined, size: 14),
+                          label: const Text('Ganti Foto Profil', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700)),
+                          style: TextButton.styleFrom(foregroundColor: AppColors.pharmaNavy),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+
+                      const Text(
+                        'Nama Pengguna',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textDark,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: nameCtrl,
+                        decoration: InputDecoration(
+                          hintText: 'Nama lengkap / username',
+                          floatingLabelBehavior: FloatingLabelBehavior.never,
+                          filled: true,
+                          fillColor: AppColors.inputBg,
+                          prefixIcon: const Icon(Icons.person_outline_rounded, size: 18),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                            borderSide: const BorderSide(color: AppColors.containerHigh),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      const Text(
+                        'Alamat Email',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textDark,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: emailCtrl,
+                        keyboardType: TextInputType.emailAddress,
+                        decoration: InputDecoration(
+                          hintText: 'email@domain.com',
+                          floatingLabelBehavior: FloatingLabelBehavior.never,
+                          filled: true,
+                          fillColor: AppColors.inputBg,
+                          prefixIcon: const Icon(Icons.mail_outline_rounded, size: 18),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                            borderSide: const BorderSide(color: AppColors.containerHigh),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: AppColors.textMuted,
+                                side: const BorderSide(color: AppColors.containerHigh),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                                ),
+                              ),
+                              onPressed: () => Navigator.pop(sheetCtx),
+                              child: const Text('Batal'),
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.md),
+                          Expanded(
+                            flex: 2,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.pharmaNavy,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                                ),
+                              ),
+                              onPressed: isSavingProfile
+                                  ? null
+                                  : () async {
+                                      final newName = nameCtrl.text.trim();
+                                      final newEmail = emailCtrl.text.trim();
+                                      if (newName.isEmpty || newEmail.isEmpty) {
+                                        return;
+                                      }
+                                      setModalState(() => isSavingProfile = true);
+                                      try {
+                                        await ApiService().updateProfile(
+                                          fullName: newName,
+                                          email: newEmail,
+                                        );
+                                      } catch (_) {}
+
+                                      await _storageService.saveUserProfile(
+                                        name: newName,
+                                        email: newEmail,
+                                        provider: _authProvider,
+                                        avatar: tempAvatar,
+                                      );
+
+                                      if (!mounted) return;
+                                      setState(() {
+                                        _userName = newName;
+                                        _userEmail = newEmail;
+                                        _userAvatar = tempAvatar;
+                                      });
+                                      if (sheetCtx.mounted) {
+                                        Navigator.pop(sheetCtx);
+                                      }
+                                      _showSnack(context, 'Profil & foto berhasil diperbarui');
+                                    },
+                              child: isSavingProfile
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                    )
+                                  : const Text(
+                                      'Simpan Profil',
+                                      style: TextStyle(fontWeight: FontWeight.w800),
+                                    ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ] else ...[
+                      Container(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        decoration: BoxDecoration(
+                          color: AppColors.pharmaNavy.withAlpha(12),
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                          border: Border.all(color: AppColors.pharmaNavy.withAlpha(30)),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.shield_outlined, color: AppColors.pharmaNavy, size: 20),
+                            SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'Kata sandi baru minimal 6 karakter. Pastikan sandi aman & rahasia.',
+                                style: TextStyle(fontSize: 11.5, color: AppColors.pharmaNavy, height: 1.3),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+
+                      const Text(
+                        'Password Saat Ini',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textDark),
+                      ),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: oldPasswordCtrl,
+                        obscureText: obscureOld,
+                        decoration: InputDecoration(
+                          hintText: 'Masukkan kata sandi lama',
+                          floatingLabelBehavior: FloatingLabelBehavior.never,
+                          filled: true,
+                          fillColor: AppColors.inputBg,
+                          prefixIcon: const Icon(Icons.lock_clock_outlined, size: 18),
+                          suffixIcon: IconButton(
+                            icon: Icon(obscureOld ? Icons.visibility_off_outlined : Icons.visibility_outlined, size: 18),
+                            onPressed: () => setModalState(() => obscureOld = !obscureOld),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                            borderSide: const BorderSide(color: AppColors.containerHigh),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+
+                      const Text(
+                        'Password Baru',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textDark),
+                      ),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: newPasswordCtrl,
+                        obscureText: obscureNew,
+                        decoration: InputDecoration(
+                          hintText: 'Minimal 6 karakter',
+                          floatingLabelBehavior: FloatingLabelBehavior.never,
+                          filled: true,
+                          fillColor: AppColors.inputBg,
+                          prefixIcon: const Icon(Icons.lock_reset_rounded, size: 18),
+                          suffixIcon: IconButton(
+                            icon: Icon(obscureNew ? Icons.visibility_off_outlined : Icons.visibility_outlined, size: 18),
+                            onPressed: () => setModalState(() => obscureNew = !obscureNew),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                            borderSide: const BorderSide(color: AppColors.containerHigh),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+
+                      const Text(
+                        'Konfirmasi Password Baru',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textDark),
+                      ),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: confirmPasswordCtrl,
+                        obscureText: obscureConfirm,
+                        decoration: InputDecoration(
+                          hintText: 'Ulangi kata sandi baru',
+                          floatingLabelBehavior: FloatingLabelBehavior.never,
+                          filled: true,
+                          fillColor: AppColors.inputBg,
+                          prefixIcon: const Icon(Icons.check_circle_outline_rounded, size: 18),
+                          suffixIcon: IconButton(
+                            icon: Icon(obscureConfirm ? Icons.visibility_off_outlined : Icons.visibility_outlined, size: 18),
+                            onPressed: () => setModalState(() => obscureConfirm = !obscureConfirm),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                            borderSide: const BorderSide(color: AppColors.containerHigh),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: AppColors.textMuted,
+                                side: const BorderSide(color: AppColors.containerHigh),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                                ),
+                              ),
+                              onPressed: () => Navigator.pop(sheetCtx),
+                              child: const Text('Batal'),
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.md),
+                          Expanded(
+                            flex: 2,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.pharmaNavy,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                                ),
+                              ),
+                              onPressed: isSavingPassword
+                                  ? null
+                                  : () async {
+                                      final oldP = oldPasswordCtrl.text;
+                                      final newP = newPasswordCtrl.text;
+                                      final confP = confirmPasswordCtrl.text;
+
+                                      if (oldP.isEmpty) {
+                                        _showSnack(context, 'Password lama tidak boleh kosong', isError: true);
+                                        return;
+                                      }
+                                      if (newP.length < 6) {
+                                        _showSnack(context, 'Password baru minimal 6 karakter', isError: true);
+                                        return;
+                                      }
+                                      if (newP != confP) {
+                                        _showSnack(context, 'Konfirmasi password baru tidak cocok', isError: true);
+                                        return;
+                                      }
+
+                                      setModalState(() => isSavingPassword = true);
+                                      try {
+                                        await ApiService().changePassword(
+                                          oldPassword: oldP,
+                                          newPassword: newP,
+                                        );
+                                        if (sheetCtx.mounted) {
+                                          Navigator.pop(sheetCtx);
+                                        }
+                                        if (!mounted) return;
+                                        _showSnack(context, 'Password berhasil diperbarui di database');
+                                      } catch (e) {
+                                        setModalState(() => isSavingPassword = false);
+                                        if (!mounted) return;
+                                        final msg = e.toString().replaceAll('Exception: ', '');
+                                        _showSnack(context, msg, isError: true);
+                                      }
+                                    },
+                              child: isSavingPassword
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                    )
+                                  : const Text(
+                                      'Perbarui Sandi',
+                                      style: TextStyle(fontWeight: FontWeight.w800),
+                                    ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
             ),
-          ],
-        ),
+          );
+        },
       ),
-    ),
-  );
+    );
   }
 
   Future<void> _saveSettings() async {
@@ -486,18 +983,21 @@ class _SettingsPageState extends State<SettingsPage> {
               child: Row(
                 children: [
                   CircleAvatar(
-                    radius: 22,
+                    radius: 24,
                     backgroundColor: AppColors.pharmaNavy.withAlpha(24),
-                    child: Text(
-                      _userName.isNotEmpty
-                          ? _userName.substring(0, 1).toUpperCase()
-                          : 'A',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.pharmaNavy,
-                      ),
-                    ),
+                    backgroundImage: _getAvatarImage(_userAvatar),
+                    child: _userAvatar.isEmpty
+                        ? Text(
+                            _userName.isNotEmpty
+                                ? _userName.substring(0, 1).toUpperCase()
+                                : 'A',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.pharmaNavy,
+                            ),
+                          )
+                        : null,
                   ),
                   const SizedBox(width: AppSpacing.md),
                   Expanded(
