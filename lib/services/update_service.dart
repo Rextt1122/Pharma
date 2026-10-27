@@ -175,7 +175,11 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
               setState(() {
                 final percent = int.tryParse(event.value ?? '0') ?? 0;
                 _progress = (percent / 100.0).clamp(0.0, 1.0);
-                _statusText = 'Mengunduh pembaruan ($percent%)...';
+                if (percent >= 100) {
+                  _statusText = 'Unduhan selesai (100%). Membuka installer...';
+                } else {
+                  _statusText = 'Mengunduh pembaruan ($percent%)...';
+                }
               });
               break;
             case OtaStatus.INSTALLING:
