@@ -4,6 +4,7 @@ import '../services/api_service.dart';
 import '../services/biometric_service.dart';
 import '../services/storage_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/app_toast.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -116,12 +117,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         Navigator.pushReplacementNamed(context, '/main');
       } else {
         setState(() => _canUseBiometrics = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Sesi kedaluwarsa. Login dengan password.'),
-            backgroundColor: AppColors.alertRed,
-          ),
-        );
+        AppToast.error(context, 'Sesi kedaluwarsa. Login dengan password.');
       }
     } finally {
       if (mounted) {
@@ -149,11 +145,13 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             email: email,
           );
           final user = (res['user'] as Map<String, dynamic>?) ?? {};
+          final role = user['role']?.toString() ?? 'user';
 
           await StorageService().saveUserProfile(
             name: user['name']?.toString() ?? fullName,
             email: user['email']?.toString() ?? email,
-            provider: 'Database MySQL',
+            provider: 'Database MySQL ($role)',
+            role: role,
           );
 
           if (mounted) {
@@ -164,11 +162,13 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
           final user = (res['user'] as Map<String, dynamic>?) ?? {};
           final userName = user['name']?.toString() ?? user['full_name']?.toString() ?? username;
           final userEmail = user['email']?.toString() ?? (username.contains('@') ? username : '$username@smartpharma.id');
+          final role = user['role']?.toString() ?? 'operator';
 
           await StorageService().saveUserProfile(
             name: userName,
             email: userEmail,
-            provider: 'Database MySQL (${user['role'] ?? 'operator'})',
+            provider: 'Database MySQL ($role)',
+            role: role,
           );
 
           if (mounted) {
@@ -178,27 +178,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       } catch (e) {
         if (mounted) {
           final cleanMsg = e.toString().replaceAll('Exception: ', '');
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(Icons.error_outline_rounded, color: Colors.white, size: 18),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      cleanMsg,
-                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12.5),
-                    ),
-                  ),
-                ],
-              ),
-              backgroundColor: AppColors.alertRed,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusSm)),
-              margin: const EdgeInsets.all(AppSpacing.md),
-              duration: const Duration(seconds: 3),
-            ),
-          );
+          AppToast.error(context, cleanMsg);
         }
       } finally {
         if (mounted) {
@@ -487,16 +467,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                           alignment: Alignment.centerRight,
                                           child: TextButton(
                                             onPressed: () {
-                                              ScaffoldMessenger.of(
+                                              AppToast.info(
                                                 context,
-                                              ).showSnackBar(
-                                                const SnackBar(
-                                                  content: Text(
-                                                    'Hubungi admin gudang untuk reset kredensial.',
-                                                  ),
-                                                  backgroundColor:
-                                                      AppColors.pharmaNavy,
-                                                ),
+                                                'Hubungi admin gudang untuk reset kredensial.',
                                               );
                                             },
                                             style: TextButton.styleFrom(

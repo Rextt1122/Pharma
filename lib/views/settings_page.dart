@@ -9,6 +9,7 @@ import '../services/storage_service.dart';
 import '../services/update_service.dart';
 import '../providers/sensor_provider.dart';
 import '../theme/app_theme.dart';
+import '../widgets/app_toast.dart';
 import '../widgets/botanic_vector_decor.dart';
 import '../widgets/shimmer_loading.dart';
 
@@ -111,29 +112,11 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _showSnack(BuildContext ctx, String message, {bool isError = false}) {
-    ScaffoldMessenger.of(ctx).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(
-              isError ? Icons.error_outline_rounded : Icons.check_circle_outline_rounded,
-              color: Colors.white,
-              size: 18,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                message,
-                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12.5),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: isError ? AppColors.alertRed : AppColors.pharmaNavy,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusSm)),
-      ),
-    );
+    if (isError) {
+      AppToast.error(ctx, message);
+    } else {
+      AppToast.success(ctx, message);
+    }
   }
 
   void _showEditProfileDialog() {
@@ -775,12 +758,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Future<void> _saveSettings() async {
     final newIp = _ipController.text.trim();
     if (newIp.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('IP Server tidak boleh kosong'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      AppToast.error(context, 'IP Server tidak boleh kosong');
       return;
     }
 
@@ -814,12 +792,7 @@ class _SettingsPageState extends State<SettingsPage> {
       setState(() => _isSaving = false);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Konfigurasi disimpan: $newIp'),
-            backgroundColor: AppColors.pharmaNavy,
-          ),
-        );
+        AppToast.success(context, 'Konfigurasi disimpan: $newIp');
       }
     }
   }
@@ -831,12 +804,7 @@ class _SettingsPageState extends State<SettingsPage> {
       );
       if (!authenticated) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Verifikasi sidik jari tidak cocok / dibatalkan'),
-              backgroundColor: Colors.redAccent,
-            ),
-          );
+          AppToast.error(context, 'Verifikasi sidik jari tidak cocok / dibatalkan');
         }
         return;
       }
@@ -850,23 +818,15 @@ class _SettingsPageState extends State<SettingsPage> {
     }
     if (mounted) {
       setState(() => _isBiometricEnabled = value);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            value
-                ? 'Login biometrik aktif'
-                : 'Login biometrik dinonaktifkan',
-          ),
-          backgroundColor: AppColors.pharmaNavy,
-        ),
+      AppToast.info(
+        context,
+        value ? 'Login biometrik aktif' : 'Login biometrik dinonaktifkan',
       );
     }
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red),
-    );
+    AppToast.error(context, message);
   }
 
   @override
@@ -1524,13 +1484,9 @@ class _SettingsPageState extends State<SettingsPage> {
                         if (info.hasUpdate) {
                           UpdateService.showUpdateDialog(context, info);
                         } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Aplikasi sudah versi terbaru (v${info.currentVersion})',
-                              ),
-                              backgroundColor: AppColors.pharmaNavy,
-                            ),
+                          AppToast.info(
+                            context,
+                            'Aplikasi sudah versi terbaru (v${info.currentVersion})',
                           );
                         }
                       },

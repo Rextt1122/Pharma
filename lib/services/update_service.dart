@@ -6,6 +6,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../theme/app_theme.dart';
+import '../widgets/app_toast.dart';
 
 class AppUpdateInfo {
   final bool hasUpdate;
@@ -200,11 +201,9 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
                 _isDownloading = false;
                 _statusText = 'Izin instalasi aplikasi tidak dikenal belum diaktifkan.';
               });
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Aktifkan izin pasang aplikasi tidak dikenal untuk Pharma di Pengaturan HP'),
-                  backgroundColor: AppColors.alertRed,
-                ),
+              AppToast.error(
+                context,
+                'Aktifkan izin pasang aplikasi tidak dikenal untuk Pharma di Pengaturan HP',
               );
               break;
             case OtaStatus.INSTALLATION_ERROR:

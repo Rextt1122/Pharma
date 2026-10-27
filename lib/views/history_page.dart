@@ -4,6 +4,7 @@ import '../models/sensor_model.dart';
 import '../providers/history_provider.dart';
 import '../providers/sensor_provider.dart';
 import '../theme/app_theme.dart';
+import '../widgets/app_toast.dart';
 import '../widgets/botanic_vector_decor.dart';
 import '../widgets/sensor_trend_chart.dart';
 import '../widgets/shimmer_loading.dart';
@@ -30,22 +31,11 @@ class HistoryPage extends StatelessWidget {
                       try {
                         final path = await provider.exportToCsv();
                         if (path != null && context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Berhasil diexport ke:\n$path'),
-                              duration: const Duration(seconds: 4),
-                              backgroundColor: AppColors.pharmaNavy,
-                            ),
-                          );
+                          AppToast.success(context, 'Berhasil diexport ke:\n$path');
                         }
                       } catch (e) {
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(e.toString()),
-                              backgroundColor: Colors.red.shade700,
-                            ),
-                          );
+                          AppToast.error(context, e.toString());
                         }
                       }
                     },

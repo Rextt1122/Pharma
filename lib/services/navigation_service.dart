@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/app_toast.dart';
 
 /// Navigator global, dipakai service untuk redirect ke login saat sesi habis.
 final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
@@ -9,8 +10,6 @@ void redirectToLogin() {
   nav.pushNamedAndRemoveUntil('/login', (_) => false);
   final ctx = appNavigatorKey.currentContext;
   if (ctx != null) {
-    ScaffoldMessenger.maybeOf(ctx)?.showSnackBar(
-      const SnackBar(content: Text('Sesi berakhir. Silakan login ulang.')),
-    );
+    AppToast.warning(ctx, 'Sesi berakhir. Silakan login ulang.');
   }
 }
