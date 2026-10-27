@@ -48,6 +48,7 @@ class SensorProvider extends ChangeNotifier {
 
   bool _isConnected = false;
   bool _isInitialLoading = true;
+  bool _isOperator = true;
   final List<AppNotification> _notifications = [];
   
   // Threshold values (loaded from storage)
@@ -68,6 +69,7 @@ class SensorProvider extends ChangeNotifier {
   bool get buzzerActive => _buzzerActive;
   bool get isConnected => _isConnected;
   bool get isInitialLoading => _isInitialLoading;
+  bool get isOperator => _isOperator;
   List<AppNotification> get notifications => List.unmodifiable(_notifications);
   int get notificationCount => _notifications.length;
   
@@ -90,6 +92,12 @@ class SensorProvider extends ChangeNotifier {
   SensorProvider() {
     _initThresholds();
     _initMqtt();
+    refreshUserRole();
+  }
+
+  Future<void> refreshUserRole() async {
+    _isOperator = await _storageService.isOperator();
+    notifyListeners();
   }
 
   void selectDevice(String id) {
@@ -99,7 +107,8 @@ class SensorProvider extends ChangeNotifier {
     }
   }
 
-  void toggleUv() {
+  bool toggleUv() {
+    if (!_isOperator) return false;
     final current = sensorData;
     final nextState = current.statusUv == 1 ? 0 : 1;
     final updated = current.copyWith(statusUv: nextState);
@@ -111,14 +120,17 @@ class SensorProvider extends ChangeNotifier {
     _mqttService.publish('pharma/control/$_selectedDeviceId', '{"actuator":"uv","state":$nextState}');
     _mqttService.publish('pharma/control/uv', '{"device_id":"$_selectedDeviceId","state":$nextState}');
     notifyListeners();
+    return true;
   }
 
-  void toggleBuzzer() {
+  bool toggleBuzzer() {
+    if (!_isOperator) return false;
     _buzzerActive = !_buzzerActive;
     final state = _buzzerActive ? 1 : 0;
     _mqttService.publish('pharma/control/$_selectedDeviceId', '{"actuator":"buzzer","state":$state}');
     _mqttService.publish('pharma/control/buzzer', '{"device_id":"$_selectedDeviceId","state":$state}');
     notifyListeners();
+    return true;
   }
 
   Future<void> _initThresholds() async {

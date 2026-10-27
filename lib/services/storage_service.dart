@@ -10,6 +10,7 @@ class StorageService {
   static const String _keyBiometricEnabled = 'biometric_enabled';
   static const String _keyUserName = 'user_name';
   static const String _keyUserEmail = 'user_email';
+  static const String _keyUserRole = 'user_role';
   static const String _keyAuthProvider = 'auth_provider';
   static const String _keyUserAvatar = 'user_avatar';
 
@@ -116,6 +117,30 @@ class StorageService {
     }
   }
 
+  Future<Map<String, dynamic>?> getTokenPayload() async {
+    final token = await getAuthToken();
+    if (token == null) return null;
+    try {
+      final parts = token.split('.');
+      if (parts.length != 2) return null;
+      return jsonDecode(
+        utf8.decode(base64Url.decode(base64.normalize(parts[0]))),
+      ) as Map<String, dynamic>;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<int?> getUserId() async {
+    final payload = await getTokenPayload();
+    return (payload?['uid'] as num?)?.toInt();
+  }
+
+  Future<String?> getUsername() async {
+    final payload = await getTokenPayload();
+    return payload?['usr']?.toString();
+  }
+
   // Biometric preference
   Future<void> setBiometricEnabled(bool value) async {
     final prefs = await SharedPreferences.getInstance();
@@ -131,15 +156,49 @@ class StorageService {
     required String name,
     required String email,
     required String provider,
+    String? role,
     String? avatar,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_keyUserName, name.trim());
     await prefs.setString(_keyUserEmail, email.trim());
     await prefs.setString(_keyAuthProvider, provider.trim());
+    if (role != null) {
+      await prefs.setString(_keyUserRole, role.trim().toLowerCase());
+    }
     if (avatar != null) {
       await prefs.setString(_keyUserAvatar, avatar);
     }
+  }
+
+  Future<void> saveUserRole(String role) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyUserRole, role.trim().toLowerCase());
+  }
+
+  Future<String> getUserRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getString(_keyUserRole);
+    if (saved != null && saved.isNotEmpty) return saved.toLowerCase();
+    final token = await getAuthToken();
+    if (token != null) {
+      try {
+        final parts = token.split('.');
+        if (parts.length == 2) {
+          final payload = jsonDecode(
+            utf8.decode(base64Url.decode(base64.normalize(parts[0]))),
+          ) as Map<String, dynamic>;
+          final r = payload['role']?.toString();
+          if (r != null && r.isNotEmpty) return r.toLowerCase();
+        }
+      } catch (_) {}
+    }
+    return 'user';
+  }
+
+  Future<bool> isOperator() async {
+    final role = await getUserRole();
+    return role == 'operator' || role == 'admin';
   }
 
   Future<void> saveUserAvatar(String avatarData) async {
@@ -152,6 +211,7 @@ class StorageService {
     return {
       'name': prefs.getString(_keyUserName) ?? 'Pengguna Farmasi',
       'email': prefs.getString(_keyUserEmail) ?? 'user@smartpharma.id',
+      'role': prefs.getString(_keyUserRole) ?? (await getUserRole()),
       'provider': prefs.getString(_keyAuthProvider) ?? 'Smart Pharma',
       'avatar': prefs.getString(_keyUserAvatar) ?? '',
     };

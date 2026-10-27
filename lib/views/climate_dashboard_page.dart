@@ -15,7 +15,7 @@ class ClimateDashboardPage extends StatelessWidget {
   Widget build(BuildContext context) => Consumer<SensorProvider>(
         builder: (context, provider, child) => provider.isInitialLoading
             ? _loading()
-            : _dashboard(provider, provider.sensorData),
+            : _dashboard(context, provider, provider.sensorData),
       );
 
   Widget _loading() => ListView(
@@ -33,7 +33,7 @@ class ClimateDashboardPage extends StatelessWidget {
         ],
       );
 
-  Widget _dashboard(SensorProvider p, SensorModel s) {
+  Widget _dashboard(BuildContext context, SensorProvider p, SensorModel s) {
     final targetMin = p.currentTempMin;
     final targetMax = p.currentTempMax;
     final humMin = p.currentHumidityMin;
@@ -65,9 +65,37 @@ class ClimateDashboardPage extends StatelessWidget {
         const SizedBox(height: AppSpacing.md),
         _temperatureGauge(s, p, tempOk, targetMin, targetMax),
         const SizedBox(height: AppSpacing.md),
-        _automation(Icons.cleaning_services_outlined, 'Sterilisasi UV', s.isUvMenyala ? 'Sterilisasi sedang berjalan' : 'Mode siaga', s.isUvMenyala, AppColors.uvPurple, p.toggleUv),
+        _automation(
+          Icons.cleaning_services_outlined,
+          'Sterilisasi UV',
+          s.isUvMenyala ? 'Sterilisasi sedang berjalan' : 'Mode siaga',
+          s.isUvMenyala,
+          AppColors.uvPurple,
+          () {
+            if (!p.isOperator) {
+              _showOperatorOnlySnack(context);
+              return;
+            }
+            p.toggleUv();
+          },
+          isRestricted: !p.isOperator,
+        ),
         const SizedBox(height: AppSpacing.sm),
-        _automation(Icons.notifications_active_outlined, 'Buzzer dan LED alarm', p.buzzerActive ? 'Alarm aktif' : 'Aktifkan bila diperlukan', p.buzzerActive, AppColors.pharmaBlue, p.toggleBuzzer),
+        _automation(
+          Icons.notifications_active_outlined,
+          'Buzzer dan LED alarm',
+          p.buzzerActive ? 'Alarm aktif' : 'Aktifkan bila diperlukan',
+          p.buzzerActive,
+          AppColors.pharmaBlue,
+          () {
+            if (!p.isOperator) {
+              _showOperatorOnlySnack(context);
+              return;
+            }
+            p.toggleBuzzer();
+          },
+          isRestricted: !p.isOperator,
+        ),
         const SizedBox(height: AppSpacing.md),
         _connection(p),
       ],
@@ -388,7 +416,40 @@ class ClimateDashboardPage extends StatelessWidget {
     );
   }
 
-  Widget _automation(IconData icon, String title, String sub, bool on, Color color, VoidCallback tap) => InkWell(
+  void _showOperatorOnlySnack(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Row(
+          children: [
+            Icon(Icons.lock_outline_rounded, color: Colors.white, size: 18),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Akses terbatas: Hanya akun Operator yang dapat mengontrol aktuator.',
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12.5),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: AppColors.pharmaNavy,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusSm)),
+        margin: const EdgeInsets.all(AppSpacing.md),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  Widget _automation(
+    IconData icon,
+    String title,
+    String sub,
+    bool on,
+    Color color,
+    VoidCallback tap, {
+    bool isRestricted = false,
+  }) =>
+      InkWell(
         onTap: tap,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         child: Container(
@@ -399,10 +460,62 @@ class ClimateDashboardPage extends StatelessWidget {
             boxShadow: _cardShadow,
           ),
           child: Row(children: [
-            Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: color.withAlpha(24), borderRadius: BorderRadius.circular(AppSpacing.radiusSm)), child: Icon(icon, color: color)),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color.withAlpha(24),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+              ),
+              child: Icon(icon, color: color),
+            ),
             const SizedBox(width: AppSpacing.md),
-            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.textDark)), const SizedBox(height: 2), Text(sub, style: AppTypography.caption)])),
-            Switch(value: on, onChanged: (_) => tap(), activeThumbColor: color),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textDark,
+                        ),
+                      ),
+                      if (isRestricted) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                          decoration: BoxDecoration(
+                            color: AppColors.containerHigh,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: const Text(
+                            'Khusus Operator',
+                            style: TextStyle(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textMuted,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    isRestricted ? 'Hanya Operator yang dapat mengubah status' : sub,
+                    style: AppTypography.caption,
+                  ),
+                ],
+              ),
+            ),
+            Switch(
+              value: on,
+              onChanged: (_) => tap(),
+              activeThumbColor: color,
+            ),
           ]),
         ),
       );

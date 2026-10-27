@@ -168,6 +168,11 @@ class ApiService {
           throw Exception('Server tidak mengirim token sesi');
         }
         await _storageService.saveAuthToken(token);
+        final user = (data['user'] as Map<String, dynamic>?) ?? {};
+        final role = user['role']?.toString();
+        if (role != null) {
+          await _storageService.saveUserRole(role);
+        }
         return data;
       } else {
         final errorMsg = data['detail'] ?? 'Autentikasi gagal';
@@ -212,6 +217,9 @@ class ApiService {
           throw Exception('Server tidak mengirim token sesi');
         }
         await _storageService.saveAuthToken(token);
+        final user = (data['user'] as Map<String, dynamic>?) ?? {};
+        final role = user['role']?.toString() ?? 'user';
+        await _storageService.saveUserRole(role);
         return data;
       } else {
         final errorMsg = data['detail'] ?? 'Registrasi gagal';
@@ -288,6 +296,122 @@ class ApiService {
         return data;
       } else {
         throw Exception(data['detail'] ?? 'Gagal mengubah password');
+      }
+    } catch (e) {
+      if (e is Exception && !e.toString().contains('ClientException')) rethrow;
+      throw Exception('Gagal menghubungi server: $e');
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> fetchUsers() async {
+    final ip = await resolveReachableIp();
+    final url = Uri.parse('http://$ip:8001/users');
+    final token = await _storageService.getAuthToken();
+
+    try {
+      final response = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+      ).timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        final List<dynamic> list = jsonDecode(response.body);
+        return list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      } else if (response.statusCode == 401) {
+        await _storageService.invalidateSession();
+        redirectToLogin();
+        throw Exception('Sesi berakhir. Silakan login ulang.');
+      } else if (response.statusCode == 403) {
+        throw Exception('Hanya Operator yang berwenang mengelola pengguna.');
+      } else {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        throw Exception(data['detail'] ?? 'Gagal mengambil daftar pengguna');
+      }
+    } catch (e) {
+      if (e is Exception && !e.toString().contains('ClientException')) rethrow;
+      throw Exception('Gagal menghubungi server: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> updateUserRole({
+    required int userId,
+    required String role,
+  }) async {
+    final ip = await resolveReachableIp();
+    final url = Uri.parse('http://$ip:8001/users/role');
+    final token = await _storageService.getAuthToken();
+
+    try {
+      final response = await http
+          .post(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              if (token != null) 'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode({
+              'user_id': userId,
+              'role': role.trim().toLowerCase(),
+            }),
+          )
+          .timeout(const Duration(seconds: 5));
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode == 200) {
+        return data;
+      } else if (response.statusCode == 401) {
+        await _storageService.invalidateSession();
+        redirectToLogin();
+        throw Exception('Sesi berakhir. Silakan login ulang.');
+      } else if (response.statusCode == 403) {
+        throw Exception('Akses ditolak: hanya operator yang memiliki izin');
+      } else {
+        throw Exception(data['detail'] ?? 'Gagal mengubah role pengguna');
+      }
+    } catch (e) {
+      if (e is Exception && !e.toString().contains('ClientException')) rethrow;
+      throw Exception('Gagal menghubungi server: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchMyProfile() async {
+    final ip = await resolveReachableIp();
+    final url = Uri.parse('http://$ip:8001/me');
+    final token = await _storageService.getAuthToken();
+
+    try {
+      final response = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+      ).timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        final role = data['role']?.toString() ?? 'user';
+        final name = data['name']?.toString() ?? '';
+        final email = data['email']?.toString() ?? '';
+        if (name.isNotEmpty && email.isNotEmpty) {
+          await _storageService.saveUserProfile(
+            name: name,
+            email: email,
+            provider: 'Database MySQL ($role)',
+            role: role,
+          );
+        }
+        return data;
+      } else if (response.statusCode == 401) {
+        await _storageService.invalidateSession();
+        redirectToLogin();
+        throw Exception('Sesi berakhir. Silakan login ulang.');
+      } else {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        throw Exception(data['detail'] ?? 'Gagal mengambil data profil');
       }
     } catch (e) {
       if (e is Exception && !e.toString().contains('ClientException')) rethrow;

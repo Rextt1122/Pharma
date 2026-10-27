@@ -457,20 +457,36 @@ class RealtimePage extends StatelessWidget {
               const SizedBox(height: AppSpacing.md),
               _buildActuatorRow(
                 title: 'Lampu Sterilisasi UV',
-                subtitle: sensor.isUvMenyala ? 'Aktif • Sedang Sterilisasi' : 'Nonaktif • Mode Standby',
+                subtitle: !provider.isOperator
+                    ? 'Terkunci • Khusus akun Operator'
+                    : (sensor.isUvMenyala ? 'Aktif • Sedang Sterilisasi' : 'Nonaktif • Mode Standby'),
                 icon: Icons.cleaning_services_rounded,
                 isActive: sensor.isUvMenyala,
                 activeColor: AppColors.uvPurple,
-                onToggle: () => provider.toggleUv(),
+                onToggle: () {
+                  if (!provider.isOperator) {
+                    _showOperatorOnlySnack(context);
+                    return;
+                  }
+                  provider.toggleUv();
+                },
               ),
               const SizedBox(height: AppSpacing.sm + 2),
               _buildActuatorRow(
                 title: 'Buzzer & LED Alarm',
-                subtitle: provider.buzzerActive ? 'Alarm Bunyi • Peringatan' : 'Senyap • Kondisi Normal',
+                subtitle: !provider.isOperator
+                    ? 'Terkunci • Khusus akun Operator'
+                    : (provider.buzzerActive ? 'Alarm Bunyi • Peringatan' : 'Senyap • Kondisi Normal'),
                 icon: Icons.notifications_active_rounded,
                 isActive: provider.buzzerActive,
                 activeColor: AppColors.alertRed,
-                onToggle: () => provider.toggleBuzzer(),
+                onToggle: () {
+                  if (!provider.isOperator) {
+                    _showOperatorOnlySnack(context);
+                    return;
+                  }
+                  provider.toggleBuzzer();
+                },
               ),
             ],
           ),
@@ -610,6 +626,30 @@ class RealtimePage extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showOperatorOnlySnack(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Row(
+          children: [
+            Icon(Icons.lock_outline_rounded, color: Colors.white, size: 18),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Akses terbatas: Hanya akun Operator yang dapat mengontrol aktuator.',
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12.5),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: AppColors.pharmaNavy,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusSm)),
+        margin: const EdgeInsets.all(AppSpacing.md),
+        duration: const Duration(seconds: 3),
       ),
     );
   }

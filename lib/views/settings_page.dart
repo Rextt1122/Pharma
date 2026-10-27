@@ -22,6 +22,7 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   final StorageService _storageService = StorageService();
+  final ApiService _apiService = ApiService();
   final TextEditingController _ipController = TextEditingController(
     text: StorageService.defaultIp,
   );
@@ -35,6 +36,9 @@ class _SettingsPageState extends State<SettingsPage> {
   String _userName = 'Pengguna Farmasi';
   String _userEmail = 'user@smartpharma.id';
   String _authProvider = 'Smart Pharma';
+  String _userRole = 'operator';
+  bool _isOperator = true;
+  int? _currentUserId;
   String _userAvatar = '';
   bool _isSaving = false;
   bool _isLoading = true;
@@ -79,11 +83,16 @@ class _SettingsPageState extends State<SettingsPage> {
       final profile = results[2] as Map<String, String>;
       final isBioEnabled = results[3] as bool;
       final isBioSupported = results[4] as bool;
+      final role = await _storageService.getUserRole();
+      final uid = await _storageService.getUserId();
 
       setState(() {
         _ipController.text = ip;
         _userName = profile['name'] ?? 'Pengguna Farmasi';
         _userEmail = profile['email'] ?? 'user@smartpharma.id';
+        _userRole = role;
+        _isOperator = role == 'operator' || role == 'admin';
+        _currentUserId = uid;
         _authProvider = profile['provider'] ?? 'Smart Pharma';
         _userAvatar = profile['avatar'] ?? '';
         _isBiometricEnabled = isBioEnabled;
@@ -104,6 +113,18 @@ class _SettingsPageState extends State<SettingsPage> {
         );
         _isLoading = false;
       });
+
+      _apiService.fetchMyProfile().then((myProfile) {
+        if (mounted) {
+          final r = myProfile['role']?.toString().toLowerCase() ?? _userRole;
+          setState(() {
+            _userRole = r;
+            _isOperator = r == 'operator' || r == 'admin';
+            _currentUserId = (myProfile['id'] as num?)?.toInt() ?? _currentUserId;
+            _authProvider = 'Database MySQL ($r)';
+          });
+        }
+      }).catchError((_) {});
     } catch (_) {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -117,6 +138,434 @@ class _SettingsPageState extends State<SettingsPage> {
     } else {
       AppToast.success(ctx, message);
     }
+  }
+
+  void _showManageUsersModal() {
+    List<Map<String, dynamic>> users = [];
+    bool loading = true;
+    String? error;
+    String searchQuery = '';
+    final Set<int> updatingIds = {};
+    final searchCtrl = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.cardWhite,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (sheetCtx) => StatefulBuilder(
+        builder: (ctx, setModalState) {
+          void fetchUserList() async {
+            setModalState(() {
+              loading = true;
+              error = null;
+            });
+            try {
+              final result = await _apiService.fetchUsers();
+              if (sheetCtx.mounted) {
+                setModalState(() {
+                  users = result;
+                  loading = false;
+                });
+              }
+            } catch (e) {
+              if (sheetCtx.mounted) {
+                setModalState(() {
+                  error = e.toString().replaceAll('Exception: ', '');
+                  loading = false;
+                });
+              }
+            }
+          }
+
+          if (loading && error == null && users.isEmpty) {
+            fetchUserList();
+          }
+
+          final filteredUsers = users.where((u) {
+            final q = searchQuery.toLowerCase().trim();
+            if (q.isEmpty) return true;
+            final name = (u['full_name'] ?? u['name'] ?? '').toString().toLowerCase();
+            final usr = (u['username'] ?? '').toString().toLowerCase();
+            final em = (u['email'] ?? '').toString().toLowerCase();
+            return name.contains(q) || usr.contains(q) || em.contains(q);
+          }).toList();
+
+          final int totalOp = users.where((u) => (u['role'] ?? '').toString().toLowerCase() == 'operator').length;
+          final int totalReg = users.where((u) => (u['role'] ?? '').toString().toLowerCase() != 'operator').length;
+
+          return ModalSheetTopDecor(
+            child: Padding(
+              padding: EdgeInsets.only(
+                left: AppSpacing.lg,
+                right: AppSpacing.lg,
+                top: AppSpacing.md + 4,
+                bottom: MediaQuery.of(sheetCtx).viewInsets.bottom + AppSpacing.lg,
+              ),
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height * 0.78,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 38,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: AppColors.containerHigh,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(AppSpacing.sm),
+                          decoration: BoxDecoration(
+                            color: AppColors.pharmaNavy.withAlpha(20),
+                            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                          ),
+                          child: const Icon(
+                            Icons.manage_accounts_rounded,
+                            color: AppColors.pharmaNavy,
+                            size: 22,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Kelola Pengguna & Akses',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.pharmaNavy,
+                                ),
+                              ),
+                              Text(
+                                'Atur hak staf Operator dan User',
+                                style: AppTypography.caption,
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.refresh_rounded, size: 20, color: AppColors.pharmaNavy),
+                          tooltip: 'Segarkan data',
+                          onPressed: loading ? null : fetchUserList,
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close_rounded, size: 20, color: AppColors.textMuted),
+                          onPressed: () => Navigator.pop(sheetCtx),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    // Summary counts
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: AppColors.containerLow,
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          _buildStatItem('Total Akun', users.length.toString(), AppColors.textDark),
+                          Container(width: 1, height: 24, color: AppColors.containerHigh),
+                          _buildStatItem('Operator', totalOp.toString(), AppColors.pharmaNavy),
+                          Container(width: 1, height: 24, color: AppColors.containerHigh),
+                          _buildStatItem('User Biasa', totalReg.toString(), AppColors.textMuted),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm + 2),
+                    // Search bar
+                    TextField(
+                      controller: searchCtrl,
+                      onChanged: (val) => setModalState(() => searchQuery = val),
+                      style: AppTypography.body.copyWith(fontSize: 13),
+                      decoration: InputDecoration(
+                        hintText: 'Cari nama, username, atau email...',
+                        hintStyle: AppTypography.caption,
+                        prefixIcon: const Icon(Icons.search_rounded, size: 20, color: AppColors.textMuted),
+                        suffixIcon: searchQuery.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.clear_rounded, size: 18),
+                                onPressed: () {
+                                  searchCtrl.clear();
+                                  setModalState(() => searchQuery = '');
+                                },
+                              )
+                            : null,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        isDense: true,
+                        filled: true,
+                        fillColor: AppColors.inputBg,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                          borderSide: const BorderSide(color: AppColors.containerLow),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                          borderSide: const BorderSide(color: AppColors.containerLow),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                          borderSide: const BorderSide(color: AppColors.pharmaNavy, width: 1.5),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm + 4),
+                    Expanded(
+                      child: loading
+                          ? const Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  CircularProgressIndicator(color: AppColors.pharmaNavy, strokeWidth: 2.5),
+                                  SizedBox(height: 12),
+                                  Text('Memuat daftar pengguna...', style: AppTypography.caption),
+                                ],
+                              ),
+                            )
+                          : error != null
+                              ? Center(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.error_outline_rounded, color: AppColors.alertRed, size: 36),
+                                      const SizedBox(height: 8),
+                                      Text(error!, textAlign: TextAlign.center, style: AppTypography.caption),
+                                      const SizedBox(height: 12),
+                                      ElevatedButton(
+                                        onPressed: fetchUserList,
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: AppColors.pharmaNavy,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                                          ),
+                                        ),
+                                        child: const Text('Coba Lagi', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              : filteredUsers.isEmpty
+                                  ? const Center(
+                                      child: Text(
+                                        'Tidak ada pengguna ditemukan.',
+                                        style: AppTypography.caption,
+                                      ),
+                                    )
+                                  : ListView.separated(
+                                      physics: const BouncingScrollPhysics(),
+                                      itemCount: filteredUsers.length,
+                                      separatorBuilder: (_, index) => const SizedBox(height: AppSpacing.sm),
+                                      itemBuilder: (listCtx, idx) {
+                                        final u = filteredUsers[idx];
+                                        final uId = (u['id'] as num?)?.toInt() ?? 0;
+                                        final uUsername = u['username']?.toString() ?? '';
+                                        final uFullName = (u['full_name'] ?? u['name'] ?? uUsername).toString();
+                                        final uEmail = u['email']?.toString() ?? '';
+                                        final uRole = (u['role']?.toString() ?? 'user').toLowerCase();
+                                        final isTargetOp = uRole == 'operator';
+                                        final isSelf = (_currentUserId != null && uId == _currentUserId) ||
+                                            uUsername.toLowerCase() == _userName.toLowerCase();
+                                        final isUpdating = updatingIds.contains(uId);
+
+                                        return Container(
+                                          padding: const EdgeInsets.all(AppSpacing.md),
+                                          decoration: BoxDecoration(
+                                            color: isSelf ? AppColors.containerLow.withAlpha(80) : AppColors.cardWhite,
+                                            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                                            border: Border.all(
+                                              color: isSelf ? AppColors.pharmaNavy.withAlpha(50) : AppColors.containerLow,
+                                              width: 1.0,
+                                            ),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              CircleAvatar(
+                                                radius: 20,
+                                                backgroundColor: isTargetOp
+                                                    ? AppColors.pharmaNavy.withAlpha(20)
+                                                    : AppColors.containerHigh,
+                                                child: Text(
+                                                  uFullName.isNotEmpty ? uFullName.substring(0, 1).toUpperCase() : 'U',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.w800,
+                                                    fontSize: 14,
+                                                    color: isTargetOp ? AppColors.pharmaNavy : AppColors.textDark,
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(width: AppSpacing.md),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Row(
+                                                      children: [
+                                                        Flexible(
+                                                          child: Text(
+                                                            uFullName,
+                                                            style: const TextStyle(
+                                                              fontSize: 13.5,
+                                                              fontWeight: FontWeight.bold,
+                                                              color: AppColors.textDark,
+                                                            ),
+                                                            overflow: TextOverflow.ellipsis,
+                                                          ),
+                                                        ),
+                                                        if (isSelf) ...[
+                                                          const SizedBox(width: 6),
+                                                          Container(
+                                                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                                            decoration: BoxDecoration(
+                                                              color: AppColors.pharmaNavy.withAlpha(20),
+                                                              borderRadius: BorderRadius.circular(4),
+                                                            ),
+                                                            child: const Text(
+                                                              'Anda',
+                                                              style: TextStyle(
+                                                                fontSize: 9.5,
+                                                                fontWeight: FontWeight.w700,
+                                                                color: AppColors.pharmaNavy,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ],
+                                                    ),
+                                                    const SizedBox(height: 2),
+                                                    Text(
+                                                      '@$uUsername • $uEmail',
+                                                      style: AppTypography.caption.copyWith(fontSize: 11),
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              const SizedBox(width: AppSpacing.sm),
+                                              if (isUpdating)
+                                                const SizedBox(
+                                                  width: 24,
+                                                  height: 24,
+                                                  child: CircularProgressIndicator(
+                                                    strokeWidth: 2,
+                                                    color: AppColors.pharmaNavy,
+                                                  ),
+                                                )
+                                              else if (isSelf)
+                                                Container(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                  decoration: BoxDecoration(
+                                                    color: AppColors.pharmaNavy,
+                                                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                                                  ),
+                                                  child: const Text(
+                                                    'OPERATOR',
+                                                    style: TextStyle(
+                                                      fontSize: 10,
+                                                      fontWeight: FontWeight.w800,
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                )
+                                              else
+                                                Column(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                                  children: [
+                                                    Switch(
+                                                      value: isTargetOp,
+                                                      activeThumbColor: AppColors.pharmaNavy,
+                                                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                                      onChanged: (bool makeOp) async {
+                                                        final targetRole = makeOp ? 'operator' : 'user';
+                                                        setModalState(() => updatingIds.add(uId));
+                                                        try {
+                                                          await _apiService.updateUserRole(
+                                                            userId: uId,
+                                                            role: targetRole,
+                                                          );
+                                                          setModalState(() {
+                                                            u['role'] = targetRole;
+                                                            updatingIds.remove(uId);
+                                                          });
+                                                          if (mounted) {
+                                                            _showSnack(
+                                                              context,
+                                                              'Role $uUsername diubah menjadi ${targetRole.toUpperCase()}',
+                                                            );
+                                                          }
+                                                        } catch (err) {
+                                                          setModalState(() => updatingIds.remove(uId));
+                                                          if (mounted) {
+                                                            _showSnack(
+                                                              context,
+                                                              err.toString().replaceAll('Exception: ', ''),
+                                                              isError: true,
+                                                            );
+                                                          }
+                                                        }
+                                                      },
+                                                    ),
+                                                    Text(
+                                                      isTargetOp ? 'Operator' : 'User',
+                                                      style: TextStyle(
+                                                        fontSize: 10,
+                                                        fontWeight: FontWeight.w700,
+                                                        color: isTargetOp ? AppColors.pharmaNavy : AppColors.textMuted,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                            ],
+                                          ),
+                                        );
+                                      },
+                                    ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildStatItem(String label, String value, Color color) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w800,
+            color: color,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 10.5,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textMuted,
+          ),
+        ),
+      ],
+    );
   }
 
   void _showEditProfileDialog() {
@@ -976,14 +1425,37 @@ class _SettingsPageState extends State<SettingsPage> {
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 4),
-                        Text(
-                          _authProvider,
-                          style: TextStyle(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.pharmaNavy.withAlpha(180),
-                          ),
-                          overflow: TextOverflow.ellipsis,
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: _isOperator ? AppColors.pharmaNavy : AppColors.containerHigh,
+                                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                              ),
+                              child: Text(
+                                _userRole.toUpperCase(),
+                                style: TextStyle(
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: _isOperator ? Colors.white : AppColors.textDark,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                _authProvider,
+                                style: TextStyle(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.pharmaNavy.withAlpha(180),
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -1064,6 +1536,74 @@ class _SettingsPageState extends State<SettingsPage> {
             ],
           ),
         ),
+        if (_isOperator) ...[
+          const SizedBox(height: AppSpacing.md - 2),
+          Container(
+            decoration: BoxDecoration(
+              color: AppColors.cardWhite,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              border: Border.all(color: AppColors.containerLow, width: 1.0),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x140E555A),
+                  blurRadius: 14,
+                  offset: Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Material(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              child: InkWell(
+                onTap: _showManageUsersModal,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg,
+                    vertical: AppSpacing.md,
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(AppSpacing.sm + 2),
+                        decoration: const BoxDecoration(
+                          color: AppColors.containerLow,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.manage_accounts_rounded,
+                          color: AppColors.pharmaNavy,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm + 4),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Kelola Pengguna & Akses',
+                              style: AppTypography.subtitle,
+                            ),
+                            Text(
+                              'Atur hak akses staf Operator & User',
+                              style: AppTypography.caption,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(
+                        Icons.chevron_right_rounded,
+                        color: AppColors.pharmaNavy,
+                        size: 24,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
         const SizedBox(height: AppSpacing.md - 2),
         Container(
           padding: const EdgeInsets.all(AppSpacing.lg),
