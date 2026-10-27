@@ -21,13 +21,13 @@ class StorageService {
   static const String _keyHumidityMax = 'threshold_humidity_max';
   static const String _keyGasMax = 'threshold_gas_max';
 
-  // IP VirtualBox Host-Only (192.168.33.10).
+  // IP VirtualBox Host-Only (192.168.33.10)
   static const String defaultIp = '192.168.33.10';
 
   // Port untuk REST API FastAPI
   static const int apiPort = 8001;
 
-  // Port untuk MQTT via WebSocket (Mosquitto harus listen di 9001)
+  // Port untuk MQTT via WebSocket
   static const int mqttWsPort = 9001;
 
   // Default threshold values (farmasi storage)

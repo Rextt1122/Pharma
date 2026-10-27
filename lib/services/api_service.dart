@@ -377,6 +377,38 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>> deleteUser(int userId) async {
+    final ip = await resolveReachableIp();
+    final url = Uri.parse('http://$ip:8001/users/$userId');
+    final token = await _storageService.getAuthToken();
+
+    try {
+      final response = await http.delete(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+      ).timeout(const Duration(seconds: 5));
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode == 200) {
+        return data;
+      } else if (response.statusCode == 401) {
+        await _storageService.invalidateSession();
+        redirectToLogin();
+        throw Exception('Sesi berakhir. Silakan login ulang.');
+      } else if (response.statusCode == 403) {
+        throw Exception('Akses ditolak: hanya operator yang memiliki izin');
+      } else {
+        throw Exception(data['detail'] ?? 'Gagal menghapus pengguna');
+      }
+    } catch (e) {
+      if (e is Exception && !e.toString().contains('ClientException')) rethrow;
+      throw Exception('Gagal menghubungi server: $e');
+    }
+  }
+
   Future<Map<String, dynamic>> fetchMyProfile() async {
     final ip = await resolveReachableIp();
     final url = Uri.parse('http://$ip:8001/me');

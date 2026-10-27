@@ -479,51 +479,78 @@ class _SettingsPageState extends State<SettingsPage> {
                                                   ),
                                                 )
                                               else
-                                                Column(
+                                                Row(
                                                   mainAxisSize: MainAxisSize.min,
-                                                  crossAxisAlignment: CrossAxisAlignment.end,
                                                   children: [
-                                                    Switch(
-                                                      value: isTargetOp,
-                                                      activeThumbColor: AppColors.pharmaNavy,
-                                                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                                      onChanged: (bool makeOp) async {
-                                                        final targetRole = makeOp ? 'operator' : 'user';
-                                                        setModalState(() => updatingIds.add(uId));
-                                                        try {
-                                                          await _apiService.updateUserRole(
-                                                            userId: uId,
-                                                            role: targetRole,
-                                                          );
-                                                          setModalState(() {
-                                                            u['role'] = targetRole;
-                                                            updatingIds.remove(uId);
-                                                          });
-                                                          if (mounted) {
-                                                            _showSnack(
-                                                              context,
-                                                              'Role $uUsername diubah menjadi ${targetRole.toUpperCase()}',
-                                                            );
-                                                          }
-                                                        } catch (err) {
-                                                          setModalState(() => updatingIds.remove(uId));
-                                                          if (mounted) {
-                                                            _showSnack(
-                                                              context,
-                                                              err.toString().replaceAll('Exception: ', ''),
-                                                              isError: true,
-                                                            );
-                                                          }
-                                                        }
-                                                      },
+                                                    Column(
+                                                      mainAxisSize: MainAxisSize.min,
+                                                      crossAxisAlignment: CrossAxisAlignment.end,
+                                                      children: [
+                                                        Switch(
+                                                          value: isTargetOp,
+                                                          activeThumbColor: AppColors.pharmaNavy,
+                                                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                                          onChanged: (bool makeOp) async {
+                                                            final targetRole = makeOp ? 'operator' : 'user';
+                                                            setModalState(() => updatingIds.add(uId));
+                                                            try {
+                                                              await _apiService.updateUserRole(
+                                                                userId: uId,
+                                                                role: targetRole,
+                                                              );
+                                                              setModalState(() {
+                                                                u['role'] = targetRole;
+                                                                updatingIds.remove(uId);
+                                                              });
+                                                              if (mounted) {
+                                                                _showSnack(
+                                                                  context,
+                                                                  'Role $uUsername diubah menjadi ${targetRole.toUpperCase()}',
+                                                                );
+                                                              }
+                                                            } catch (err) {
+                                                              setModalState(() => updatingIds.remove(uId));
+                                                              if (mounted) {
+                                                                _showSnack(
+                                                                  context,
+                                                                  err.toString().replaceAll('Exception: ', ''),
+                                                                  isError: true,
+                                                                );
+                                                              }
+                                                            }
+                                                          },
+                                                        ),
+                                                        Text(
+                                                          isTargetOp ? 'Operator' : 'User',
+                                                          style: TextStyle(
+                                                            fontSize: 10,
+                                                            fontWeight: FontWeight.w700,
+                                                            color: isTargetOp ? AppColors.pharmaNavy : AppColors.textMuted,
+                                                          ),
+                                                        ),
+                                                      ],
                                                     ),
-                                                    Text(
-                                                      isTargetOp ? 'Operator' : 'User',
-                                                      style: TextStyle(
-                                                        fontSize: 10,
-                                                        fontWeight: FontWeight.w700,
-                                                        color: isTargetOp ? AppColors.pharmaNavy : AppColors.textMuted,
+                                                    const SizedBox(width: 4),
+                                                    IconButton(
+                                                      icon: const Icon(
+                                                        Icons.delete_outline_rounded,
+                                                        color: AppColors.alertRed,
+                                                        size: 20,
                                                       ),
+                                                      tooltip: 'Hapus Pengguna',
+                                                      onPressed: () {
+                                                        _confirmDeleteUser(
+                                                          sheetCtx,
+                                                          userId: uId,
+                                                          username: uUsername,
+                                                          fullName: uFullName,
+                                                          onSuccess: () {
+                                                            setModalState(() {
+                                                              users.removeWhere((item) => item['id'] == uId);
+                                                            });
+                                                          },
+                                                        );
+                                                      },
                                                     ),
                                                   ],
                                                 ),
@@ -565,6 +592,74 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
         ),
       ],
+    );
+  }
+
+  void _confirmDeleteUser(
+    BuildContext parentCtx, {
+    required int userId,
+    required String username,
+    required String fullName,
+    required VoidCallback onSuccess,
+  }) {
+    showDialog(
+      context: parentCtx,
+      builder: (dialogCtx) => AlertDialog(
+        backgroundColor: AppColors.cardWhite,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.sm),
+              decoration: BoxDecoration(
+                color: AppColors.alertRed.withAlpha(20),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+              ),
+              child: const Icon(Icons.delete_forever_rounded, color: AppColors.alertRed, size: 22),
+            ),
+            const SizedBox(width: AppSpacing.sm + 2),
+            const Text(
+              'Hapus Pengguna',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.textDark),
+            ),
+          ],
+        ),
+        content: Text(
+          'Apakah Anda yakin ingin menghapus akun @$username ($fullName)? Tindakan ini tidak dapat dibatalkan.',
+          style: AppTypography.body.copyWith(fontSize: 13),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx),
+            child: const Text('Batal', style: TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.w700)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.alertRed,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+              ),
+            ),
+            onPressed: () async {
+              Navigator.pop(dialogCtx);
+              try {
+                await _apiService.deleteUser(userId);
+                onSuccess();
+                if (mounted) {
+                  _showSnack(context, 'Pengguna @$username berhasil dihapus');
+                }
+              } catch (e) {
+                if (mounted) {
+                  _showSnack(context, e.toString().replaceAll('Exception: ', ''), isError: true);
+                }
+              }
+            },
+            child: const Text('Hapus', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
+          ),
+        ],
+      ),
     );
   }
 
