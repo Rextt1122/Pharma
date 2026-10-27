@@ -195,7 +195,15 @@ class HistoryPage extends StatelessWidget {
               size: 140,
               opacity: 0.035,
               alignment: Alignment.topRight,
-              child: SensorTrendChart(historyData: provider.historyList),
+              child: SensorTrendChart(
+                historyData: provider.historyList,
+                tempMin: sensorProvider.currentTempMin,
+                tempMax: sensorProvider.currentTempMax,
+                humidityMin: sensorProvider.currentHumidityMin,
+                humidityMax: sensorProvider.currentHumidityMax,
+                gasMax: sensorProvider.gasMax,
+                isVaccineRack: sensorProvider.isVaccineRack,
+              ),
             ),
             const SizedBox(height: AppSpacing.md + 2),
             Row(

@@ -7,10 +7,22 @@ enum ChartMetric { suhu, kelembapan, gas }
 
 class SensorTrendChart extends StatefulWidget {
   final List<SensorModel> historyData;
+  final double tempMin;
+  final double tempMax;
+  final double humidityMin;
+  final double humidityMax;
+  final double gasMax;
+  final bool isVaccineRack;
 
   const SensorTrendChart({
     super.key,
     required this.historyData,
+    this.tempMin = 2.0,
+    this.tempMax = 8.0,
+    this.humidityMin = 30.0,
+    this.humidityMax = 50.0,
+    this.gasMax = 50.0,
+    this.isVaccineRack = true,
   });
 
   @override
@@ -53,6 +65,34 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
     }
   }
 
+  double? get _upperThreshold {
+    switch (_selectedMetric) {
+      case ChartMetric.suhu:
+        return widget.tempMax;
+      case ChartMetric.kelembapan:
+        return widget.humidityMax;
+      case ChartMetric.gas:
+        return widget.gasMax;
+    }
+  }
+
+  double? get _lowerThreshold {
+    switch (_selectedMetric) {
+      case ChartMetric.suhu:
+        return widget.tempMin;
+      case ChartMetric.kelembapan:
+        return widget.humidityMin;
+      case ChartMetric.gas:
+        return null;
+    }
+  }
+
+  bool _isValAnomalous(double val) {
+    if (_upperThreshold != null && val > _upperThreshold!) return true;
+    if (_lowerThreshold != null && val < _lowerThreshold!) return true;
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
     if (widget.historyData.isEmpty) {
@@ -75,9 +115,27 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
     }
 
     final avgVal = sumVal / items.length;
-    final yMargin = (maxVal - minVal).abs() < 1.0 ? 2.0 : (maxVal - minVal) * 0.15;
-    final chartMinY = (minVal - yMargin).floorToDouble();
-    final chartMaxY = (maxVal + yMargin).ceilToDouble();
+
+    // Encompass thresholds so the danger boundary lines are always clearly framed
+    double effectiveMin = minVal;
+    double effectiveMax = maxVal;
+    if (_upperThreshold != null && _upperThreshold! > effectiveMax) {
+      effectiveMax = _upperThreshold!;
+    }
+    if (_lowerThreshold != null && _lowerThreshold! < effectiveMin) {
+      effectiveMin = _lowerThreshold!;
+    }
+
+    final range = (effectiveMax - effectiveMin).abs();
+    final yMargin = range < 1.0 ? 2.0 : range * 0.18;
+    double chartMinY = (effectiveMin - yMargin).floorToDouble();
+    double chartMaxY = (effectiveMax + yMargin).ceilToDouble();
+    if (_selectedMetric == ChartMetric.gas && chartMinY < 0) {
+      chartMinY = 0;
+    }
+    if (_selectedMetric == ChartMetric.kelembapan && chartMinY < 0) {
+      chartMinY = 0;
+    }
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -158,12 +216,98 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
               ],
             ),
           ),
-          const SizedBox(height: AppSpacing.md + 4),
+          const SizedBox(height: AppSpacing.sm),
+          // Threshold Limit Indicator Banner
+          Builder(
+            builder: (context) {
+              final anomalousCount = items.where((e) => _isValAnomalous(_extractValue(e))).length;
+              final String rangeText = _lowerThreshold != null
+                  ? '${_lowerThreshold!.toStringAsFixed(0)} – ${_upperThreshold!.toStringAsFixed(0)} $_metricUnit'
+                  : '< ${_upperThreshold!.toStringAsFixed(0)} $_metricUnit';
+
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: (anomalousCount > 0 ? AppColors.alertRed : AppColors.activeGreen).withAlpha(18),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                  border: Border.all(
+                    color: (anomalousCount > 0 ? AppColors.alertRed : AppColors.activeGreen).withAlpha(60),
+                    width: 0.8,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      anomalousCount > 0 ? Icons.warning_amber_rounded : Icons.verified_user_outlined,
+                      size: 15,
+                      color: anomalousCount > 0 ? AppColors.alertRed : AppColors.activeGreen,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        anomalousCount > 0
+                            ? 'Peringatan: $anomalousCount titik melampaui batas bahaya ($rangeText)'
+                            : 'Kondisi Aman: Seluruh titik dalam rentang standar ($rangeText)',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: anomalousCount > 0 ? AppColors.alertRed : AppColors.pharmaNavy,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: AppSpacing.md),
           // FlChart LineChart
           SizedBox(
             height: 200,
             child: LineChart(
               LineChartData(
+                extraLinesData: ExtraLinesData(
+                  horizontalLines: [
+                    if (_upperThreshold != null)
+                      HorizontalLine(
+                        y: _upperThreshold!,
+                        color: AppColors.alertRed.withAlpha(220),
+                        strokeWidth: 1.5,
+                        dashArray: [6, 4],
+                        label: HorizontalLineLabel(
+                          show: true,
+                          alignment: Alignment.topRight,
+                          padding: const EdgeInsets.only(right: 8, bottom: 2),
+                          style: const TextStyle(
+                            color: AppColors.alertRed,
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w800,
+                          ),
+                          labelResolver: (line) =>
+                              'Batas Bahaya (${line.y.toStringAsFixed(0)} $_metricUnit)',
+                        ),
+                      ),
+                    if (_lowerThreshold != null)
+                      HorizontalLine(
+                        y: _lowerThreshold!,
+                        color: const Color(0xFF0284C7),
+                        strokeWidth: 1.3,
+                        dashArray: [6, 4],
+                        label: HorizontalLineLabel(
+                          show: true,
+                          alignment: Alignment.bottomRight,
+                          padding: const EdgeInsets.only(right: 8, top: 2),
+                          style: const TextStyle(
+                            color: Color(0xFF0284C7),
+                            fontSize: 9.0,
+                            fontWeight: FontWeight.w700,
+                          ),
+                          labelResolver: (line) =>
+                              'Batas Bawah (${line.y.toStringAsFixed(0)} $_metricUnit)',
+                        ),
+                      ),
+                  ],
+                ),
                 gridData: FlGridData(
                   show: true,
                   drawVerticalLine: false,
@@ -262,12 +406,13 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
                     barWidth: 3,
                     isStrokeCapRound: true,
                     dotData: FlDotData(
-                      show: items.length <= 15,
+                      show: items.length <= 25,
                       getDotPainter: (spot, percent, barData, index) {
+                        final isDanger = _isValAnomalous(spot.y);
                         return FlDotCirclePainter(
-                          radius: 3.5,
-                          color: _metricColor,
-                          strokeWidth: 2,
+                          radius: isDanger ? 5.0 : 3.5,
+                          color: isDanger ? AppColors.alertRed : _metricColor,
+                          strokeWidth: isDanger ? 2.5 : 2,
                           strokeColor: Colors.white,
                         );
                       },
