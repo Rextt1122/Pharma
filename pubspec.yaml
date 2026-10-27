@@ -38,5 +38,6 @@ flutter:
     - assets/models/
     - assets/models/gudang_3d.glb
     - assets/models/coba_refined_v4_1.glb
+    - assets/models/model_3d_v2.glb
     - assets/images/
     - assets/images/denah_ruang_vaksin.png
