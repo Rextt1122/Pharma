@@ -21,6 +21,7 @@ class MqttService {
     final reachableIp = await _apiService.resolveReachableIp();
     final candidates = <String>{
       reachableIp,
+      '192.168.33.12',
       '127.0.0.1',
       '192.168.33.10',
       '192.168.1.21',
