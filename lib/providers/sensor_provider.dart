@@ -32,16 +32,16 @@ class SensorProvider extends ChangeNotifier {
     kadarGas: 12.0,
     statusPintu: 0,
     statusUv: 0,
-    status: 'Normal (Cold Storage)',
+    status: 'Aktif (Node Sensor)',
   );
   SensorModel _device2Data = SensorModel(
     deviceId: 'device_2',
-    suhu: 21.8,
-    kelembapan: 53.0,
-    kadarGas: 18.5,
+    suhu: 0.0,
+    kelembapan: 0.0,
+    kadarGas: 0.0,
     statusPintu: 0,
-    statusUv: 1,
-    status: 'Normal (Suhu Ruang & UV)',
+    statusUv: 0,
+    status: 'Standby (Node Aktuator)',
   );
   String _selectedDeviceId = 'device_1';
   bool _buzzerActive = false;
@@ -109,16 +109,11 @@ class SensorProvider extends ChangeNotifier {
 
   bool toggleUv() {
     if (!_isOperator) return false;
-    final current = sensorData;
-    final nextState = current.statusUv == 1 ? 0 : 1;
-    final updated = current.copyWith(statusUv: nextState);
-    if (_selectedDeviceId == 'device_1') {
-      _device1Data = updated;
-    } else {
-      _device2Data = updated;
-    }
-    _mqttService.publish('pharma/control/$_selectedDeviceId', '{"actuator":"uv","state":$nextState}');
-    _mqttService.publish('pharma/control/uv', '{"device_id":"$_selectedDeviceId","state":$nextState}');
+    final nextState = _device2Data.statusUv == 1 ? 0 : 1;
+    _device2Data = _device2Data.copyWith(statusUv: nextState);
+    _device1Data = _device1Data.copyWith(statusUv: nextState);
+    _mqttService.publish('pharma/control/device_2', '{"actuator":"uv","state":$nextState}');
+    _mqttService.publish('pharma/control/uv', '{"device_id":"device_2","state":$nextState}');
     notifyListeners();
     return true;
   }
@@ -127,8 +122,8 @@ class SensorProvider extends ChangeNotifier {
     if (!_isOperator) return false;
     _buzzerActive = !_buzzerActive;
     final state = _buzzerActive ? 1 : 0;
-    _mqttService.publish('pharma/control/$_selectedDeviceId', '{"actuator":"buzzer","state":$state}');
-    _mqttService.publish('pharma/control/buzzer', '{"device_id":"$_selectedDeviceId","state":$state}');
+    _mqttService.publish('pharma/control/device_2', '{"actuator":"buzzer","state":$state}');
+    _mqttService.publish('pharma/control/buzzer', '{"device_id":"device_2","state":$state}');
     notifyListeners();
     return true;
   }
