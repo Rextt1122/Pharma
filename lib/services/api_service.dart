@@ -112,7 +112,7 @@ class ApiService {
 
       final response = await http
           .get(url, headers: {'Authorization': 'Bearer $token'})
-          .timeout(const Duration(milliseconds: 3000));
+          .timeout(const Duration(seconds: 7));
 
       if (response.statusCode == 401) {
         await _storageService.invalidateSession();

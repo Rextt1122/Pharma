@@ -301,21 +301,21 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                   ] else ...[
                                     const SizedBox(height: AppSpacing.md),
                                     const Text(
-                                      'Hello!',
+                                      'Smart Pharma',
                                       style: TextStyle(
                                         color: Colors.white,
-                                        fontSize: 42,
+                                        fontSize: 32,
                                         fontWeight: FontWeight.w800,
-                                        letterSpacing: -0.8,
-                                        height: 1.05,
+                                        letterSpacing: -0.6,
+                                        height: 1.1,
                                       ),
                                     ),
-                                    const SizedBox(height: 6),
+                                    const SizedBox(height: 4),
                                     Text(
-                                      'Welcome to Smart Pharma',
+                                      'Monitoring & Akses Gudang',
                                       style: TextStyle(
-                                        color: Colors.white.withAlpha(220),
-                                        fontSize: 16,
+                                        color: Colors.white.withAlpha(200),
+                                        fontSize: 14,
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
@@ -671,13 +671,13 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                     AnimatedPositioned(
                       duration: const Duration(milliseconds: 360),
                       curve: Curves.easeOutBack,
-                      top: headerHeight - (_isSignUp ? 92 : 108),
-                      right: _isSignUp ? 18 : 24,
+                      top: headerHeight - (_isSignUp ? 72 : 88),
+                      right: _isSignUp ? 18 : 22,
                       child: IgnorePointer(
                         child: AnimatedScale(
                           duration: const Duration(milliseconds: 360),
                           curve: Curves.easeOutBack,
-                          scale: _isSignUp ? 0.82 : 1.0,
+                          scale: _isSignUp ? 0.85 : 1.0,
                           alignment: Alignment.bottomCenter,
                           child: ScaleTransition(
                             scale: _plantScale,
@@ -687,7 +687,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                 animation: _ambientController,
                                 builder: (context, _) {
                                   return CustomPaint(
-                                    size: const Size(115, 140),
+                                    size: const Size(88, 108),
                                     painter: _PharmaPlantPainter(
                                       progress: _ambientController.value,
                                     ),

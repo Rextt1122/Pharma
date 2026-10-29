@@ -104,17 +104,13 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
     final spots = <FlSpot>[];
     double minVal = double.infinity;
     double maxVal = -double.infinity;
-    double sumVal = 0.0;
 
     for (int i = 0; i < items.length; i++) {
       final val = _extractValue(items[i]);
       spots.add(FlSpot(i.toDouble(), val));
       if (val < minVal) minVal = val;
       if (val > maxVal) maxVal = val;
-      sumVal += val;
     }
-
-    final avgVal = sumVal / items.length;
 
     // Encompass thresholds so the danger boundary lines are always clearly framed
     double effectiveMin = minVal;
@@ -191,47 +187,28 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
             ),
             child: Row(
               children: [
-                _buildSegmentItem('Suhu (°C)', ChartMetric.suhu),
-                _buildSegmentItem('Kelembapan (%)', ChartMetric.kelembapan),
+                _buildSegmentItem('Suhu', ChartMetric.suhu),
+                _buildSegmentItem('Kelembapan', ChartMetric.kelembapan),
                 _buildSegmentItem('Kadar Gas', ChartMetric.gas),
               ],
             ),
           ),
-          const SizedBox(height: AppSpacing.md),
-          // Stats Row (Min, Avg, Max)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
-            decoration: BoxDecoration(
-              color: AppColors.background,
-              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildStatColumn('Min', '${minVal.toStringAsFixed(1)} $_metricUnit'),
-                Container(height: 20, width: 1, color: const Color(0xFFCBD5E1)),
-                _buildStatColumn('Rata-rata', '${avgVal.toStringAsFixed(1)} $_metricUnit'),
-                Container(height: 20, width: 1, color: const Color(0xFFCBD5E1)),
-                _buildStatColumn('Maks', '${maxVal.toStringAsFixed(1)} $_metricUnit'),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: AppSpacing.sm + 2),
           // Threshold Limit Indicator Banner
           Builder(
             builder: (context) {
               final anomalousCount = items.where((e) => _isValAnomalous(_extractValue(e))).length;
               final String rangeText = _lowerThreshold != null
-                  ? '${_lowerThreshold!.toStringAsFixed(0)} – ${_upperThreshold!.toStringAsFixed(0)} $_metricUnit'
+                  ? '${_lowerThreshold!.toStringAsFixed(0)}–${_upperThreshold!.toStringAsFixed(0)} $_metricUnit'
                   : '< ${_upperThreshold!.toStringAsFixed(0)} $_metricUnit';
 
               return Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: (anomalousCount > 0 ? AppColors.alertRed : AppColors.activeGreen).withAlpha(18),
+                  color: (anomalousCount > 0 ? AppColors.alertRed : AppColors.activeGreen).withAlpha(16),
                   borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                   border: Border.all(
-                    color: (anomalousCount > 0 ? AppColors.alertRed : AppColors.activeGreen).withAlpha(60),
+                    color: (anomalousCount > 0 ? AppColors.alertRed : AppColors.activeGreen).withAlpha(50),
                     width: 0.8,
                   ),
                 ),
@@ -246,13 +223,15 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
                     Expanded(
                       child: Text(
                         anomalousCount > 0
-                            ? 'Peringatan: $anomalousCount titik melampaui batas bahaya ($rangeText)'
-                            : 'Kondisi Aman: Seluruh titik dalam rentang standar ($rangeText)',
+                            ? '$anomalousCount Anomali • Batas Standar $rangeText'
+                            : 'Normal • Seluruh Titik Dalam Batas $rangeText',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
                           color: anomalousCount > 0 ? AppColors.alertRed : AppColors.pharmaNavy,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
@@ -284,7 +263,7 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
                             fontWeight: FontWeight.w800,
                           ),
                           labelResolver: (line) =>
-                              'Batas Bahaya (${line.y.toStringAsFixed(0)} $_metricUnit)',
+                              'Maks (${line.y.toStringAsFixed(0)} $_metricUnit)',
                         ),
                       ),
                     if (_lowerThreshold != null)
@@ -303,7 +282,7 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
                             fontWeight: FontWeight.w700,
                           ),
                           labelResolver: (line) =>
-                              'Batas Bawah (${line.y.toStringAsFixed(0)} $_metricUnit)',
+                              'Min (${line.y.toStringAsFixed(0)} $_metricUnit)',
                         ),
                       ),
                   ],
@@ -441,11 +420,13 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
   Widget _buildSegmentItem(String label, ChartMetric metric) {
     final isSelected = _selectedMetric == metric;
     return Expanded(
-      child: GestureDetector(
+      child: InkWell(
         onTap: () => setState(() => _selectedMetric = metric),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.symmetric(vertical: 7),
+          constraints: const BoxConstraints(minHeight: 44),
+          padding: const EdgeInsets.symmetric(vertical: 8),
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: isSelected ? AppColors.pharmaNavy : Colors.transparent,
@@ -456,28 +437,11 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
             style: TextStyle(
               color: isSelected ? Colors.white : AppColors.textMuted,
               fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-              fontSize: 11.5,
+              fontSize: 12,
             ),
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildStatColumn(String label, String value) {
-    return Column(
-      children: [
-        Text(label, style: const TextStyle(fontSize: 10, color: AppColors.textMuted)),
-        const SizedBox(height: 2),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textDark,
-          ),
-        ),
-      ],
     );
   }
 }

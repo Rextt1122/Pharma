@@ -88,24 +88,48 @@ class HistoryPage extends StatelessWidget {
                     style: AppTypography.body,
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.pharmaNavy,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md - 4),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd)),
-                    ),
-                    onPressed: () => provider.fetchHistory(),
-                    icon: const Icon(Icons.refresh, size: 18),
-                    label: const Text(
-                      'Coba Lagi',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        height: 1.1,
-                        leadingDistribution: TextLeadingDistribution.even,
+                  if (provider.errorMessage?.contains('login') == true ||
+                      provider.errorMessage?.contains('Sesi') == true) ...[
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.pharmaNavy,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md - 4),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd)),
+                      ),
+                      onPressed: () {
+                        Navigator.pushReplacementNamed(context, '/login');
+                      },
+                      icon: const Icon(Icons.login_rounded, size: 18),
+                      label: const Text(
+                        'Login Ulang',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          height: 1.1,
+                          leadingDistribution: TextLeadingDistribution.even,
+                        ),
                       ),
                     ),
-                  ),
+                  ] else ...[
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.pharmaNavy,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md - 4),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd)),
+                      ),
+                      onPressed: () => provider.fetchHistory(),
+                      icon: const Icon(Icons.refresh, size: 18),
+                      label: const Text(
+                        'Coba Lagi',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          height: 1.1,
+                          leadingDistribution: TextLeadingDistribution.even,
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -160,32 +184,35 @@ class HistoryPage extends StatelessWidget {
             left: AppSpacing.md,
             right: AppSpacing.md,
             top: AppSpacing.sm + 4,
-            bottom: 72,
+            bottom: AppSpacing.md,
           ),
           children: [
             Row(
               children: [
                 Expanded(
                   child: _buildMetricPillCard(
+                    icon: Icons.list_alt_rounded,
                     title: 'Total Log',
                     value: '${provider.historyList.length}',
-                    dotColor: AppColors.pharmaNavy,
+                    color: AppColors.pharmaNavy,
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: _buildMetricPillCard(
+                    icon: Icons.thermostat_rounded,
                     title: 'Rata Suhu',
                     value: '${avgSuhu.toStringAsFixed(1)} °C',
-                    dotColor: AppColors.tempRed,
+                    color: AppColors.tempRed,
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: _buildMetricPillCard(
+                    icon: Icons.cloud_outlined,
                     title: 'Rata Gas',
                     value: '${avgGas.toStringAsFixed(1)} PPM',
-                    dotColor: AppColors.warningAmber,
+                    color: AppColors.warningAmber,
                   ),
                 ),
               ],
@@ -420,14 +447,15 @@ class HistoryPage extends StatelessWidget {
   }
 
   Widget _buildMetricPillCard({
+    required IconData icon,
     required String title,
     required String value,
-    required Color dotColor,
+    required Color color,
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(
-        vertical: AppSpacing.sm + 6,
-        horizontal: AppSpacing.sm + 2,
+        vertical: 12,
+        horizontal: 10,
       ),
       decoration: BoxDecoration(
         color: AppColors.cardWhite,
@@ -435,31 +463,49 @@ class HistoryPage extends StatelessWidget {
         border: Border.all(color: AppColors.containerLow, width: 1.0),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x140E555A),
-            blurRadius: 14,
-            offset: Offset(0, 4),
+            color: Color(0x0C0E555A),
+            blurRadius: 10,
+            offset: Offset(0, 3),
           ),
         ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                width: 6,
-                height: 6,
+                padding: const EdgeInsets.all(5),
                 decoration: BoxDecoration(
-                  color: dotColor,
+                  color: color.withAlpha(22),
                   shape: BoxShape.circle,
                 ),
+                child: Icon(icon, color: color, size: 14),
               ),
-              const SizedBox(width: AppSpacing.xs),
-              Text(title, style: AppTypography.caption),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textMuted,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: AppSpacing.xs + 2),
-          Text(value, style: AppTypography.subtitle),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textDark,
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
         ],
       ),
     );

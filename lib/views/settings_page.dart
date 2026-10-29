@@ -40,7 +40,6 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _isOperator = true;
   int? _currentUserId;
   String _userAvatar = '';
-  bool _isSaving = false;
   bool _isLoading = true;
   bool _isCheckingUpdate = false;
 
@@ -1299,48 +1298,6 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Future<void> _saveSettings() async {
-    final newIp = _ipController.text.trim();
-    if (newIp.isEmpty) {
-      AppToast.error(context, 'IP Server tidak boleh kosong');
-      return;
-    }
-
-    if (_tempMin >= _tempMax) {
-      _showError('Suhu min harus kurang dari max');
-      return;
-    }
-    if (_humidityMin >= _humidityMax) {
-      _showError('Kelembapan min harus kurang dari max');
-      return;
-    }
-    if (_gasMax < 0) {
-      _showError('Gas max tidak boleh negatif');
-      return;
-    }
-
-    // Save settings
-    setState(() => _isSaving = true);
-    await Future.delayed(const Duration(milliseconds: 300));
-    await _storageService.saveServerIp(newIp);
-
-    if (mounted) {
-      context.read<SensorProvider>().updateThresholds(
-        tempMin: _tempMin,
-        tempMax: _tempMax,
-        humidityMin: _humidityMin,
-        humidityMax: _humidityMax,
-        gasMax: _gasMax,
-      );
-
-      setState(() => _isSaving = false);
-
-      if (mounted) {
-        AppToast.success(context, 'Konfigurasi disimpan: $newIp');
-      }
-    }
-  }
-
   Future<void> _toggleBiometric(bool value) async {
     if (value) {
       final authenticated = await _biometricService.authenticate(
@@ -1369,84 +1326,1064 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
-  void _showError(String message) {
-    AppToast.error(context, message);
-  }
-
   @override
   void dispose() {
     _ipController.dispose();
     super.dispose();
   }
 
-  Widget _buildThresholdSlider({
-    required String label,
-    required String unit,
-    required double value,
-    required double min,
-    required double max,
-    required ValueChanged<double> onChanged,
-    required IconData icon,
-  }) {
-    final double safeMin = min;
-    final double safeMax = max > min ? max : min + 1.0;
-    final double safeValue = value.clamp(safeMin, safeMax);
-    int divisions = ((safeMax - safeMin) * 2).round();
-    if (divisions <= 0) divisions = 1;
+  // ==========================================
+  // PROGRESSIVE SETTINGS MODALS (Design Guide)
+  // ==========================================
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
+  void _showThresholdsModal() {
+    double tempMin = _tempMin;
+    double tempMax = _tempMax;
+    double humidityMin = _humidityMin;
+    double humidityMax = _humidityMax;
+    double gasMax = _gasMax;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.cardWhite,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (sheetCtx) => StatefulBuilder(
+        builder: (ctx, setModalState) {
+          Widget buildModalSlider({
+            required String label,
+            required String unit,
+            required double value,
+            required double min,
+            required double max,
+            required ValueChanged<double> onChanged,
+            required IconData icon,
+          }) {
+            final double safeMin = min;
+            final double safeMax = max > min ? max : min + 1.0;
+            final double safeValue = value.clamp(safeMin, safeMax);
+            int divisions = ((safeMax - safeMin) * 2).round();
+            if (divisions <= 0) divisions = 1;
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(icon, size: 18, color: AppColors.pharmaNavy),
-                const SizedBox(width: AppSpacing.xs + 2),
-                Text(label, style: AppTypography.caption),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(icon, size: 18, color: AppColors.pharmaNavy),
+                        const SizedBox(width: AppSpacing.xs + 2),
+                        Text(label, style: AppTypography.caption),
+                      ],
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm + 2,
+                        vertical: AppSpacing.xs,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.pharmaNavy.withAlpha(25),
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                      ),
+                      child: Text(
+                        '${safeValue.toStringAsFixed(1)} $unit',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.pharmaNavy,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.xs + 2),
+                SliderTheme(
+                  data: SliderThemeData(
+                    trackHeight: 6.0,
+                    thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 12.0),
+                    overlayShape: const RoundSliderOverlayShape(overlayRadius: 18.0),
+                    activeTrackColor: AppColors.pharmaNavy,
+                    inactiveTrackColor: AppColors.containerLow,
+                    thumbColor: AppColors.pharmaNavy,
+                    overlayColor: AppColors.pharmaNavy.withAlpha(51),
+                  ),
+                  child: Slider(
+                    min: safeMin,
+                    max: safeMax,
+                    divisions: divisions,
+                    value: safeValue,
+                    onChanged: (val) {
+                      setModalState(() {
+                        onChanged(val);
+                      });
+                    },
+                  ),
+                ),
               ],
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.sm + 2,
-                vertical: AppSpacing.xs,
+            );
+          }
+
+          return ModalSheetTopDecor(
+            child: Padding(
+              padding: EdgeInsets.only(
+                left: AppSpacing.lg,
+                right: AppSpacing.lg,
+                top: AppSpacing.md + 4,
+                bottom: MediaQuery.of(sheetCtx).viewInsets.bottom + AppSpacing.lg,
               ),
-              decoration: BoxDecoration(
-                color: AppColors.pharmaNavy.withAlpha(25),
-                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-              ),
-              child: Text(
-                '${safeValue.toStringAsFixed(1)} $unit',
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.pharmaNavy,
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 38,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: AppColors.containerHigh,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(AppSpacing.sm),
+                          decoration: BoxDecoration(
+                            color: AppColors.pharmaNavy.withAlpha(20),
+                            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                          ),
+                          child: const Icon(
+                            Icons.tune_rounded,
+                            color: AppColors.pharmaNavy,
+                            size: 22,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Ambang Batas Sensor',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.pharmaNavy,
+                                ),
+                              ),
+                              SizedBox(height: 1),
+                              Text(
+                                'Batas deteksi anomali suhu, kelembapan, & gas',
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  color: AppColors.textMuted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    buildModalSlider(
+                      label: 'Suhu Minimum',
+                      unit: '°C',
+                      value: tempMin,
+                      min: -20,
+                      max: 30,
+                      onChanged: (v) => tempMin = v,
+                      icon: Icons.arrow_downward,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    buildModalSlider(
+                      label: 'Suhu Maximum',
+                      unit: '°C',
+                      value: tempMax,
+                      min: -10,
+                      max: 50,
+                      onChanged: (v) => tempMax = v,
+                      icon: Icons.arrow_upward,
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    buildModalSlider(
+                      label: 'Kelembapan Minimum',
+                      unit: '%',
+                      value: humidityMin,
+                      min: 0,
+                      max: 80,
+                      onChanged: (v) => humidityMin = v,
+                      icon: Icons.water_drop_outlined,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    buildModalSlider(
+                      label: 'Kelembapan Maximum',
+                      unit: '%',
+                      value: humidityMax,
+                      min: 20,
+                      max: 100,
+                      onChanged: (v) => humidityMax = v,
+                      icon: Icons.water_drop,
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    buildModalSlider(
+                      label: 'Kadar Gas Maximum',
+                      unit: 'PPM',
+                      value: gasMax,
+                      min: 0,
+                      max: 500,
+                      onChanged: (v) => gasMax = v,
+                      icon: Icons.cloud,
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppColors.textDark,
+                              side: const BorderSide(color: AppColors.containerHigh),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                            onPressed: () => Navigator.pop(sheetCtx),
+                            child: const Text('Batal'),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          flex: 2,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.pharmaNavy,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                            onPressed: () async {
+                              if (tempMin >= tempMax) {
+                                AppToast.error(context, 'Suhu min harus kurang dari max');
+                                return;
+                              }
+                              if (humidityMin >= humidityMax) {
+                                AppToast.error(context, 'Kelembapan min harus kurang dari max');
+                                return;
+                              }
+                              setState(() {
+                                _tempMin = tempMin;
+                                _tempMax = tempMax;
+                                _humidityMin = humidityMin;
+                                _humidityMax = humidityMax;
+                                _gasMax = gasMax;
+                              });
+                              await _storageService.saveThresholds(
+                                tempMin: tempMin,
+                                tempMax: tempMax,
+                                humidityMin: humidityMin,
+                                humidityMax: humidityMax,
+                                gasMax: gasMax,
+                              );
+                              if (!mounted) return;
+                              context.read<SensorProvider>().updateThresholds(
+                                tempMin: tempMin,
+                                tempMax: tempMax,
+                                humidityMin: humidityMin,
+                                humidityMax: humidityMax,
+                                gasMax: gasMax,
+                              );
+                              if (sheetCtx.mounted) {
+                                Navigator.pop(sheetCtx);
+                              }
+                              AppToast.success(context, 'Batas threshold berhasil disimpan');
+                            },
+                            child: const Text(
+                              'Simpan Ambang Batas',
+                              style: TextStyle(fontWeight: FontWeight.w800),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _showNetworkConfigModal() {
+    final ipCtrl = TextEditingController(text: _ipController.text);
+    bool isSavingIp = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.cardWhite,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (sheetCtx) => StatefulBuilder(
+        builder: (ctx, setModalState) {
+          return ModalSheetTopDecor(
+            child: Padding(
+              padding: EdgeInsets.only(
+                left: AppSpacing.lg,
+                right: AppSpacing.lg,
+                top: AppSpacing.md + 4,
+                bottom: MediaQuery.of(sheetCtx).viewInsets.bottom + AppSpacing.lg,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 38,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: AppColors.containerHigh,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(AppSpacing.sm),
+                        decoration: BoxDecoration(
+                          color: AppColors.pharmaNavy.withAlpha(20),
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                        ),
+                        child: const Icon(
+                          Icons.dns_rounded,
+                          color: AppColors.pharmaNavy,
+                          size: 22,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Server & Jaringan Gudang',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.pharmaNavy,
+                              ),
+                            ),
+                            SizedBox(height: 1),
+                            Text(
+                              'Alamat IP Host Telemetri & MQTT Broker',
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                color: AppColors.textMuted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  const Text(
+                    'IP Server Host',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textDark,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: ipCtrl,
+                    style: AppTypography.body,
+                    decoration: InputDecoration(
+                      hintText: '192.168.1.100',
+                      floatingLabelBehavior: FloatingLabelBehavior.never,
+                      prefixIcon: const Icon(
+                        Icons.wifi_outlined,
+                        color: AppColors.textMuted,
+                        size: 20,
+                      ),
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.restore, size: 20),
+                        tooltip: 'Reset Default',
+                        onPressed: () {
+                          ipCtrl.text = StorageService.defaultIp;
+                        },
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                        borderSide: const BorderSide(color: AppColors.containerHigh),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                        borderSide: const BorderSide(color: AppColors.containerHigh),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                        borderSide: const BorderSide(color: AppColors.pharmaNavy, width: 1.5),
+                      ),
+                      filled: true,
+                      fillColor: AppColors.inputBg,
+                      helperText: 'Format IPv4 standar: contoh 192.168.33.10',
+                      helperStyle: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                  const SizedBox(height: AppSpacing.xl),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.textDark,
+                            side: const BorderSide(color: AppColors.containerHigh),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          onPressed: () => Navigator.pop(sheetCtx),
+                          child: const Text('Batal'),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        flex: 2,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.pharmaNavy,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          onPressed: isSavingIp
+                              ? null
+                              : () async {
+                                  final newIp = ipCtrl.text.trim();
+                                  if (newIp.isEmpty) {
+                                    AppToast.error(context, 'IP Server tidak boleh kosong');
+                                    return;
+                                  }
+                                  setModalState(() => isSavingIp = true);
+                                  await _storageService.saveServerIp(newIp);
+                                  if (!mounted) return;
+                                  setState(() {
+                                    _ipController.text = newIp;
+                                  });
+                                  if (sheetCtx.mounted) {
+                                    Navigator.pop(sheetCtx);
+                                  }
+                                  AppToast.success(context, 'Konfigurasi IP disimpan: $newIp');
+                                },
+                          child: isSavingIp
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Text(
+                                  'Simpan IP',
+                                  style: TextStyle(fontWeight: FontWeight.w800),
+                                ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _showServicesModal() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.cardWhite,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (sheetCtx) => ModalSheetTopDecor(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.md + 4,
+            AppSpacing.lg,
+            AppSpacing.lg + 8,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 38,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.containerHigh,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(AppSpacing.sm),
+                    decoration: BoxDecoration(
+                      color: AppColors.pharmaNavy.withAlpha(20),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                    ),
+                    child: const Icon(
+                      Icons.hub_rounded,
+                      color: AppColors.pharmaNavy,
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Status Layanan IoT',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.pharmaNavy,
+                          ),
+                        ),
+                        SizedBox(height: 1),
+                        Text(
+                          'Protokol komunikasi broker MQTT & REST API',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              _buildServiceStatusTile(
+                icon: Icons.router_outlined,
+                name: 'Broker MQTT Mosquitto',
+                details: 'Host: ${_ipController.text} • Port: 1883 • Topic: pharma/sensor',
+                status: 'Aktif',
+                isOnline: true,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              _buildServiceStatusTile(
+                icon: Icons.api_rounded,
+                name: 'Backend REST API FastAPI',
+                details: 'Host: ${_ipController.text} • Port: 8001 • Endpoint: /sensor',
+                status: 'Aktif',
+                isOnline: true,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              _buildServiceStatusTile(
+                icon: Icons.storage_rounded,
+                name: 'Database MySQL Telemetri',
+                details: 'Host: ${_ipController.text} • Port: 3306 • DB: pharma_db',
+                status: 'Terhubung',
+                isOnline: true,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildServiceStatusTile({
+    required IconData icon,
+    required String name,
+    required String details,
+    required String status,
+    required bool isOnline,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.inputBg,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+        border: Border.all(color: AppColors.containerLow, width: 0.8),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.sm),
+            decoration: const BoxDecoration(
+              color: AppColors.cardWhite,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: AppColors.pharmaNavy, size: 18),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textDark,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  details,
+                  style: const TextStyle(fontSize: 10.5, color: AppColors.textMuted),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: (isOnline ? AppColors.activeGreen : AppColors.alertRed).withAlpha(22),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+            ),
+            child: Text(
+              '● $status',
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
+                color: isOnline ? AppColors.activeGreen : AppColors.alertRed,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAboutModal() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.cardWhite,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (sheetCtx) => ModalSheetTopDecor(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.md + 4,
+            AppSpacing.lg,
+            AppSpacing.lg + 8,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 38,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.containerHigh,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              const PharmaBrandStamp(),
+              const SizedBox(height: AppSpacing.md),
+              const Text(
+                'Pharma Medic IoT Monitoring',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.pharmaNavy,
+                ),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'Versi 1.0.5 (Build +6)',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textMuted,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: AppColors.inputBg,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                  border: Border.all(color: AppColors.containerLow),
+                ),
+                child: const Text(
+                  'Aplikasi monitoring lingkungan penyimpanan vaksin (Cold Storage 2–8°C) dan ruang steril (Cleanroom 15–25°C) terintegrasi dengan telemetri IoT, deteksi gas, sterilisasi UV-C, dan Digital Twin 3D.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 11.5, color: AppColors.textDark, height: 1.4),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showLogoutConfirmDialog() {
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        ),
+        backgroundColor: AppColors.cardWhite,
+        contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: AppColors.alertRed.withAlpha(20),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.warning_rounded,
+                color: AppColors.alertRed,
+                size: 38,
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Keluar dari Aplikasi?',
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textDark,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Sesi login Anda akan diakhiri. Anda perlu memasukkan kredensial lagi untuk mengakses dashboard pemantauan gudang.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12,
+                color: AppColors.textMuted,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.textDark,
+                      side: const BorderSide(color: AppColors.containerHigh),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 11),
+                    ),
+                    onPressed: () => Navigator.pop(dialogCtx),
+                    child: const Text('Batal', style: TextStyle(fontWeight: FontWeight.w700)),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.alertRed,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 11),
+                    ),
+                    onPressed: () async {
+                      Navigator.pop(dialogCtx);
+                      await StorageService().clearSession();
+                      if (!mounted) return;
+                      Navigator.pushReplacementNamed(context, '/login');
+                    },
+                    child: const Text('Ya, Keluar', style: TextStyle(fontWeight: FontWeight.w800)),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
-        const SizedBox(height: AppSpacing.xs + 2),
-        SliderTheme(
-          data: SliderThemeData(
-            trackHeight: 6.0,
-            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 12.0),
-            overlayShape: const RoundSliderOverlayShape(overlayRadius: 18.0),
-            activeTrackColor: AppColors.pharmaNavy,
-            inactiveTrackColor: AppColors.containerLow,
-            thumbColor: AppColors.pharmaNavy,
-            overlayColor: AppColors.pharmaNavy.withAlpha(51),
+      ),
+    );
+  }
+
+  // ==========================================
+  // STRUCTURED GROUP UI BUILDERS (Design Guide)
+  // ==========================================
+
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 8, top: 4),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 11.5,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.8,
+          color: AppColors.textMuted,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGroupCard({required List<Widget> children}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.cardWhite,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(color: AppColors.containerLow, width: 1.0),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x100E555A),
+            blurRadius: 14,
+            offset: Offset(0, 4),
           ),
-          child: Slider(
-            min: safeMin,
-            max: safeMax,
-            divisions: divisions,
-            value: safeValue,
-            onChanged: onChanged,
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        child: Column(
+          children: children,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSettingRow({
+    required IconData icon,
+    required String title,
+    String? description,
+    Widget? trailing,
+    VoidCallback? onTap,
+    Color? iconColor,
+    bool showDivider = true,
+  }) {
+    return Column(
+      children: [
+        InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md + 2,
+              vertical: AppSpacing.md - 3,
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.sm),
+                  decoration: const BoxDecoration(
+                    color: AppColors.containerLow,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    icon,
+                    color: iconColor ?? AppColors.pharmaNavy,
+                    size: 19,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textDark,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (description != null && description.isNotEmpty) ...[
+                        const SizedBox(height: 1.5),
+                        Text(
+                          description,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: AppColors.textMuted,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                if (trailing != null) ...[
+                  const SizedBox(width: 8),
+                  trailing,
+                ],
+              ],
+            ),
           ),
         ),
+        if (showDivider)
+          const Divider(
+            height: 1,
+            indent: 52,
+            endIndent: 16,
+            color: AppColors.containerLow,
+          ),
       ],
+    );
+  }
+
+  Widget _buildHeroProfileCard() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.cardWhite,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(color: AppColors.containerLow, width: 1.0),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x140E555A),
+            blurRadius: 14,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: BotanicVectorCardWatermark(
+        size: 110,
+        opacity: 0.045,
+        alignment: Alignment.topRight,
+        child: InkWell(
+          onTap: _showEditProfileDialog,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.md + 4),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 26,
+                  backgroundColor: AppColors.pharmaNavy.withAlpha(24),
+                  backgroundImage: _getAvatarImage(_userAvatar),
+                  child: _userAvatar.isEmpty
+                      ? Text(
+                          _userName.isNotEmpty
+                              ? _userName.substring(0, 1).toUpperCase()
+                              : 'A',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.pharmaNavy,
+                          ),
+                        )
+                      : null,
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _userName,
+                        style: AppTypography.subtitle,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        _userEmail,
+                        style: AppTypography.caption,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: _isOperator ? AppColors.pharmaNavy : AppColors.containerHigh,
+                              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                            ),
+                            child: Text(
+                              _userRole.toUpperCase(),
+                              style: TextStyle(
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w800,
+                                color: _isOperator ? Colors.white : AppColors.textDark,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _authProvider,
+                              style: TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.pharmaNavy.withAlpha(180),
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                IconButton(
+                  onPressed: _showEditProfileDialog,
+                  icon: const Icon(Icons.edit_outlined, size: 20),
+                  color: AppColors.pharmaNavy,
+                  tooltip: 'Edit Profil',
+                  constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                  style: IconButton.styleFrom(
+                    backgroundColor: AppColors.containerLow,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -1462,648 +2399,109 @@ class _SettingsPageState extends State<SettingsPage> {
         left: AppSpacing.md,
         right: AppSpacing.md,
         top: AppSpacing.sm + 4,
-        bottom: AppSpacing.lg,
+        bottom: AppSpacing.sm,
       ),
       children: [
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.cardWhite,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-            border: Border.all(color: AppColors.containerLow, width: 1.0),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x140E555A),
-                blurRadius: 14,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          child: BotanicVectorCardWatermark(
-            size: 110,
-            opacity: 0.045,
-            alignment: Alignment.topRight,
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.md + 4),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 24,
-                    backgroundColor: AppColors.pharmaNavy.withAlpha(24),
-                    backgroundImage: _getAvatarImage(_userAvatar),
-                    child: _userAvatar.isEmpty
-                        ? Text(
-                            _userName.isNotEmpty
-                                ? _userName.substring(0, 1).toUpperCase()
-                                : 'A',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.pharmaNavy,
-                            ),
-                          )
-                        : null,
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _userName,
-                          style: AppTypography.subtitle,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          _userEmail,
-                          style: AppTypography.caption,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: _isOperator ? AppColors.pharmaNavy : AppColors.containerHigh,
-                                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                              ),
-                              child: Text(
-                                _userRole.toUpperCase(),
-                                style: TextStyle(
-                                  fontSize: 9.5,
-                                  fontWeight: FontWeight.w800,
-                                  color: _isOperator ? Colors.white : AppColors.textDark,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                _authProvider,
-                                style: TextStyle(
-                                  fontSize: 10.5,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.pharmaNavy.withAlpha(180),
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  IconButton(
-                    onPressed: _showEditProfileDialog,
-                    icon: const Icon(Icons.edit_outlined, size: 20),
-                    color: AppColors.pharmaNavy,
-                    tooltip: 'Edit Profil',
-                    style: IconButton.styleFrom(
-                      backgroundColor: AppColors.containerLow,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md - 2),
-        Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: AppSpacing.md,
-          ),
-          decoration: BoxDecoration(
-            color: AppColors.cardWhite,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-            border: Border.all(color: AppColors.containerLow, width: 1.0),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x140E555A),
-                blurRadius: 14,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.sm + 2),
-                decoration: const BoxDecoration(
-                  color: AppColors.containerLow,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.fingerprint_rounded,
-                  color: AppColors.pharmaNavy,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm + 4),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Login Biometrik',
-                      style: AppTypography.subtitle,
-                    ),
-                    Text(
-                      _isBiometricSupported
-                          ? 'Akses cepat dengan sidik jari / Face ID'
-                          : 'Perangkat belum mendukung biometrik',
-                      style: AppTypography.caption,
-                    ),
-                  ],
-                ),
-              ),
-              Switch(
+        // 1. HIGHLIGHT CRITICAL SETTINGS: Top Profile Hero Card (Slide 03)
+        _buildHeroProfileCard(),
+        const SizedBox(height: AppSpacing.lg),
+
+        // 2. GROUP 1: AKUN & KEAMANAN
+        _buildSectionHeader('AKUN & KEAMANAN'),
+        _buildGroupCard(
+          children: [
+            _buildSettingRow(
+              icon: Icons.fingerprint_rounded,
+              title: 'Login Biometrik',
+              description: null,
+              trailing: Switch(
                 value: _isBiometricEnabled,
                 onChanged: _isBiometricSupported ? _toggleBiometric : null,
                 activeThumbColor: AppColors.pharmaNavy,
               ),
-            ],
-          ),
-        ),
-        if (_isOperator) ...[
-          const SizedBox(height: AppSpacing.md - 2),
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.cardWhite,
-              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-              border: Border.all(color: AppColors.containerLow, width: 1.0),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x140E555A),
-                  blurRadius: 14,
-                  offset: Offset(0, 4),
-                ),
-              ],
+              showDivider: _isOperator,
             ),
-            child: Material(
-              color: Colors.transparent,
-              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-              child: InkWell(
+            if (_isOperator)
+              _buildSettingRow(
+                icon: Icons.manage_accounts_rounded,
+                title: 'Kelola Pengguna & Akses',
+                description: null,
+                trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted, size: 22),
                 onTap: _showManageUsersModal,
-                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.lg,
-                    vertical: AppSpacing.md,
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(AppSpacing.sm + 2),
-                        decoration: const BoxDecoration(
-                          color: AppColors.containerLow,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.manage_accounts_rounded,
-                          color: AppColors.pharmaNavy,
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm + 4),
-                      const Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Kelola Pengguna & Akses',
-                              style: AppTypography.subtitle,
-                            ),
-                            Text(
-                              'Atur hak akses staf Operator & User',
-                              style: AppTypography.caption,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const Icon(
-                        Icons.chevron_right_rounded,
-                        color: AppColors.pharmaNavy,
-                        size: 24,
-                      ),
-                    ],
-                  ),
-                ),
+                showDivider: false,
               ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.lg),
+
+        // 3. GROUP 2: JARINGAN & SENSOR
+        _buildSectionHeader('JARINGAN & SENSOR'),
+        _buildGroupCard(
+          children: [
+            _buildSettingRow(
+              icon: Icons.dns_rounded,
+              title: 'Server Jaringan',
+              description: 'Host: ${_ipController.text}',
+              trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted, size: 22),
+              onTap: _showNetworkConfigModal,
+              showDivider: true,
             ),
-          ),
-        ],
-        const SizedBox(height: AppSpacing.md - 2),
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          decoration: BoxDecoration(
-            color: AppColors.cardWhite,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-            border: Border.all(color: AppColors.containerLow, width: 1.0),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x140E555A),
-                blurRadius: 14,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+            _buildSettingRow(
+              icon: Icons.tune_rounded,
+              title: 'Batas Ambang Sensor',
+              description: '${_tempMin.toStringAsFixed(0)}–${_tempMax.toStringAsFixed(0)}°C • <${_gasMax.toStringAsFixed(0)} PPM',
+              trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted, size: 22),
+              onTap: _showThresholdsModal,
+              showDivider: true,
+            ),
+            _buildSettingRow(
+              icon: Icons.hub_rounded,
+              title: 'Layanan Telemetri',
+              description: 'MQTT & REST API',
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(AppSpacing.sm + 2),
-                    decoration: const BoxDecoration(
-                      color: AppColors.containerLow,
-                      shape: BoxShape.circle,
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppColors.activeGreen.withAlpha(20),
+                      borderRadius: BorderRadius.circular(4),
                     ),
-                    child: const Icon(
-                      Icons.dns_outlined,
-                      color: AppColors.pharmaNavy,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm + 4),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Konfigurasi Jaringan Gudang',
-                          style: AppTypography.subtitle,
-                        ),
-                        Text(
-                          'Server Telemetri FastAPI & MQTT Broker',
-                          style: AppTypography.caption,
-                        ),
-                      ],
+                    child: const Text(
+                      '● Aktif',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.activeGreen,
+                      ),
                     ),
                   ),
+                  const SizedBox(width: 4),
+                  const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted, size: 22),
                 ],
               ),
-              const SizedBox(height: AppSpacing.lg),
-              const Text(
-                'IP Server Lokal',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textDark,
-                ),
-              ),
-              const SizedBox(height: 6),
-              TextField(
-                controller: _ipController,
-                style: AppTypography.body,
-                decoration: InputDecoration(
-                  hintText: '192.168.1.100',
-                  floatingLabelBehavior: FloatingLabelBehavior.never,
-                  prefixIcon: const Icon(
-                    Icons.wifi_outlined,
-                    color: AppColors.textMuted,
-                  ),
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.restore, size: 20),
-                    tooltip: 'Reset Default',
-                    onPressed: () {
-                      _ipController.text = StorageService.defaultIp;
-                    },
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                    borderSide: const BorderSide(
-                      color: AppColors.containerHigh,
-                      width: 1.0,
-                    ),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                    borderSide: const BorderSide(
-                      color: AppColors.containerHigh,
-                      width: 1.0,
-                    ),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                    borderSide: const BorderSide(
-                      color: AppColors.pharmaNavy,
-                      width: 1.5,
-                    ),
-                  ),
-                  filled: true,
-                  fillColor: AppColors.inputBg,
-                ),
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.pharmaNavy,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: AppSpacing.md - 2,
-                    ),
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                    ),
-                  ),
-                  onPressed: _isSaving ? null : _saveSettings,
-                  icon: _isSaving
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Icon(Icons.save_outlined, size: 18),
-                  label: Text(
-                    _isSaving ? 'Menyimpan...' : 'Simpan Konfigurasi',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      height: 1.1,
-                      leadingDistribution: TextLeadingDistribution.even,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+              onTap: _showServicesModal,
+              showDivider: false,
+            ),
+          ],
         ),
-        const SizedBox(height: AppSpacing.md - 2),
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          decoration: BoxDecoration(
-            color: AppColors.cardWhite,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-            border: Border.all(color: AppColors.containerLow, width: 1.0),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x140E555A),
-                blurRadius: 14,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(AppSpacing.sm + 2),
-                    decoration: const BoxDecoration(
-                      color: AppColors.containerLow,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.tune_outlined,
-                      color: AppColors.pharmaNavy,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm + 4),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Threshold Sensor', style: AppTypography.subtitle),
-                        Text(
-                          'Atur batas deteksi anomali peralatan',
-                          style: AppTypography.caption,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              // Suhu with Sliders
-              _buildThresholdSlider(
-                label: 'Suhu Minimum',
-                unit: '°C',
-                value: _tempMin,
-                min: -20,
-                max: 30,
-                onChanged: (val) => setState(() => _tempMin = val),
-                icon: Icons.arrow_downward,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              _buildThresholdSlider(
-                label: 'Suhu Maximum',
-                unit: '°C',
-                value: _tempMax,
-                min: -10,
-                max: 50,
-                onChanged: (val) => setState(() => _tempMax = val),
-                icon: Icons.arrow_upward,
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              // Kelembapan with Sliders
-              _buildThresholdSlider(
-                label: 'Kelembapan Minimum',
-                unit: '%',
-                value: _humidityMin,
-                min: 0,
-                max: 80,
-                onChanged: (val) => setState(() => _humidityMin = val),
-                icon: Icons.water_drop_outlined,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              _buildThresholdSlider(
-                label: 'Kelembapan Maximum',
-                unit: '%',
-                value: _humidityMax,
-                min: 20,
-                max: 100,
-                onChanged: (val) => setState(() => _humidityMax = val),
-                icon: Icons.water_drop,
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              // Gas Max with Slider
-              _buildThresholdSlider(
-                label: 'Kadar Gas Maximum',
-                unit: 'PPM',
-                value: _gasMax,
-                min: 0,
-                max: 500,
-                onChanged: (val) => setState(() => _gasMax = val),
-                icon: Icons.cloud,
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md - 2),
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.cardWhite,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-            border: Border.all(color: AppColors.containerLow, width: 1.0),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x140E555A),
-                blurRadius: 14,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              ListTile(
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.lg,
-                  vertical: AppSpacing.xs,
-                ),
-                leading: Container(
-                  padding: const EdgeInsets.all(AppSpacing.sm),
-                  decoration: const BoxDecoration(
-                    color: AppColors.containerLow,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.router_outlined,
-                    color: AppColors.pharmaNavy,
-                    size: 18,
-                  ),
-                ),
-                title: const Text(
-                  'Broker MQTT Mosquitto',
-                  style: AppTypography.subtitle,
-                ),
-                subtitle: const Text(
-                  'Port: 1883 | Topic: pharma/sensor',
-                  style: AppTypography.caption,
-                ),
-                trailing: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.sm + 2,
-                    vertical: AppSpacing.xs,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.pharmaNavy,
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                  ),
-                  child: Text(
-                    '● Active',
-                    textAlign: TextAlign.center,
-                    style: AppTypography.badge.copyWith(
-                      color: Colors.white,
-                      fontSize: 10,
-                    ),
-                  ),
-                ),
-              ),
-              const Divider(
-                height: 1,
-                indent: AppSpacing.lg,
-                endIndent: AppSpacing.lg,
-                color: AppColors.containerLow,
-              ),
-              ListTile(
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.lg,
-                  vertical: AppSpacing.xs,
-                ),
-                leading: Container(
-                  padding: const EdgeInsets.all(AppSpacing.sm),
-                  decoration: const BoxDecoration(
-                    color: AppColors.containerLow,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.api_outlined,
-                    color: AppColors.pharmaNavy,
-                    size: 18,
-                  ),
-                ),
-                title: const Text(
-                  'Backend REST API FastAPI',
-                  style: AppTypography.subtitle,
-                ),
-                subtitle: const Text(
-                  'Port: 8001 | Endpoint: /sensor',
-                  style: AppTypography.caption,
-                ),
-                trailing: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.sm + 2,
-                    vertical: AppSpacing.xs,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.pharmaNavy,
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                  ),
-                  child: Text(
-                    '● Active',
-                    textAlign: TextAlign.center,
-                    style: AppTypography.badge.copyWith(
-                      color: Colors.white,
-                      fontSize: 10,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md - 2),
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.md + 2),
-          decoration: BoxDecoration(
-            color: AppColors.cardWhite,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-            border: Border.all(color: AppColors.containerLow, width: 1.0),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x140E555A),
-                blurRadius: 14,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.sm),
-                decoration: const BoxDecoration(
-                  color: AppColors.containerLow,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.system_update_alt_rounded,
-                  color: AppColors.pharmaNavy,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Pembaruan Aplikasi', style: AppTypography.subtitle),
-                    SizedBox(height: 1),
-                    Text('In-App OTA via GitHub Releases', style: AppTypography.caption),
-                  ],
-                ),
-              ),
-              ElevatedButton(
+        const SizedBox(height: AppSpacing.lg),
+
+        // 4. GROUP 3: APLIKASI
+        _buildSectionHeader('APLIKASI'),
+        _buildGroupCard(
+          children: [
+            _buildSettingRow(
+              icon: Icons.system_update_alt_rounded,
+              title: 'Pembaruan Aplikasi',
+              description: 'Versi v1.0.2',
+              trailing: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.pharmaNavy,
                   foregroundColor: Colors.white,
                   elevation: 0,
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  minimumSize: const Size(0, 36),
+                  minimumSize: const Size(64, 44),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                   ),
@@ -2137,43 +2535,48 @@ class _SettingsPageState extends State<SettingsPage> {
                     : const Text(
                         'Periksa',
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 11,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
               ),
-            ],
-          ),
+              showDivider: true,
+            ),
+            _buildSettingRow(
+              icon: Icons.info_outline_rounded,
+              title: 'Tentang Aplikasi',
+              description: null,
+              trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted, size: 22),
+              onTap: _showAboutModal,
+              showDivider: false,
+            ),
+          ],
         ),
-        const SizedBox(height: AppSpacing.lg),
+        const SizedBox(height: AppSpacing.xl),
+
+        // 5. EDGE CASE: KELUAR AKUN (Slide 07)
         OutlinedButton.icon(
           style: OutlinedButton.styleFrom(
-            foregroundColor: Colors.red.shade700,
-            side: BorderSide(color: Colors.red.shade300),
-            padding: const EdgeInsets.symmetric(vertical: AppSpacing.md - 2),
+            foregroundColor: AppColors.alertRed,
+            side: BorderSide(color: AppColors.alertRed.withAlpha(100)),
+            backgroundColor: AppColors.alertRed.withAlpha(8),
+            padding: const EdgeInsets.symmetric(vertical: 12),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
             ),
           ),
-          onPressed: () async {
-            await StorageService().clearSession();
-            if (context.mounted) {
-              Navigator.pushReplacementNamed(context, '/login');
-            }
-          },
-          icon: const Icon(Icons.logout, size: 18),
+          onPressed: _showLogoutConfirmDialog,
+          icon: const Icon(Icons.logout_rounded, size: 18),
           label: const Text(
             'Keluar dari Aplikasi',
             style: TextStyle(
-              fontWeight: FontWeight.bold,
-              height: 1.1,
-              leadingDistribution: TextLeadingDistribution.even,
+              fontWeight: FontWeight.w800,
+              fontSize: 13,
             ),
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
         const PharmaBrandStamp(),
-        const SizedBox(height: AppSpacing.md),
       ],
     );
   }

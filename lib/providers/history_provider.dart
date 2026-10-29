@@ -39,9 +39,15 @@ class HistoryProvider extends ChangeNotifier {
     try {
       _historyList = await _apiService.fetchSensorHistory();
     } catch (e) {
-      _errorMessage = e is FormatException
-          ? 'Data riwayat tidak dapat dibaca. Coba muat ulang.'
-          : 'Riwayat belum dapat dimuat. Periksa koneksi, lalu coba lagi.';
+      if (e is FormatException) {
+        _errorMessage = 'Data riwayat tidak dapat dibaca. Coba muat ulang.';
+      } else if (e.toString().contains('Sesi berakhir') || e.toString().contains('401')) {
+        _errorMessage = 'Sesi login telah berakhir. Silakan login kembali.';
+      } else if (e.toString().contains('Timeout') || e.toString().contains('waktu') || e.toString().contains('Waktu')) {
+        _errorMessage = 'Waktu permintaan habis. Server merespons lambat.';
+      } else {
+        _errorMessage = 'Gagal terhubung ke server. Periksa koneksi ke host.';
+      }
     } finally {
       final elapsed = stopwatch.elapsedMilliseconds;
       if (elapsed < 600) {

@@ -94,10 +94,10 @@ class _MainNavigationState extends State<MainNavigation>
   }
 
   final List<String> _titles = const [
-    'Monitoring Gudang Farmasi',
-    'Miniatur 3D & Digital Twin',
-    'Riwayat Log Gudang',
-    'Pengaturan Sistem',
+    'Monitoring Realtime',
+    'Digital Twin 3D',
+    'Riwayat Log',
+    'Pengaturan',
   ];
 
   void _showNotificationSheet(BuildContext context, SensorProvider provider) {

@@ -12,6 +12,6 @@ import 'package:smart_greenhouse_pbl/main.dart';
 void main() {
   testWidgets('App starts at SplashPage', (WidgetTester tester) async {
     await tester.pumpWidget(const MyApp());
-    expect(find.text('PHARMA WAREHOUSE'), findsOneWidget);
+    expect(find.text('Smart Pharma'), findsOneWidget);
   });
 }

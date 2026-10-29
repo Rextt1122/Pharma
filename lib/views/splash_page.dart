@@ -82,90 +82,55 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
-                        width: 88,
-                        height: 88,
+                        width: 80,
+                        height: 80,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.white.withAlpha(20),
+                          color: Colors.white.withAlpha(22),
                           border: Border.all(
-                            color: Colors.white.withAlpha(50),
-                            width: 1.5,
+                            color: Colors.white.withAlpha(45),
+                            width: 1.2,
                           ),
-                          boxShadow: [
+                          boxShadow: const [
                             BoxShadow(
-                              color: AppColors.pharmaBlue.withAlpha(40),
-                              blurRadius: 24,
-                              spreadRadius: 4,
+                              color: Color(0x18000000),
+                              blurRadius: 20,
+                              offset: Offset(0, 4),
                             ),
                           ],
                         ),
                         child: const Center(
                           child: Icon(
                             Icons.medical_services_outlined,
-                            size: 42,
+                            size: 38,
                             color: Colors.white,
                           ),
                         ),
                       ),
-                      const SizedBox(height: AppSpacing.lg),
+                      const SizedBox(height: AppSpacing.md + 4),
                       const Text(
-                        'PHARMA WAREHOUSE',
+                        'Smart Pharma',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 2.0,
-                          height: 1.1,
-                          leadingDistribution: TextLeadingDistribution.even,
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.5,
                         ),
                       ),
-                      const SizedBox(height: AppSpacing.xs + 2),
-                      const Text(
-                        'Cold Chain IoT Monitoring System',
+                      const SizedBox(height: 4),
+                      Text(
+                        'Cold Storage Monitoring',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: Color(0xFF94A3B8),
-                          fontSize: 12,
-                          letterSpacing: 0.5,
-                          height: 1.1,
-                          leadingDistribution: TextLeadingDistribution.even,
+                          color: Colors.white.withAlpha(190),
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 0.3,
                         ),
                       ),
                     ],
                   ),
-                ),
-              ),
-            ),
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: AppSpacing.lg,
-              child: FadeTransition(
-                opacity: _fadeAnimation,
-                child: const Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'PBL KELOMPOK GUDANG VAKSIN',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Color(0xFF64748B),
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      'v1.0.0 • 2026',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Color(0xFF475569),
-                        fontSize: 10,
-                      ),
-                    ),
-                  ],
                 ),
               ),
             ),

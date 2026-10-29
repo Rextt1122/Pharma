@@ -17,14 +17,12 @@ class Model3dPage extends StatefulWidget {
 class _Model3dPageState extends State<Model3dPage> {
   bool _is3dModel = true;
   bool _autoRotate = false;
-  String _selectedView = 'Depan';
   int _selectedZone = 0;
 
-  final List<String> _views = const ['Depan', 'ISO 3D', 'Atas', 'Internal'];
   final List<String> _zones = const [
     'Semua Zona',
-    'Cold Storage (2-8°C)',
-    'Kamar UV Steril',
+    'Cold Storage',
+    'Kamar UV',
     'Pintu Utama',
     'Detektor Gas',
   ];
@@ -98,34 +96,30 @@ class _Model3dPageState extends State<Model3dPage> {
   }
 
   String _getCameraOrbit() {
-    if (_selectedZone == 1) return '35deg 65deg 55%';
-    if (_selectedZone == 2) return '130deg 65deg 55%';
-    if (_selectedZone == 3) return '-5deg 75deg 50%';
-    if (_selectedZone == 4) return '210deg 65deg 55%';
-
-    switch (_selectedView) {
-      case 'Depan':
-        return '14deg 80deg 60%';
-      case 'Atas':
-        return '0deg 5deg 75%';
-      case 'Internal':
-        return '180deg 75deg 60%';
-      case 'ISO 3D':
-        return '45deg 65deg 70%';
+    switch (_selectedZone) {
+      case 1:
+        return '35deg 65deg 55%';
+      case 2:
+        return '130deg 65deg 55%';
+      case 3:
+        return '-5deg 75deg 50%';
+      case 4:
+        return '210deg 65deg 55%';
       default:
         return '14deg 80deg 60%';
     }
   }
 
   String _getCameraTarget() {
-    if (_selectedZone == 1) return '2.5m 1.0m -4.0m';
-    if (_selectedZone == 2) return '-1.5m 1.0m -6.0m';
-    if (_selectedZone == 3) return '0.5m 1.0m 0.0m';
-    if (_selectedZone == 4) return '3.0m 1.5m -5.0m';
-
-    switch (_selectedView) {
-      case 'Depan':
-        return '0.55m 1.0m -3.0m';
+    switch (_selectedZone) {
+      case 1:
+        return '2.5m 1.0m -4.0m';
+      case 2:
+        return '-1.5m 1.0m -6.0m';
+      case 3:
+        return '0.5m 1.0m 0.0m';
+      case 4:
+        return '3.0m 1.5m -5.0m';
       default:
         return '0.55m 1.0m -3.0m';
     }
@@ -147,7 +141,7 @@ class _Model3dPageState extends State<Model3dPage> {
             left: AppSpacing.md,
             right: AppSpacing.md,
             top: AppSpacing.sm + 4,
-            bottom: AppSpacing.lg,
+            bottom: AppSpacing.md,
           ),
           children: [
             Container(
@@ -249,7 +243,7 @@ class _Model3dPageState extends State<Model3dPage> {
                                   ),
                                   const SizedBox(width: 6),
                                   Text(
-                                    'Model 3D Blender',
+                                    'Model 3D',
                                     style: TextStyle(
                                       color: _is3dModel ? Colors.white : AppColors.textMuted,
                                       fontWeight: FontWeight.bold,
@@ -281,7 +275,7 @@ class _Model3dPageState extends State<Model3dPage> {
                                   ),
                                   const SizedBox(width: 6),
                                   Text(
-                                    'Denah Sensor (2D)',
+                                    'Denah 2D',
                                     style: TextStyle(
                                       color: !_is3dModel ? Colors.white : AppColors.textMuted,
                                       fontWeight: FontWeight.bold,
@@ -296,44 +290,6 @@ class _Model3dPageState extends State<Model3dPage> {
                       ],
                     ),
                   ),
-                  if (_is3dModel) ...[
-                    const SizedBox(height: AppSpacing.sm + 4),
-                    Container(
-                      padding: const EdgeInsets.all(3),
-                      decoration: BoxDecoration(
-                        color: AppColors.inputBg,
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                        border: Border.all(color: AppColors.containerLow, width: 0.8),
-                      ),
-                      child: Row(
-                        children: _views.map((viewMode) {
-                          final isSelected = _selectedView == viewMode;
-                          return Expanded(
-                            child: GestureDetector(
-                              onTap: () => setState(() => _selectedView = viewMode),
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 180),
-                                padding: const EdgeInsets.symmetric(vertical: 7),
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  color: isSelected ? AppColors.pharmaNavy : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                                ),
-                                child: Text(
-                                  viewMode,
-                                  style: TextStyle(
-                                    color: isSelected ? Colors.white : AppColors.textMuted,
-                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                                    fontSize: 11.5,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                  ],
                 ],
               ),
             ),
@@ -358,7 +314,7 @@ class _Model3dPageState extends State<Model3dPage> {
                   children: [
                     if (_is3dModel)
                       ModelViewer(
-                        key: ValueKey('3d-model-$_selectedView-$_selectedZone-$_autoRotate-v5'),
+                        key: ValueKey('3d-model-$_selectedZone-$_autoRotate-v6'),
                         src: 'assets/models/model_3d_v2.glb',
                         alt: 'Digital Twin Miniatur Gudang Farmasi 3D',
                         autoRotate: _autoRotate,
@@ -457,7 +413,6 @@ class _Model3dPageState extends State<Model3dPage> {
                             GestureDetector(
                               onTap: () {
                                 setState(() {
-                                  _selectedView = 'Depan';
                                   _selectedZone = 0;
                                   _autoRotate = false;
                                 });
@@ -534,7 +489,7 @@ class _Model3dPageState extends State<Model3dPage> {
                                   Flexible(
                                     child: Text(
                                       _is3dModel
-                                          ? 'Kamera: $_selectedView ${_selectedZone > 0 ? "(${_zones[_selectedZone]})" : ""}'
+                                          ? 'Fokus: ${_zones[_selectedZone]}'
                                           : 'Denah: Ruang Vaksin & Kontrol (12x8m)',
                                       overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(
@@ -574,84 +529,131 @@ class _Model3dPageState extends State<Model3dPage> {
                 ),
               ),
             ),
-            const SizedBox(height: AppSpacing.md - 2),
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              decoration: BoxDecoration(
-                color: AppColors.cardWhite,
-                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                border: Border.all(color: AppColors.containerLow, width: 1.0),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x140E555A),
-                    blurRadius: 14,
-                    offset: Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Fokus Lokasi Sensor', style: AppTypography.subtitle),
-                  const SizedBox(height: AppSpacing.sm),
-                  _buildZoneButton(0, 'Semua Zona (Tinjauan Menyeluruh)'),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      Expanded(child: _buildZoneButton(1, 'Cold Storage (2-8°C)')),
-                      const SizedBox(width: 6),
-                      Expanded(child: _buildZoneButton(2, 'Kamar UV Steril')),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      Expanded(child: _buildZoneButton(3, 'Pintu Utama')),
-                      const SizedBox(width: 6),
-                      Expanded(child: _buildZoneButton(4, 'Detektor Gas')),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md - 2),
-            Container(
-              decoration: BoxDecoration(
-                color: AppColors.cardWhite,
-                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                border: Border.all(color: AppColors.containerLow, width: 1.0),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x140E555A),
-                    blurRadius: 14,
-                    offset: Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: BotanicVectorCardWatermark(
-                size: 110,
-                opacity: 0.045,
-                alignment: Alignment.topRight,
-                child: Padding(
-                  padding: const EdgeInsets.all(AppSpacing.md + 4),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Spesifikasi Gudang', style: AppTypography.subtitle),
-                      const SizedBox(height: AppSpacing.md),
-                      _buildSpecRow(Icons.warehouse_outlined, 'Storage', '120 m² (Cold Storage Zone A)'),
-                      const Divider(height: 18, thickness: 0.7, color: AppColors.containerLow),
-                      _buildSpecRow(Icons.thermostat_outlined, 'Sensor Suhu/Lembap', 'SHT31 (Akurasi ±0.2°C)'),
-                      const Divider(height: 18, thickness: 0.7, color: AppColors.containerLow),
-                      _buildSpecRow(Icons.co2_outlined, 'Detektor Gas/Asap', 'MQ-2 / MQ-135 Gas Sensor'),
-                      const Divider(height: 18, thickness: 0.7, color: AppColors.containerLow),
-                      _buildSpecRow(Icons.cleaning_services_outlined, 'Sterilisasi Ruang', 'UV-C Germicidal (254nm)'),
-                      const Divider(height: 18, thickness: 0.7, color: AppColors.containerLow),
-                      _buildSpecRow(Icons.door_sliding_outlined, 'Akses Pintu', 'Magnetic Contact Switch'),
-                    ],
-                  ),
+            const SizedBox(height: AppSpacing.md),
+            // Section Header: Fokus Sensor
+            const Padding(
+              padding: EdgeInsets.only(left: 4, bottom: 8),
+              child: Text(
+                'FOKUS SENSOR',
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.8,
+                  color: AppColors.textMuted,
                 ),
               ),
+            ),
+            // Bento Focus Cards (Less Is More)
+            _buildTactileZoneTile(
+              idx: 0,
+              icon: Icons.grid_view_rounded,
+              title: 'Semua Zona',
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildTactileZoneTile(
+                    idx: 1,
+                    icon: Icons.ac_unit_rounded,
+                    title: 'Cold Storage',
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: _buildTactileZoneTile(
+                    idx: 2,
+                    icon: Icons.cleaning_services_rounded,
+                    title: 'Kamar UV',
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildTactileZoneTile(
+                    idx: 3,
+                    icon: Icons.door_sliding_outlined,
+                    title: 'Pintu Utama',
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: _buildTactileZoneTile(
+                    idx: 4,
+                    icon: Icons.cloud_outlined,
+                    title: 'Detektor Gas',
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            // Section Header: Spesifikasi
+            const Padding(
+              padding: EdgeInsets.only(left: 4, bottom: 8),
+              child: Text(
+                'SPESIFIKASI GUDANG',
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.8,
+                  color: AppColors.textMuted,
+                ),
+              ),
+            ),
+            // Bento Warehouse Specs
+            Row(
+              children: [
+                Expanded(
+                  child: _buildBentoSpecCard(
+                    icon: Icons.warehouse_rounded,
+                    title: 'Luas Storage',
+                    value: '120 m²',
+                    detail: 'Cold Storage A',
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: _buildBentoSpecCard(
+                    icon: Icons.thermostat_rounded,
+                    title: 'Sensor Suhu',
+                    value: 'SHT31',
+                    detail: 'Akurasi ±0.2°C',
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildBentoSpecCard(
+                    icon: Icons.co2_rounded,
+                    title: 'Sensor Gas',
+                    value: 'MQ-2 / 135',
+                    detail: 'Deteksi Asap & Gas',
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: _buildBentoSpecCard(
+                    icon: Icons.wb_iridescent_rounded,
+                    title: 'Sterilisasi Ruang',
+                    value: 'UV-C 254nm',
+                    detail: 'Germicidal Disinfektan',
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            _buildBentoSpecCard(
+              icon: Icons.lock_outline_rounded,
+              title: 'Keamanan Pintu',
+              value: 'Magnetic Switch',
+              detail: 'Deteksi buka-tutup otomatis',
+              isFullWidth: true,
             ),
           ],
         );
@@ -659,74 +661,146 @@ class _Model3dPageState extends State<Model3dPage> {
     );
   }
 
-  Widget _buildZoneButton(int idx, String label) {
+  Widget _buildTactileZoneTile({
+    required int idx,
+    required IconData icon,
+    required String title,
+  }) {
     final isSelected = _selectedZone == idx;
-    return InkWell(
-      onTap: () => setState(() => _selectedZone = idx),
-      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.pharmaNavy : AppColors.inputBg,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-          border: Border.all(
-            color: isSelected ? AppColors.pharmaNavy : AppColors.containerLow,
-            width: 1.0,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (isSelected) ...[
-              const Icon(Icons.check_circle_rounded, size: 13, color: Colors.white),
-              const SizedBox(width: 5),
-            ],
-            Flexible(
-              child: Text(
-                label,
-                style: TextStyle(
-                  color: isSelected ? Colors.white : AppColors.textDark,
-                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                  fontSize: 11.5,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => setState(() => _selectedZone = idx),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          height: 48,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.pharmaNavy.withAlpha(20) : AppColors.cardWhite,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            border: Border.all(
+              color: isSelected ? AppColors.pharmaNavy : AppColors.containerLow,
+              width: isSelected ? 1.5 : 1.0,
             ),
-          ],
+            boxShadow: [
+              BoxShadow(
+                color: (isSelected ? AppColors.pharmaNavy : const Color(0x0C0E555A))
+                    .withAlpha(isSelected ? 30 : 10),
+                blurRadius: isSelected ? 12 : 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(7),
+                decoration: BoxDecoration(
+                  color: (isSelected ? AppColors.pharmaNavy : AppColors.containerLow)
+                      .withAlpha(isSelected ? 30 : 255),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  icon,
+                  size: 17,
+                  color: isSelected ? AppColors.pharmaNavy : AppColors.textMuted,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: isSelected ? AppColors.pharmaNavy : AppColors.textDark,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Container(
+                width: 7,
+                height: 7,
+                decoration: BoxDecoration(
+                  color: isSelected ? AppColors.pharmaNavy : Colors.transparent,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildSpecRow(IconData icon, String label, String value) {
-    return Row(
-      children: [
-        Icon(icon, size: 17, color: AppColors.pharmaNavy),
-        const SizedBox(width: 10),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textMuted,
+  Widget _buildBentoSpecCard({
+    required IconData icon,
+    required String title,
+    required String value,
+    required String detail,
+    bool isFullWidth = false,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.cardWhite,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(color: AppColors.containerLow, width: 1.0),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0C0E555A),
+            blurRadius: 10,
+            offset: Offset(0, 3),
           ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            value,
-            textAlign: TextAlign.end,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textDark,
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.pharmaNavy.withAlpha(20),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+            ),
+            child: Icon(icon, color: AppColors.pharmaNavy, size: 18),
+          ),
+          const SizedBox(width: AppSpacing.sm + 2),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textMuted,
+                  ),
+                ),
+                const SizedBox(height: 1),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textDark,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  detail,
+                  style: const TextStyle(
+                    fontSize: 10,
+                    color: AppColors.textMuted,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
