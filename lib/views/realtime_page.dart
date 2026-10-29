@@ -31,9 +31,9 @@ class RealtimePage extends StatelessWidget {
                 children: [
                   Expanded(
                     child: _buildDeviceTab(
-                      title: 'Device 1 (Sensor)',
-                      subtitle: 'Suhu · Gas · Pintu',
-                      icon: Icons.sensors_rounded,
+                      title: 'Node 1 (Suhu & Udara)',
+                      subtitle: '3 Sensor · 3 Aktuator',
+                      icon: Icons.thermostat_auto_rounded,
                       isSelected: provider.selectedDeviceId == 'device_1',
                       onTap: () => provider.selectDevice('device_1'),
                     ),
@@ -41,9 +41,9 @@ class RealtimePage extends StatelessWidget {
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: _buildDeviceTab(
-                      title: 'Device 2 (Aktuator)',
-                      subtitle: 'Relay UV · Buzzer',
-                      icon: Icons.tune_rounded,
+                      title: 'Node 2 (UV & Keamanan)',
+                      subtitle: '3 Sensor · 2 Aktuator',
+                      icon: Icons.shield_rounded,
                       isSelected: provider.selectedDeviceId == 'device_2',
                       onTap: () => provider.selectDevice('device_2'),
                     ),
@@ -84,8 +84,8 @@ class RealtimePage extends StatelessWidget {
                   const Spacer(),
                   Text(
                     provider.selectedDeviceId == 'device_1'
-                        ? 'DEV-1 (ESP32 Sensor)'
-                        : 'DEV-2 (ESP32 Aktuator)',
+                        ? 'DEV-1 (ESP32 Udara)'
+                        : 'DEV-2 (ESP32 Steril)',
                     style: const TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
@@ -164,7 +164,74 @@ class RealtimePage extends StatelessWidget {
         bottom: AppSpacing.lg,
       ),
       children: [
-        // 1. Gas Metric Card (Clean & uncluttered)
+        // Hero Header Card for Node 1
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 14),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.sm + 2),
+                decoration: BoxDecoration(
+                  color: Colors.white.withAlpha(20),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.thermostat_auto_rounded, color: Colors.white, size: 22),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Pemantauan Suhu & Udara (Node 1)',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'ESP32 • DHT22 · MQ-2 · LDR',
+                      style: TextStyle(color: Color(0xFF94A3B8), fontSize: 11),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppColors.pharmaNavy.withAlpha(180),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                  border: Border.all(color: Colors.white30, width: 0.8),
+                ),
+                child: const Text(
+                  '3 SENSOR · 3 AKTUATOR',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 9.5,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+
+        // 1. Gas & Smoke Metric Card (MQ-2)
         AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -185,13 +252,13 @@ class RealtimePage extends StatelessWidget {
                   Row(
                     children: [
                       Icon(
-                        sensor.isGasBahaya ? Icons.warning_amber_rounded : Icons.co2_outlined,
+                        sensor.isGasBahaya ? Icons.warning_amber_rounded : Icons.smoke_free_outlined,
                         color: sensor.isGasBahaya ? Colors.white : AppColors.pharmaNavy,
                         size: 18,
                       ),
                       const SizedBox(width: AppSpacing.xs + 4),
                       Text(
-                        'Kadar Gas & Udara',
+                        'Sensor Asap & Gas Bocor (MQ-2)',
                         style: TextStyle(
                           color: sensor.isGasBahaya ? Colors.white : AppColors.textDark,
                           fontSize: 12.5,
@@ -234,7 +301,7 @@ class RealtimePage extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'Batas: ${provider.gasMax.toStringAsFixed(0)} PPM',
+                    'Batas Maks: ${provider.gasMax.toStringAsFixed(0)} PPM',
                     style: TextStyle(
                       fontSize: 10.5,
                       color: sensor.isGasBahaya ? Colors.white70 : AppColors.textMuted,
@@ -247,41 +314,14 @@ class RealtimePage extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 10),
+
         // 2. 2x2 Clean Sensor Metrics Grid
         Row(
           children: [
-            // Pintu Gudang
+            // Suhu Storage (DHT22)
             Expanded(
               child: _buildMetricTile(
-                title: 'Pintu Gudang',
-                value: sensor.isPintuTerbuka ? 'Terbuka' : 'Tertutup',
-                subtitle: sensor.isPintuTerbuka ? 'Perlu Ditutup' : 'Terkunci Rapat',
-                icon: sensor.isPintuTerbuka ? Icons.door_sliding_outlined : Icons.lock_outline,
-                valueColor: sensor.isPintuTerbuka ? AppColors.alertRed : AppColors.activeGreen,
-                iconColor: sensor.isPintuTerbuka ? AppColors.alertRed : AppColors.activeGreen,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            // Sterilisasi UV
-            Expanded(
-              child: _buildMetricTile(
-                title: 'Sterilisasi UV',
-                value: sensor.isUvMenyala ? 'Aktif' : 'Nonaktif',
-                subtitle: sensor.isUvMenyala ? 'Sterilisasi ON' : 'Mode Standby',
-                icon: Icons.cleaning_services_outlined,
-                valueColor: sensor.isUvMenyala ? AppColors.uvPurple : AppColors.textDark,
-                iconColor: sensor.isUvMenyala ? AppColors.uvPurple : AppColors.textMuted,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Row(
-          children: [
-            // Suhu Storage
-            Expanded(
-              child: _buildMetricTile(
-                title: 'Suhu Storage',
+                title: 'Suhu Storage (DHT22)',
                 value: '${sensor.suhu.toStringAsFixed(1)} °C',
                 subtitle: 'Target: ${provider.tempMin.toStringAsFixed(0)}–${provider.tempMax.toStringAsFixed(0)}°C',
                 icon: Icons.thermostat_outlined,
@@ -292,10 +332,10 @@ class RealtimePage extends StatelessWidget {
               ),
             ),
             const SizedBox(width: AppSpacing.md),
-            // Kelembapan
+            // Kelembapan (DHT22)
             Expanded(
               child: _buildMetricTile(
-                title: 'Kelembapan',
+                title: 'Kelembapan (DHT22)',
                 value: '${sensor.kelembapan.toStringAsFixed(1)} %',
                 subtitle: 'Target: ${provider.humidityMin.toStringAsFixed(0)}–${provider.humidityMax.toStringAsFixed(0)}%',
                 icon: Icons.water_drop_outlined,
@@ -303,6 +343,34 @@ class RealtimePage extends StatelessWidget {
                     ? AppColors.textDark
                     : AppColors.alertRed,
                 iconColor: AppColors.humidityBlue,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Row(
+          children: [
+            // Sensor 3: LDR Sensor Cahaya
+            Expanded(
+              child: _buildMetricTile(
+                title: 'Sensor Cahaya (LDR)',
+                value: '${sensor.cahaya.toStringAsFixed(0)} Lux',
+                subtitle: sensor.cahaya < 80 ? 'Gudang Gelap (Aman)' : 'Cahaya Terang (Terbuka)',
+                icon: Icons.light_mode_outlined,
+                valueColor: AppColors.textDark,
+                iconColor: AppColors.warningAmber,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            // Indikator Keselamatan / Api
+            Expanded(
+              child: _buildMetricTile(
+                title: 'Status Kebakaran',
+                value: sensor.isGasBahaya ? 'Bahaya Api!' : 'Aman',
+                subtitle: sensor.isGasBahaya ? 'Asap Terdeteksi MQ-2' : 'Udara Bersih Optimal',
+                icon: Icons.local_fire_department_outlined,
+                valueColor: sensor.isGasBahaya ? AppColors.alertRed : AppColors.activeGreen,
+                iconColor: sensor.isGasBahaya ? AppColors.alertRed : AppColors.activeGreen,
               ),
             ),
           ],
@@ -426,6 +494,98 @@ class RealtimePage extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.md),
+        // Panel Kontrol 3 Aktuator Node 1
+        Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: AppColors.cardWhite,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+            border: Border.all(color: AppColors.containerHigh, width: 1.0),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.tune_rounded, color: AppColors.pharmaNavy, size: 20),
+                      SizedBox(width: AppSpacing.sm),
+                      Text(
+                        'Kontrol Aktuator (Device 1)',
+                        style: AppTypography.subtitle,
+                      ),
+                    ],
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppColors.pharmaNavy.withAlpha(20),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                    ),
+                    child: const Text('3 AKTUATOR', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.pharmaNavy)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              // Aktuator 1: Modul Relay Fan
+              _buildActuatorRow(
+                title: 'Relay 1: Fan / Kipas Darurat',
+                subtitle: !provider.isOperator
+                    ? 'Terkunci • Khusus akun Operator'
+                    : (sensor.isKipasAktif ? 'Kipas Berputar • Pendinginan Aktif' : 'Nonaktif • Siaga Otomatis'),
+                icon: Icons.mode_fan_off_rounded,
+                isActive: sensor.isKipasAktif,
+                activeColor: AppColors.pharmaTeal,
+                onToggle: () {
+                  if (!provider.isOperator) {
+                    _showOperatorOnlySnack(context);
+                    return;
+                  }
+                  provider.toggleKipas();
+                },
+              ),
+              const SizedBox(height: AppSpacing.sm + 2),
+              // Aktuator 2: Sirine Buzzer Alarm
+              _buildActuatorRow(
+                title: 'Aktuator 2: Sirine Buzzer Alarm',
+                subtitle: !provider.isOperator
+                    ? 'Terkunci • Khusus akun Operator'
+                    : (sensor.isBuzzerAktif || sensor.isGasBahaya ? 'Sirine Menyala • Peringatan Bahaya!' : 'Senyap • Kondisi Normal'),
+                icon: Icons.notifications_active_rounded,
+                isActive: sensor.isBuzzerAktif || sensor.isGasBahaya,
+                activeColor: AppColors.alertRed,
+                onToggle: () {
+                  if (!provider.isOperator) {
+                    _showOperatorOnlySnack(context);
+                    return;
+                  }
+                  provider.toggleBuzzer();
+                },
+              ),
+              const SizedBox(height: AppSpacing.sm + 2),
+              // Aktuator 3: Mini Water Pump
+              _buildActuatorRow(
+                title: 'Aktuator 3: Mini Water Pump',
+                subtitle: !provider.isOperator
+                    ? 'Terkunci • Khusus akun Operator'
+                    : (sensor.isPompaAktif ? 'Pompa Menyala • Pemadam / Pendingin ON' : 'Nonaktif • Siaga Darurat'),
+                icon: Icons.water_damage_rounded,
+                isActive: sensor.isPompaAktif,
+                activeColor: AppColors.pharmaBlue,
+                onToggle: () {
+                  if (!provider.isOperator) {
+                    _showOperatorOnlySnack(context);
+                    return;
+                  }
+                  provider.togglePompa();
+                },
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
         // Switch to Node 2 Hint Card
         InkWell(
           onTap: () => provider.selectDevice('device_2'),
@@ -445,7 +605,7 @@ class RealtimePage extends StatelessWidget {
                     color: AppColors.pharmaNavy.withAlpha(15),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.tune_rounded, color: AppColors.pharmaNavy, size: 20),
+                  child: const Icon(Icons.shield_rounded, color: AppColors.pharmaNavy, size: 20),
                 ),
                 const SizedBox(width: AppSpacing.sm + 2),
                 const Expanded(
@@ -453,12 +613,12 @@ class RealtimePage extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Panel Kontrol Aktuator (Device 2)',
+                        'Panel Sterilisasi & Keamanan (Node 2)',
                         style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.textDark),
                       ),
                       SizedBox(height: 1),
                       Text(
-                        'Relay UV & Buzzer dikontrol di Node 2. Ketuk untuk beralih.',
+                        'PIR, Pintu, Ultrasonik Stok, Lampu UV & LED Ruang.',
                         style: TextStyle(fontSize: 11, color: AppColors.textMuted),
                       ),
                     ],
@@ -472,7 +632,7 @@ class RealtimePage extends StatelessWidget {
         const SizedBox(height: AppSpacing.md),
         _buildTelemetryCard(
           isConnected: isConnected,
-          nodeLabel: 'Node 1 (ESP32 Sensor) Aktif',
+          nodeLabel: 'Node 1 (ESP32 Pemantau Udara) Aktif',
           topic: 'pharma/device1/sensor',
           onReconnect: () => provider.reconnect(),
         ),
@@ -481,9 +641,6 @@ class RealtimePage extends StatelessWidget {
   }
 
   Widget _buildActuatorNodeContent(BuildContext context, SensorProvider provider, SensorModel sensor, bool isConnected) {
-    final dev1 = provider.device1Data;
-    final bool isEmergency = dev1.isGasBahaya || dev1.isPintuTerbuka;
-
     return ListView(
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.only(
@@ -498,7 +655,7 @@ class RealtimePage extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 14),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
+              colors: [Color(0xFF1E1B4B), Color(0xFF312E81)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -512,7 +669,7 @@ class RealtimePage extends StatelessWidget {
                   color: Colors.white.withAlpha(20),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.tune_rounded, color: Colors.white, size: 22),
+                child: const Icon(Icons.shield_rounded, color: Colors.white, size: 22),
               ),
               const SizedBox(width: AppSpacing.md),
               const Expanded(
@@ -520,17 +677,21 @@ class RealtimePage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Panel Kontrol Aktuator (Device 2)',
+                      'Sterilisasi UV & Keamanan (Node 2)',
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     SizedBox(height: 2),
                     Text(
-                      'ESP32 Node Aktuator • Relay UV & Alarm Fisik',
-                      style: TextStyle(color: Color(0xFF94A3B8), fontSize: 11),
+                      'ESP32 • PIR · Reed Switch · HC-SR04',
+                      style: TextStyle(color: Color(0xFFC7D2FE), fontSize: 11),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
@@ -543,11 +704,11 @@ class RealtimePage extends StatelessWidget {
                   border: Border.all(color: Colors.white30, width: 0.8),
                 ),
                 child: const Text(
-                  '2 AKTUATOR',
+                  '3 SENSOR · 2 AKTUATOR',
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
-                    fontSize: 10,
+                    fontSize: 9.5,
                   ),
                 ),
               ),
@@ -556,7 +717,103 @@ class RealtimePage extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.md),
 
-        // Actuator 1: Relay UV-C
+        // 1. Sensor 1 & 2: PIR Gerak & Reed Switch Pintu
+        Row(
+          children: [
+            // Sensor 1: PIR Pendeteksi Gerak Manusia
+            Expanded(
+              child: _buildMetricTile(
+                title: 'Sensor Gerak (PIR)',
+                value: sensor.isGerakTerdeteksi ? 'Ada Orang' : 'Kosong',
+                subtitle: sensor.isGerakTerdeteksi ? 'UV Lock Aktif (Aman)' : 'Ruang Steril Kosong',
+                icon: Icons.motion_photos_on_rounded,
+                valueColor: sensor.isGerakTerdeteksi ? AppColors.alertRed : AppColors.activeGreen,
+                iconColor: sensor.isGerakTerdeteksi ? AppColors.alertRed : AppColors.activeGreen,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            // Sensor 2: Reed Switch / Sensor Magnetik Pintu
+            Expanded(
+              child: _buildMetricTile(
+                title: 'Pintu Gudang (Reed)',
+                value: sensor.isPintuTerbuka ? 'Terbuka' : 'Tertutup',
+                subtitle: sensor.isPintuTerbuka ? 'Akses Pintu Terbuka' : 'Terkunci Rapat (Aman)',
+                icon: sensor.isPintuTerbuka ? Icons.door_sliding_outlined : Icons.lock_outline,
+                valueColor: sensor.isPintuTerbuka ? AppColors.alertRed : AppColors.activeGreen,
+                iconColor: sensor.isPintuTerbuka ? AppColors.alertRed : AppColors.activeGreen,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.md),
+
+        // 2. Sensor 3: HC-SR04 Kapasitas Tumpukan Kardus Stok
+        Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: AppColors.cardWhite,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+            border: Border.all(color: AppColors.containerHigh, width: 1.0),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.inventory_2_outlined, color: AppColors.pharmaNavy, size: 20),
+                      SizedBox(width: AppSpacing.sm),
+                      Text(
+                        'Kapasitas Tumpukan Stok (HC-SR04)',
+                        style: AppTypography.subtitle,
+                      ),
+                    ],
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppColors.pharmaNavy.withAlpha(20),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                    ),
+                    child: Text(
+                      sensor.teksKapasitasStok,
+                      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.pharmaNavy),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Jarak Sensor: ${sensor.jarakStok.toStringAsFixed(1)} cm',
+                    style: AppTypography.heading.copyWith(fontSize: 18),
+                  ),
+                  const Text(
+                    'Ultrasonik Rak Kardus',
+                    style: TextStyle(fontSize: 11, color: AppColors.textMuted),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                child: LinearProgressIndicator(
+                  value: (1.0 - (sensor.jarakStok / 60.0)).clamp(0.05, 1.0),
+                  backgroundColor: AppColors.containerLow,
+                  valueColor: const AlwaysStoppedAnimation<Color>(AppColors.pharmaNavy),
+                  minHeight: 6,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+
+        // Actuator 1: Modul Relay Lampu UV Sterilisasi
         Container(
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
@@ -584,7 +841,7 @@ class RealtimePage extends StatelessWidget {
                         child: const Icon(Icons.cleaning_services_rounded, color: AppColors.uvPurple, size: 18),
                       ),
                       const SizedBox(width: AppSpacing.sm),
-                      const Text('Aktuator 1: Lampu Sterilisasi UV-C', style: AppTypography.subtitle),
+                      const Text('Aktuator 1: Lampu UV Sterilisasi', style: AppTypography.subtitle),
                     ],
                   ),
                   Container(
@@ -593,7 +850,7 @@ class RealtimePage extends StatelessWidget {
                       color: AppColors.uvPurple.withAlpha(20),
                       borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
                     ),
-                    child: const Text('GPIO 23 (Relay)', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.uvPurple)),
+                    child: const Text('Relay 1-Channel', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.uvPurple)),
                   ),
                 ],
               ),
@@ -602,7 +859,9 @@ class RealtimePage extends StatelessWidget {
                 title: 'Saklar Daya Lampu UV',
                 subtitle: !provider.isOperator
                     ? 'Terkunci • Khusus akun Operator'
-                    : (sensor.isUvMenyala ? 'Aktif • Radiasi Sterilisasi ON' : 'Nonaktif • Mode Standby (Aman)'),
+                    : (sensor.isGerakTerdeteksi
+                        ? 'Terkunci Otomatis (Ada Manusia)'
+                        : (sensor.isUvMenyala ? 'Aktif • Radiasi Sterilisasi ON' : 'Nonaktif • Mode Standby (Aman)')),
                 icon: Icons.lightbulb_outline_rounded,
                 isActive: sensor.isUvMenyala,
                 activeColor: AppColors.uvPurple,
@@ -616,7 +875,7 @@ class RealtimePage extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.xs + 2),
               const Text(
-                'Mengendalikan modul relay 5V untuk sterilisasi kuman, virus, dan bakteri di chamber gudang.',
+                'Simulasi lampu sterilisator UV ruangan. Otomatis mati jika terdeteksi manusia di dalam.',
                 style: TextStyle(fontSize: 10.5, color: AppColors.textMuted),
               ),
             ],
@@ -624,14 +883,14 @@ class RealtimePage extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.md),
 
-        // Actuator 2: Buzzer & LED Alarm
+        // Actuator 2: LED RGB / Biasa Indikator Ruangan
         Container(
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             color: AppColors.cardWhite,
             borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
             border: Border.all(
-              color: provider.buzzerActive || isEmergency ? AppColors.alertRed.withAlpha(120) : AppColors.containerHigh,
+              color: sensor.isLedBahaya ? AppColors.alertRed.withAlpha(120) : AppColors.containerHigh,
               width: 1.0,
             ),
           ),
@@ -646,45 +905,56 @@ class RealtimePage extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
-                          color: AppColors.alertRed.withAlpha(20),
+                          color: (sensor.isLedBahaya ? AppColors.alertRed : AppColors.activeGreen).withAlpha(20),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.notifications_active_rounded, color: AppColors.alertRed, size: 18),
+                        child: Icon(
+                          Icons.traffic_rounded,
+                          color: sensor.isLedBahaya ? AppColors.alertRed : AppColors.activeGreen,
+                          size: 18,
+                        ),
                       ),
                       const SizedBox(width: AppSpacing.sm),
-                      const Text('Aktuator 2: Buzzer & LED Alarm', style: AppTypography.subtitle),
+                      const Text('Aktuator 2: LED Indikator Ruang', style: AppTypography.subtitle),
                     ],
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
-                      color: AppColors.alertRed.withAlpha(20),
+                      color: (sensor.isLedBahaya ? AppColors.alertRed : AppColors.activeGreen).withAlpha(20),
                       borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
                     ),
-                    child: const Text('GPIO 19 (Buzzer)', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.alertRed)),
+                    child: Text(
+                      sensor.isLedBahaya ? 'MERAH (BAHAYA/UV)' : 'HIJAU (AMAN)',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: sensor.isLedBahaya ? AppColors.alertRed : AppColors.activeGreen,
+                      ),
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: AppSpacing.sm + 4),
               _buildActuatorRow(
-                title: 'Sirene & LED Indikator Darurat',
+                title: 'Indikator Akses Ruangan',
                 subtitle: !provider.isOperator
                     ? 'Terkunci • Khusus akun Operator'
-                    : (provider.buzzerActive || isEmergency ? 'Alarm Bunyi • Peringatan Aktif!' : 'Senyap • Kondisi Normal'),
-                icon: Icons.volume_up_rounded,
-                isActive: provider.buzzerActive || isEmergency,
+                    : (sensor.isLedBahaya ? 'Status: Merah (Jangan Masuk / Proses UV)' : 'Status: Hijau (Aman Dimasuki Staf)'),
+                icon: Icons.lightbulb_rounded,
+                isActive: sensor.isLedBahaya,
                 activeColor: AppColors.alertRed,
                 onToggle: () {
                   if (!provider.isOperator) {
                     _showOperatorOnlySnack(context);
                     return;
                   }
-                  provider.toggleBuzzer();
+                  provider.toggleLed();
                 },
               ),
               const SizedBox(height: AppSpacing.xs + 2),
               const Text(
-                'Memberikan peringatan audio-visual lokal ketika terdeteksi kebocoran gas atau pintu terbuka.',
+                'Indikator visual bagi personil di depan pintu untuk mengetahui keamanan ruangan.',
                 style: TextStyle(fontSize: 10.5, color: AppColors.textMuted),
               ),
             ],
@@ -692,14 +962,18 @@ class RealtimePage extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.md),
 
-        // Smart Interlock Status Card
+        // Safety Interlock Diagram Card
         Container(
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
-            color: isEmergency ? AppColors.alertRed.withAlpha(15) : AppColors.cardWhite,
+            color: (sensor.isGerakTerdeteksi || sensor.isPintuTerbuka)
+                ? AppColors.alertRed.withAlpha(15)
+                : AppColors.cardWhite,
             borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
             border: Border.all(
-              color: isEmergency ? AppColors.alertRed : AppColors.containerHigh,
+              color: (sensor.isGerakTerdeteksi || sensor.isPintuTerbuka)
+                  ? AppColors.alertRed
+                  : AppColors.containerHigh,
               width: 1.0,
             ),
           ),
@@ -709,84 +983,43 @@ class RealtimePage extends StatelessWidget {
               Row(
                 children: [
                   Icon(
-                    isEmergency ? Icons.warning_rounded : Icons.hub_outlined,
-                    color: isEmergency ? AppColors.alertRed : AppColors.pharmaNavy,
+                    (sensor.isGerakTerdeteksi || sensor.isPintuTerbuka)
+                        ? Icons.shield_rounded
+                        : Icons.verified_user_outlined,
+                    color: (sensor.isGerakTerdeteksi || sensor.isPintuTerbuka)
+                        ? AppColors.alertRed
+                        : AppColors.pharmaNavy,
                     size: 18,
                   ),
                   const SizedBox(width: AppSpacing.xs + 4),
                   Text(
-                    'Interlock Otomatis (Node 1 ➔ Node 2)',
+                    'Interlock Keselamatan UV Manusia',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 13,
-                      color: isEmergency ? AppColors.alertRed : AppColors.textDark,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: AppColors.background,
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Gas (Node 1)', style: TextStyle(fontSize: 10, color: AppColors.textMuted)),
-                          const SizedBox(height: 2),
-                          Text(
-                            '${dev1.kadarGas.toStringAsFixed(1)} PPM',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                              color: dev1.isGasBahaya ? AppColors.alertRed : AppColors.activeGreen,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: AppColors.background,
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Pintu (Node 1)', style: TextStyle(fontSize: 10, color: AppColors.textMuted)),
-                          const SizedBox(height: 2),
-                          Text(
-                            dev1.isPintuTerbuka ? 'Terbuka (Warning)' : 'Tertutup (Aman)',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                              color: dev1.isPintuTerbuka ? AppColors.alertRed : AppColors.activeGreen,
-                            ),
-                          ),
-                        ],
-                      ),
+                      color: (sensor.isGerakTerdeteksi || sensor.isPintuTerbuka)
+                          ? AppColors.alertRed
+                          : AppColors.textDark,
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 8),
               Text(
-                isEmergency
-                    ? 'PERINGATAN: Anomali di Node 1 memicu Buzzer di Node 2 secara otomatis.'
-                    : 'Otomasi aktif: Jika Node 1 mendeteksi gas > 50 PPM atau pintu terbuka, Node 2 otomatis membunyikan alarm.',
+                sensor.isGerakTerdeteksi
+                    ? 'PROTEKSI AKTIF: Sensor PIR mendeteksi personil manusia di dalam ruangan. Lampu UV otomatis terkunci MATI untuk mencegah radiasi mata dan kulit.'
+                    : (sensor.isPintuTerbuka
+                        ? 'PERINGATAN: Pintu gudang terbuka. Radiasi UV dinonaktifkan agar tidak terpapar ke koridor luar.'
+                        : 'SISTEM AMAN: Ruangan kosong dan pintu tertutup rapat. Proses sterilisasi UV dapat dijalankan dengan aman.'),
                 style: TextStyle(
                   fontSize: 11,
-                  fontWeight: isEmergency ? FontWeight.bold : FontWeight.normal,
-                  color: isEmergency ? AppColors.alertRed : AppColors.textMuted,
+                  height: 1.4,
+                  fontWeight: (sensor.isGerakTerdeteksi || sensor.isPintuTerbuka)
+                      ? FontWeight.bold
+                      : FontWeight.normal,
+                  color: (sensor.isGerakTerdeteksi || sensor.isPintuTerbuka)
+                      ? AppColors.alertRed
+                      : AppColors.textMuted,
                 ),
               ),
             ],
@@ -794,10 +1027,55 @@ class RealtimePage extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.md),
 
+        // Hint to Switch to Node 1
+        InkWell(
+          onTap: () => provider.selectDevice('device_1'),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 12),
+            decoration: BoxDecoration(
+              color: AppColors.cardWhite,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+              border: Border.all(color: AppColors.containerHigh, width: 1.0),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.sm),
+                  decoration: BoxDecoration(
+                    color: AppColors.pharmaNavy.withAlpha(15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.thermostat_auto_rounded, color: AppColors.pharmaNavy, size: 20),
+                ),
+                const SizedBox(width: AppSpacing.sm + 2),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Monitoring Suhu & Udara (Node 1)',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.textDark),
+                      ),
+                      SizedBox(height: 1),
+                      Text(
+                        'DHT22, MQ-2, LDR, Kipas, Buzzer, dan Pompa di Node 1.',
+                        style: TextStyle(fontSize: 11, color: AppColors.textMuted),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.textMuted),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+
         _buildTelemetryCard(
           isConnected: isConnected,
-          nodeLabel: 'Node 2 (ESP32 Aktuator) Aktif',
-          topic: 'pharma/control/device_2',
+          nodeLabel: 'Node 2 (ESP32 Steril & Keamanan) Aktif',
+          topic: 'pharma/device2/sensor',
           onReconnect: () => provider.reconnect(),
         ),
       ],

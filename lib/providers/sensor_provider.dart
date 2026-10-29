@@ -30,18 +30,20 @@ class SensorProvider extends ChangeNotifier {
     suhu: 4.2,
     kelembapan: 45.0,
     kadarGas: 12.0,
-    statusPintu: 0,
-    statusUv: 0,
-    status: 'Aktif (Node Sensor)',
+    cahaya: 210.0,
+    statusKipas: 0,
+    statusBuzzer: 0,
+    statusPompa: 0,
+    status: 'Normal (Suhu & Udara Gudang)',
   );
   SensorModel _device2Data = SensorModel(
     deviceId: 'device_2',
-    suhu: 0.0,
-    kelembapan: 0.0,
-    kadarGas: 0.0,
+    deteksiGerak: 0,
     statusPintu: 0,
+    jarakStok: 28.0,
     statusUv: 0,
-    status: 'Standby (Node Aktuator)',
+    statusLed: 0,
+    status: 'Siaga (Sterilisasi & Pintu)',
   );
   String _selectedDeviceId = 'device_1';
   bool _buzzerActive = false;
@@ -107,23 +109,67 @@ class SensorProvider extends ChangeNotifier {
     }
   }
 
+  // Device 1 Actuator 1: Fan / Kipas Darurat
+  bool toggleKipas() {
+    if (!_isOperator) return false;
+    final nextState = _device1Data.statusKipas == 1 ? 0 : 1;
+    _device1Data = _device1Data.copyWith(statusKipas: nextState);
+    _mqttService.publish('pharma/control/device_1', '{"actuator":"fan","state":$nextState}');
+    _mqttService.publish('pharma/control/fan', '{"device_id":"device_1","state":$nextState}');
+    notifyListeners();
+    return true;
+  }
+
+  // Device 1 Actuator 2: Sirine Buzzer Alarm
+  bool toggleBuzzer() {
+    if (!_isOperator) return false;
+    final nextState = _device1Data.statusBuzzer == 1 ? 0 : 1;
+    _device1Data = _device1Data.copyWith(statusBuzzer: nextState);
+    _buzzerActive = nextState == 1;
+    _mqttService.publish('pharma/control/device_1', '{"actuator":"buzzer","state":$nextState}');
+    _mqttService.publish('pharma/control/buzzer', '{"device_id":"device_1","state":$nextState}');
+    notifyListeners();
+    return true;
+  }
+
+  // Device 1 Actuator 3: Mini Water Pump
+  bool togglePompa() {
+    if (!_isOperator) return false;
+    final nextState = _device1Data.statusPompa == 1 ? 0 : 1;
+    _device1Data = _device1Data.copyWith(statusPompa: nextState);
+    _mqttService.publish('pharma/control/device_1', '{"actuator":"pump","state":$nextState}');
+    _mqttService.publish('pharma/control/pump', '{"device_id":"device_1","state":$nextState}');
+    notifyListeners();
+    return true;
+  }
+
+  // Device 2 Actuator 1: Lampu UV Sterilisasi (Dengan Human Interlock Protection)
   bool toggleUv() {
     if (!_isOperator) return false;
+    if (_device2Data.isGerakTerdeteksi && _device2Data.statusUv == 0) {
+      _addNotification(
+        id: 'uv_safety_lock',
+        title: 'Safety Interlock Aktif',
+        message: 'Lampu UV dicegah menyala: terdeteksi manusia di dalam ruangan!',
+        isCritical: true,
+      );
+      return false;
+    }
     final nextState = _device2Data.statusUv == 1 ? 0 : 1;
     _device2Data = _device2Data.copyWith(statusUv: nextState);
-    _device1Data = _device1Data.copyWith(statusUv: nextState);
     _mqttService.publish('pharma/control/device_2', '{"actuator":"uv","state":$nextState}');
     _mqttService.publish('pharma/control/uv', '{"device_id":"device_2","state":$nextState}');
     notifyListeners();
     return true;
   }
 
-  bool toggleBuzzer() {
+  // Device 2 Actuator 2: LED Indikator Ruangan Aman/Bahaya
+  bool toggleLed() {
     if (!_isOperator) return false;
-    _buzzerActive = !_buzzerActive;
-    final state = _buzzerActive ? 1 : 0;
-    _mqttService.publish('pharma/control/device_2', '{"actuator":"buzzer","state":$state}');
-    _mqttService.publish('pharma/control/buzzer', '{"device_id":"device_2","state":$state}');
+    final nextState = _device2Data.statusLed == 1 ? 0 : 1;
+    _device2Data = _device2Data.copyWith(statusLed: nextState);
+    _mqttService.publish('pharma/control/device_2', '{"actuator":"led","state":$nextState}');
+    _mqttService.publish('pharma/control/led', '{"device_id":"device_2","state":$nextState}');
     notifyListeners();
     return true;
   }
@@ -203,43 +249,56 @@ class SensorProvider extends ChangeNotifier {
   }
 
   void _checkAndAddNotifications(SensorModel data) {
-    final double minT = data.deviceId == 'device_2' ? 15.0 : _tempMin;
-    final double maxT = data.deviceId == 'device_2' ? 25.0 : _tempMax;
-    final double minH = data.deviceId == 'device_2' ? 45.0 : _humidityMin;
-    final double maxH = data.deviceId == 'device_2' ? 60.0 : _humidityMax;
-    final String zoneLabel = data.deviceId == 'device_2' ? 'Ruang Steril' : 'Rak Vaksin';
+    final double minT = _tempMin;
+    final double maxT = _tempMax;
 
-    if (data.kadarGas > _gasMax) {
-      _addNotificationOnce(
-        id: 'gas_alert',
-        title: 'Peringatan Gas / Asap ($zoneLabel)',
-        message: 'Kadar gas tinggi terdeteksi: ${data.kadarGas.toStringAsFixed(1)} PPM',
-        isCritical: true,
-      );
-    }
-    if (data.isPintuTerbuka) {
-      _addNotificationOnce(
-        id: 'door_alert',
-        title: 'Pintu $zoneLabel Terbuka',
-        message: 'Pintu $zoneLabel dalam keadaan terbuka!',
-        isCritical: false,
-      );
-    }
-    if (data.suhu < minT || data.suhu > maxT) {
-      _addNotificationOnce(
-        id: 'temp_alert_${data.deviceId}',
-        title: 'Suhu Tidak Normal ($zoneLabel)',
-        message: 'Suhu terima ${data.suhu.toStringAsFixed(1)}°C (Batas: ${minT.toStringAsFixed(1)}°C - ${maxT.toStringAsFixed(1)}°C)',
-        isCritical: false,
-      );
-    }
-    if (data.kelembapan < minH || data.kelembapan > maxH) {
-      _addNotificationOnce(
-        id: 'humidity_alert_${data.deviceId}',
-        title: 'Kelembapan Tidak Normal ($zoneLabel)',
-        message: 'Kelembapan terima ${data.kelembapan.toStringAsFixed(1)}% (Batas: ${minH.toStringAsFixed(1)}% - ${maxH.toStringAsFixed(1)}%)',
-        isCritical: false,
-      );
+    if (data.deviceId == 'device_1') {
+      if (data.kadarGas > _gasMax) {
+        _addNotificationOnce(
+          id: 'gas_alert',
+          title: 'Bahaya Gas / Asap (MQ-2)',
+          message: 'Asap/gas terdeteksi tinggi: ${data.kadarGas.toStringAsFixed(1)} PPM! Relay Fan & Sirine aktif.',
+          isCritical: true,
+        );
+      }
+      if (data.suhu < minT || data.suhu > maxT) {
+        _addNotificationOnce(
+          id: 'temp_alert',
+          title: 'Suhu Cold Storage Kritis (DHT22)',
+          message: 'Suhu terima ${data.suhu.toStringAsFixed(1)}°C (Standar: ${minT.toStringAsFixed(1)}°C - ${maxT.toStringAsFixed(1)}°C)',
+          isCritical: false,
+        );
+      }
+    } else {
+      // Device 2
+      if (data.isGerakTerdeteksi) {
+        _addNotificationOnce(
+          id: 'pir_alert',
+          title: 'Deteksi Gerakan (PIR)',
+          message: 'Aktivitas manusia terdeteksi di ruangan! Sistem UV wajib aman.',
+          isCritical: false,
+        );
+        // Interlock: jika UV sedang menyala saat manusia masuk, matikan otomatis!
+        if (_device2Data.isUvMenyala) {
+          _device2Data = _device2Data.copyWith(statusUv: 0);
+          _mqttService.publish('pharma/control/device_2', '{"actuator":"uv","state":0}');
+          _mqttService.publish('pharma/control/uv', '{"device_id":"device_2","state":0}');
+          _addNotification(
+            id: 'uv_auto_off',
+            title: 'UV Interlock Shutdown',
+            message: 'Lampu UV dimatikan otomatis demi keselamatan personil!',
+            isCritical: true,
+          );
+        }
+      }
+      if (data.isPintuTerbuka) {
+        _addNotificationOnce(
+          id: 'door_alert',
+          title: 'Pintu Gudang Terbuka (Reed Switch)',
+          message: 'Pintu gudang terbuka! Periksa akses ruangan.',
+          isCritical: false,
+        );
+      }
     }
   }
 
