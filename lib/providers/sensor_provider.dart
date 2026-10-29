@@ -71,6 +71,7 @@ class SensorProvider extends ChangeNotifier {
   SensorModel get device2Data => _device2Data;
   String get selectedDeviceId => _selectedDeviceId;
   bool get buzzerActive => _buzzerActive;
+  bool get isUvActive => _device2Data.isUvMenyala || _device1Data.isUvMenyala;
   bool get isConnected => _isConnected;
   bool get isInitialLoading => _isInitialLoading;
   bool get isOperator => _isOperator;
@@ -159,6 +160,7 @@ class SensorProvider extends ChangeNotifier {
     }
     final nextState = _device2Data.statusUv == 1 ? 0 : 1;
     _device2Data = _device2Data.copyWith(statusUv: nextState);
+    _device1Data = _device1Data.copyWith(statusUv: nextState);
     _mqttService.publish('pharma/control/device_2', '{"actuator":"uv","state":$nextState}');
     _mqttService.publish('pharma/control/uv', '{"device_id":"device_2","state":$nextState}');
     notifyListeners();

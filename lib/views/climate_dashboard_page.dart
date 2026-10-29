@@ -7,6 +7,7 @@ import 'package:syncfusion_flutter_gauges/gauges.dart';
 import '../models/sensor_model.dart';
 import '../providers/sensor_provider.dart';
 import '../theme/app_theme.dart';
+import '../widgets/app_toast.dart';
 import '../widgets/shimmer_loading.dart';
 
 class ClimateDashboardPage extends StatelessWidget {
@@ -634,9 +635,9 @@ class ClimateDashboardPage extends StatelessWidget {
         Expanded(
           child: _buildTactileActionCard(
             title: 'Sterilisasi UV-C',
-            status: s.isUvMenyala ? 'Aktif (Steril)' : 'Mode Siaga',
+            status: p.isUvActive ? 'Aktif (Steril)' : 'Mode Siaga',
             icon: Icons.cleaning_services_rounded,
-            isActive: s.isUvMenyala,
+            isActive: p.isUvActive,
             activeColor: AppColors.uvPurple,
             isRestricted: !p.isOperator,
             onTap: () {
@@ -644,7 +645,14 @@ class ClimateDashboardPage extends StatelessWidget {
                 _showOperatorOnlySnack(context);
                 return;
               }
-              p.toggleUv();
+              final ok = p.toggleUv();
+              if (!ok && p.device2Data.isGerakTerdeteksi) {
+                AppToast.show(
+                  context,
+                  'Lampu UV dicegah: Ada orang terdeteksi di ruangan!',
+                  type: AppToastType.warning,
+                );
+              }
             },
           ),
         ),

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 
 import '../services/api_service.dart';
@@ -42,6 +43,7 @@ class _SettingsPageState extends State<SettingsPage> {
   String _userAvatar = '';
   bool _isLoading = true;
   bool _isCheckingUpdate = false;
+  String _appVersion = 'v1.0.6';
 
   ImageProvider? _getAvatarImage(String base64Str) {
     if (base64Str.isEmpty) return null;
@@ -84,8 +86,14 @@ class _SettingsPageState extends State<SettingsPage> {
       final isBioSupported = results[4] as bool;
       final role = await _storageService.getUserRole();
       final uid = await _storageService.getUserId();
+      String appVer = _appVersion;
+      try {
+        final pkg = await PackageInfo.fromPlatform();
+        appVer = 'v${pkg.version}';
+      } catch (_) {}
 
       setState(() {
+        _appVersion = appVer;
         _ipController.text = ip;
         _userName = profile['name'] ?? 'Pengguna Farmasi';
         _userEmail = profile['email'] ?? 'user@smartpharma.id';
@@ -2030,9 +2038,9 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ),
               const SizedBox(height: 4),
-              const Text(
-                'Versi 1.0.6 (Build +7)',
-                style: TextStyle(
+              Text(
+                'Versi $_appVersion (Build +7)',
+                style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: AppColors.textMuted,
@@ -2494,7 +2502,7 @@ class _SettingsPageState extends State<SettingsPage> {
             _buildSettingRow(
               icon: Icons.system_update_alt_rounded,
               title: 'Pembaruan Aplikasi',
-              description: 'Versi v1.0.2',
+              description: 'Versi $_appVersion',
               trailing: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.pharmaNavy,
