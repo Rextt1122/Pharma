@@ -18,14 +18,17 @@ class MqttService {
   set onStatusChanged(Function(bool)? callback) => onConnectionChanged = callback;
 
   Future<void> connect() async {
+    final savedIp = await _storageService.getServerIp();
     final reachableIp = await _apiService.resolveReachableIp();
     final candidates = <String>{
-      reachableIp,
-      '192.168.33.12',
+      if (reachableIp.isNotEmpty) reachableIp,
+      if (savedIp.isNotEmpty) savedIp,
+      '192.168.1.25',
       '127.0.0.1',
       '192.168.33.10',
       '192.168.1.21',
       '192.168.137.1',
+      '192.168.33.12',
     }.where((ip) => ip.isNotEmpty && ip != '192.168.1.100').toList();
 
     for (final serverIp in candidates) {
@@ -40,9 +43,11 @@ class MqttService {
       _client!.connectionMessage = connMessage;
 
       try {
-        await _client!.connect();
+        await _client!.connect().timeout(const Duration(milliseconds: 2500));
       } catch (e) {
-        _client!.disconnect();
+        try {
+          _client!.disconnect();
+        } catch (_) {}
         continue;
       }
 

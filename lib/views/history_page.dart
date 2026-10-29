@@ -184,7 +184,7 @@ class HistoryPage extends StatelessWidget {
             left: AppSpacing.md,
             right: AppSpacing.md,
             top: AppSpacing.sm + 4,
-            bottom: AppSpacing.md,
+            bottom: 84,
           ),
           children: [
             Row(
@@ -313,7 +313,7 @@ class HistoryPage extends StatelessWidget {
           Row(
             children: [
               Text(
-                'Log #$logNumber',
+                'Log $logNumber',
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w800,

@@ -811,13 +811,24 @@ class ClimateDashboardPage extends StatelessWidget {
         const SizedBox(width: AppSpacing.sm),
         Expanded(
           child: Text(
-            online ? 'MQTT Terhubung • Telemetri Realtime' : 'MQTT Terputus • Data Terakhir',
+            p.isReconnecting
+                ? 'Menghubungkan Ulang ke Broker...'
+                : (online ? 'MQTT Terhubung • Telemetri Realtime' : 'MQTT Terputus • Data Terakhir'),
             style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textDark),
           ),
         ),
         IconButton(
-          onPressed: p.reconnect,
-          icon: const Icon(Icons.refresh_rounded, color: AppColors.pharmaNavy, size: 18),
+          onPressed: p.isReconnecting ? null : p.reconnect,
+          icon: p.isReconnecting
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.pharmaNavy),
+                  ),
+                )
+              : const Icon(Icons.refresh_rounded, color: AppColors.pharmaNavy, size: 18),
           constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
           padding: EdgeInsets.zero,
         ),

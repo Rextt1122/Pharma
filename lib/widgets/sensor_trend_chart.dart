@@ -123,13 +123,27 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
     }
 
     final range = (effectiveMax - effectiveMin).abs();
-    final yMargin = range < 1.0 ? 2.0 : range * 0.18;
+    final yMargin = range < 1.0 ? 2.0 : range * 0.15;
     double chartMinY = (effectiveMin - yMargin).floorToDouble();
     double chartMaxY = (effectiveMax + yMargin).ceilToDouble();
-    if (_selectedMetric == ChartMetric.gas && chartMinY < 0) {
+    if (minVal >= 0 && chartMinY < 0) {
       chartMinY = 0;
     }
-    if (_selectedMetric == ChartMetric.kelembapan && chartMinY < 0) {
+
+    final double span = (chartMaxY - chartMinY).abs();
+    double yInterval = 5.0;
+    if (span <= 10) {
+      yInterval = 2.0;
+    } else if (span <= 25) {
+      yInterval = 5.0;
+    } else if (span <= 60) {
+      yInterval = 10.0;
+    } else {
+      yInterval = 20.0;
+    }
+    chartMinY = (chartMinY / yInterval).floor() * yInterval;
+    chartMaxY = (chartMaxY / yInterval).ceil() * yInterval;
+    if (minVal >= 0 && chartMinY < 0) {
       chartMinY = 0;
     }
 
@@ -290,9 +304,9 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
                 gridData: FlGridData(
                   show: true,
                   drawVerticalLine: false,
-                  horizontalInterval: ((chartMaxY - chartMinY) / 4).clamp(1.0, 100.0),
+                  horizontalInterval: yInterval,
                   getDrawingHorizontalLine: (value) => const FlLine(
-                    color: Color(0xFFE2E8F0),
+                    color: Color(0xFFF1F5F9),
                     strokeWidth: 1,
                   ),
                 ),
@@ -300,9 +314,12 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      reservedSize: 40,
-                      interval: ((chartMaxY - chartMinY) / 4).clamp(1.0, 100.0),
+                      reservedSize: 34,
+                      interval: yInterval,
                       getTitlesWidget: (value, meta) {
+                        if (value == meta.min) {
+                          return const SizedBox.shrink();
+                        }
                         return Padding(
                           padding: const EdgeInsets.only(right: 6),
                           child: Text(
@@ -322,28 +339,26 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
                     sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 22,
-                      interval: (items.length <= 4)
-                          ? 1.0
-                          : (items.length / 4).clamp(1.0, 50.0),
+                      interval: items.length > 1 ? (items.length - 1).toDouble() : 1.0,
                       getTitlesWidget: (value, meta) {
                         final idx = value.round();
                         if (idx >= 0 && idx < items.length) {
-                          // Only show title on integer steps
                           if ((value - idx).abs() > 0.05) return const SizedBox.shrink();
                           final timeStr = items[idx].waktu ?? '';
                           final parts = timeStr.split(' ');
                           String displayTime = parts.length > 1 ? parts[1] : timeStr;
-                          if (displayTime.length >= 8) {
-                            displayTime = displayTime.substring(0, 8); // HH:mm:ss
-                          } else if (displayTime.length >= 5) {
-                            displayTime = displayTime.substring(0, 5);
+                          if (displayTime.length >= 5) {
+                            displayTime = displayTime.substring(0, 5); // HH:mm
                           }
-                          return Text(
-                            displayTime,
-                            style: const TextStyle(
-                              color: AppColors.textMuted,
-                              fontSize: 9,
-                              fontWeight: FontWeight.w500,
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              displayTime,
+                              style: const TextStyle(
+                                color: AppColors.textMuted,
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           );
                         }
@@ -380,18 +395,18 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
                   LineChartBarData(
                     spots: spots,
                     isCurved: true,
-                    curveSmoothness: 0.25,
+                    curveSmoothness: 0.18,
                     color: _metricColor,
-                    barWidth: 3,
+                    barWidth: 2.8,
                     isStrokeCapRound: true,
                     dotData: FlDotData(
-                      show: items.length <= 25,
+                      show: true,
                       getDotPainter: (spot, percent, barData, index) {
                         final isDanger = _isValAnomalous(spot.y);
                         return FlDotCirclePainter(
-                          radius: isDanger ? 5.0 : 3.5,
+                          radius: isDanger ? 4.5 : 3.0,
                           color: isDanger ? AppColors.alertRed : _metricColor,
-                          strokeWidth: isDanger ? 2.5 : 2,
+                          strokeWidth: 2,
                           strokeColor: Colors.white,
                         );
                       },
@@ -400,7 +415,7 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
                       show: true,
                       gradient: LinearGradient(
                         colors: [
-                          _metricColor.withAlpha(70),
+                          _metricColor.withAlpha(45),
                           _metricColor.withAlpha(0),
                         ],
                         begin: Alignment.topCenter,

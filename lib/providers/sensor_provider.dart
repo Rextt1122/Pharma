@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import '../models/sensor_model.dart';
 import '../services/api_service.dart';
@@ -195,7 +197,13 @@ class SensorProvider extends ChangeNotifier {
         }
         notifyListeners();
       }
-    } catch (_) {}
+    } catch (_) {
+    } finally {
+      if (_isInitialLoading) {
+        _isInitialLoading = false;
+        notifyListeners();
+      }
+    }
   }
 
   void _initMqtt() {
@@ -368,13 +376,36 @@ class SensorProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void reconnect() {
-    _isInitialLoading = true;
+  bool _isReconnecting = false;
+  bool get isReconnecting => _isReconnecting;
+
+  Future<void> reconnect() async {
+    if (_isReconnecting) return;
+    _isReconnecting = true;
     _device1Data = _device1Data.copyWith(status: 'Menghubungkan Ulang...');
     _device2Data = _device2Data.copyWith(status: 'Menghubungkan Ulang...');
     notifyListeners();
-    _fetchInitialApiData();
-    _mqttService.connect();
+
+    final timer = Timer(const Duration(seconds: 4), () {
+      if (_isReconnecting) {
+        _isReconnecting = false;
+        _isInitialLoading = false;
+        notifyListeners();
+      }
+    });
+
+    try {
+      await Future.wait([
+        _fetchInitialApiData(),
+        _mqttService.connect(),
+      ]).timeout(const Duration(seconds: 4));
+    } catch (_) {
+    } finally {
+      timer.cancel();
+      _isReconnecting = false;
+      _isInitialLoading = false;
+      notifyListeners();
+    }
   }
 
   @override

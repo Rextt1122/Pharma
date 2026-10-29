@@ -2031,7 +2031,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               const SizedBox(height: 4),
               const Text(
-                'Versi 1.0.5 (Build +6)',
+                'Versi 1.0.6 (Build +7)',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
