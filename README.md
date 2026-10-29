@@ -75,15 +75,6 @@ flutter run
 # Mode Release (Performa maksimal, ringan)
 flutter run --release
 ```
-
----
-
-## Unduh APK Rilis
-
-File APK versi rilis yang sudah dioptimasi (22 MB, arsitektur `arm64-v8a`) dapat diunduh langsung:
-
-👉 **[Download Pharma.apk (v1.0.3)](https://github.com/Rextt1122/Pharma/releases/latest)**
-
 ---
 
 ## Pengembang
