@@ -72,6 +72,7 @@ class ApiService {
   Future<String?> _discoverIp(String savedIp) async {
     final fastCandidates = <String>{
       if (savedIp.isNotEmpty && savedIp != '192.168.1.100') savedIp,
+      '192.168.253.238',
       '192.168.1.25',
       '127.0.0.1',
       '192.168.33.10',

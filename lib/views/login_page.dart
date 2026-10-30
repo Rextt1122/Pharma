@@ -126,6 +126,126 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     }
   }
 
+  Future<void> _showServerConfigSheet() async {
+    final currentIp = await StorageService().getServerIp();
+    final ipCtrl = TextEditingController(text: currentIp);
+    if (!mounted) return;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetCtx) {
+        bool isSaving = false;
+        return StatefulBuilder(
+          builder: (ctx, setModalState) {
+            return Container(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(ctx).viewInsets.bottom + AppSpacing.lg,
+                left: AppSpacing.lg,
+                right: AppSpacing.lg,
+                top: AppSpacing.lg,
+              ),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(
+                  top: Radius.circular(AppSpacing.radiusLg),
+                ),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Konfigurasi Server / VPS',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textDark,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded, color: AppColors.textMuted),
+                        onPressed: () => Navigator.pop(sheetCtx),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Masukkan IP laptop pada hotspot (contoh: 192.168.253.238) atau domain server/VPS jika sudah live.',
+                    style: TextStyle(fontSize: 13, color: AppColors.textMuted),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: ipCtrl,
+                    decoration: InputDecoration(
+                      labelText: 'IP Server / Host',
+                      hintText: '192.168.253.238',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                      ),
+                      filled: true,
+                      fillColor: AppColors.inputBg,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.pharmaNavy,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                        ),
+                      ),
+                      onPressed: isSaving
+                          ? null
+                          : () async {
+                              final newIp = ipCtrl.text.trim();
+                              if (newIp.isEmpty) {
+                                AppToast.error(context, 'IP Server tidak boleh kosong');
+                                return;
+                              }
+                              setModalState(() => isSaving = true);
+                              await StorageService().saveServerIp(newIp);
+                              if (sheetCtx.mounted) Navigator.pop(sheetCtx);
+                              if (mounted) {
+                                AppToast.success(context, 'Server disetel ke: $newIp');
+                              }
+                            },
+                      child: isSaving
+                          ? const SizedBox(
+                              height: 18,
+                              width: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text(
+                              'Simpan Konfigurasi',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   Future<void> _handleSubmit() async {
     if (_isSubmitting) return;
     if (_formKey.currentState!.validate()) {
@@ -242,6 +362,49 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                   ),
                                 );
                               },
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // Server IP Config button in top right
+                      Positioned(
+                        top: 14,
+                        right: 18,
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: _showServerConfigSheet,
+                            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(
+                                  AppSpacing.radiusSm,
+                                ),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.2),
+                                ),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.dns_rounded, size: 14, color: Colors.white),
+                                  SizedBox(width: 5),
+                                  Text(
+                                    'Server IP',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),

@@ -23,6 +23,7 @@ class MqttService {
     final candidates = <String>{
       if (reachableIp.isNotEmpty) reachableIp,
       if (savedIp.isNotEmpty) savedIp,
+      '192.168.253.238',
       '192.168.1.25',
       '127.0.0.1',
       '192.168.33.10',
