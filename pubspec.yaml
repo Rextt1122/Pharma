@@ -1,7 +1,7 @@
 name: smart_greenhouse_pbl
 description: "A Smart Greenhouse IoT monitoring application."
 publish_to: 'none'
-version: 1.0.7+8
+version: 1.0.8+9
 
 environment:
   sdk: ^3.13.1
