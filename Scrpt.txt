@@ -59,17 +59,17 @@ A. Cara Masuk Normal / Interaktif (Ketik Password Sendiri):
    mysql -h 127.0.0.1 -u root -p pbl_db
 
    # 2. Saat muncul "Enter password:", ketik:
-   passwordkuat123
+   fabian100607
    (catatan: saat ketik password, teks memang tidak tampil/blank demi keamanan, langsung tekan Enter saja)
 
 B. Cara Masuk ke Dalam Shell Container Terlebih Dahulu:
    docker exec -it pbl_database bash
    # Setelah masuk ke root container, ketik:
    mysql -u root -p pbl_db
-   # Masukkan password: passwordkuat123
+   # Masukkan password: fabian100607
 
 C. Cara Cepat Satu Baris (Langsung Terbuka):
-   docker exec -it pbl_database mysql -u root -ppasswordkuat123 pbl_db
+   docker exec -it pbl_database mysql -u root -pfabian100607 pbl_db
 
 # Query penting di dalam MySQL:
 SHOW TABLES;
