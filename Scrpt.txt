@@ -1,0 +1,94 @@
+================================================================================
+                    PBL PHARMA MEDIC - COMMAND CHEAT SHEET
+================================================================================
+
+[1] KONEKSI SSH KE VM (Dari PowerShell Laptop)
+--------------------------------------------------------------------------------
+ssh root@192.168.33.10
+
+
+[2] MENJALANKAN FASTAPI (PILIH SALAH SATU)
+--------------------------------------------------------------------------------
+A. Otomatis via Docker (Latar Belakang / Default):
+   docker restart pbl_backend
+   # Cek log:
+   docker logs -f pbl_backend
+
+B. Manual via Terminal VM (Untuk Demo / Presentasi Kodingan):
+   # 1. Hentikan container Docker dulu agar port 8001 tidak bentrok:
+   docker stop pbl_backend
+
+   # 2. Masuk folder backend & jalankan uvicorn:
+   cd /home/fabian/pbl-project/backend
+   uvicorn main:app --host 0.0.0.0 --port 8001 --reload
+
+   # Catatan: Tekan Ctrl + C untuk keluar dari uvicorn, lalu nyalakan docker lagi:
+   docker start pbl_backend
+
+
+[3] MENYALAKAN DOCKER-COMPOSE (BACKEND, DATABASE, MQTT, BACKUP)
+--------------------------------------------------------------------------------
+cd /home/fabian/pbl-project
+docker compose up -d
+
+# Cek semua container aktif:
+docker ps
+
+# Restart semua container aplikasi:
+docker compose restart
+
+# Hentikan semua container aplikasi:
+docker compose down
+
+
+[4] MENYALAKAN 3 DOCKER ENGINE TAMBAHAN (DIND AGAR PORTAINER HIJAU SEMUA)
+--------------------------------------------------------------------------------
+# Jalankan ketiga engine Docker-in-Docker:
+docker run --privileged -d --name docker-node2 --restart=always -p 2376:2375 -e DOCKER_TLS_CERTDIR="" docker:dind --tls=false
+docker run --privileged -d --name docker-node3 --restart=always -p 2377:2375 -e DOCKER_TLS_CERTDIR="" docker:dind --tls=false
+docker run --privileged -d --name docker-node4 --restart=always -p 2378:2375 -e DOCKER_TLS_CERTDIR="" docker:dind --tls=false
+
+# Refresh / Restart Portainer agar mendeteksi status UP:
+docker restart portainer
+
+
+[5] PERINTAH DATABASE MYSQL
+--------------------------------------------------------------------------------
+# Masuk ke MySQL di dalam container:
+docker exec -it pbl_database mysql -u root -ppasswordkuat123 pbl_db
+
+# Query penting di dalam MySQL:
+SHOW TABLES;
+SELECT id, username, email, role FROM users;
+SELECT * FROM sensor_data ORDER BY id DESC LIMIT 5;
+
+# Mengurutkan ulang ID tabel users:
+SET @count = 0;
+UPDATE users SET id = (@count := @count + 1) ORDER BY id;
+ALTER TABLE users AUTO_INCREMENT = 1;
+
+# Simulasi Bencana (Hapus Database untuk Uji Auto-Restore):
+DROP DATABASE pbl_db;
+
+# Keluar dari MySQL:
+exit;
+
+
+[6] PENGUJIAN TELEMETRI SENSOR MQTT (SIMULASI ESP32)
+--------------------------------------------------------------------------------
+# Kirim payload data sensor manual ke Broker Mosquitto:
+docker exec pbl_mqtt mosquitto_pub -h 127.0.0.1 -t 'pharma/sensor' -m '{"device_id":"device_1","suhu":4.2,"kelembapan":45.5,"kadar_gas":8.0,"status_pintu":0,"status_uv":0}'
+
+
+[7] CEK LOG DISASTER RECOVERY (AUTO-BACKUP WATCHER)
+--------------------------------------------------------------------------------
+docker logs -f pbl_backup
+
+
+[8] TAUTAN URL SISTEM (Buka di Browser Laptop / HP)
+--------------------------------------------------------------------------------
+- Swagger Docs API : http://192.168.33.10:8001/docs
+- Portainer UI     : https://192.168.33.10:9443
+- REST API Root    : http://192.168.33.10:8001/
+- IP Hotspot Laptop: 192.168.253.238 (Untuk input Server IP di aplikasi HP)
+================================================================================
