@@ -1,20 +1,22 @@
-================================================================================
-                    PBL PHARMA MEDIC - COMMAND CHEAT SHEET
-================================================================================
 
-[1] KONEKSI SSH KE VM (Dari PowerShell Laptop)
+[1] KONEKSI SSH KE VM
 --------------------------------------------------------------------------------
+
 ssh root@192.168.33.10
 
 
-[2] MENJALANKAN FASTAPI (PILIH SALAH SATU)
+[2] MENJALANKAN FASTAPI
 --------------------------------------------------------------------------------
-A. Otomatis via Docker (Latar Belakang / Default):
+
+A. Otomatis via Docker 
+
    docker restart pbl_backend
+
    # Cek log:
    docker logs -f pbl_backend
 
-B. Manual via Terminal VM (Untuk Demo / Presentasi Kodingan):
+B. Manual via Terminal VM
+
    # 1. Hentikan container Docker dulu agar port 8001 tidak bentrok:
    docker stop pbl_backend
 
@@ -26,7 +28,7 @@ B. Manual via Terminal VM (Untuk Demo / Presentasi Kodingan):
    docker start pbl_backend
 
 
-[3] MENYALAKAN DOCKER-COMPOSE (BACKEND, DATABASE, MQTT, BACKUP)
+[3] MENYALAKAN DOCKER-COMPOSE
 --------------------------------------------------------------------------------
 cd /home/fabian/pbl-project
 docker compose up -d
@@ -37,12 +39,16 @@ docker ps
 # Restart semua container aplikasi:
 docker compose restart
 
+# Atau jalankan ulang semua 4 node sekaligus:
+bash /home/fabian/pbl-project/start-nodes.sh
+
 # Hentikan semua container aplikasi:
 docker compose down
 
 
-[4] MENYALAKAN 3 DOCKER ENGINE TAMBAHAN (DIND AGAR PORTAINER HIJAU SEMUA)
+[4] MENYALAKAN 3 DOCKER ENGINE TAMBAHAN
 --------------------------------------------------------------------------------
+
 # Jalankan ketiga engine Docker-in-Docker:
 docker run --privileged -d --name docker-node2 --restart=always -p 2376:2375 -e DOCKER_TLS_CERTDIR="" docker:dind --tls=false
 docker run --privileged -d --name docker-node3 --restart=always -p 2377:2375 -e DOCKER_TLS_CERTDIR="" docker:dind --tls=false
@@ -54,24 +60,28 @@ docker restart portainer
 
 [5] PERINTAH DATABASE MYSQL
 --------------------------------------------------------------------------------
-A. Cara Masuk Normal / Interaktif (Ketik Password Sendiri):
-   # 1. Di terminal VM, ketik perintah ini lalu Enter:
+
+A. Cara Masuk Mysql
+
+   # 1. Di terminal VM, ketik perintah:
    mysql -h 127.0.0.1 -u root -p pbl_db
 
-   # 2. Saat muncul "Enter password:", ketik:
+   # 2. Password
    fabian100607
-   (catatan: saat ketik password, teks memang tidak tampil/blank demi keamanan, langsung tekan Enter saja)
 
-B. Cara Masuk ke Dalam Shell Container Terlebih Dahulu:
-   docker exec -it pbl_database bash
+  B. Cara Masuk ke Dalam Shell Container Terlebih Dahulu:
+   docker -H tcp://127.0.0.1:2376 exec -it pbl_database bash
+
    # Setelah masuk ke root container, ketik:
    mysql -u root -p pbl_db
+
    # Masukkan password: fabian100607
 
-C. Cara Cepat Satu Baris (Langsung Terbuka):
-   docker exec -it pbl_database mysql -u root -pfabian100607 pbl_db
+C. Cara Cepat:
+   docker -H tcp://127.0.0.1:2376 exec -it pbl_database mysql -u root -pfabian100607 pbl_db
 
 # Query penting di dalam MySQL:
+
 SHOW TABLES;
 SELECT id, username, email, role FROM users;
 SELECT * FROM sensor_data ORDER BY id DESC LIMIT 5;
@@ -88,18 +98,20 @@ DROP DATABASE pbl_db;
 exit;
 
 
-[6] PENGUJIAN TELEMETRI SENSOR MQTT (SIMULASI ESP32)
+[6] PENGUJIAN TELEMETRI SENSOR MQTT
 --------------------------------------------------------------------------------
+
 # Kirim payload data sensor manual ke Broker Mosquitto:
-docker exec pbl_mqtt mosquitto_pub -h 127.0.0.1 -t 'pharma/sensor' -m '{"device_id":"device_1","suhu":4.2,"kelembapan":45.5,"kadar_gas":8.0,"status_pintu":0,"status_uv":0}'
+docker -H tcp://127.0.0.1:2377 exec pbl_mqtt mosquitto_pub -h 127.0.0.1 -t 'pharma/sensor' -m '{"device_id":"device_1","suhu":4.2,"kelembapan":45.5,"kadar_gas":8.0,"status_pintu":0,"status_uv":0}'
 
 
-[7] CEK LOG DISASTER RECOVERY (AUTO-BACKUP WATCHER)
+[7] CEK LOG RECOVERY
 --------------------------------------------------------------------------------
-docker logs -f pbl_backup
+
+docker -H tcp://127.0.0.1:2378 logs -f pbl_backup
 
 
-[8] TAUTAN URL SISTEM (Buka di Browser Laptop / HP)
+[8] TAUTAN URL
 --------------------------------------------------------------------------------
 - Swagger Docs API : http://192.168.33.10:8001/docs
 - Portainer UI     : https://192.168.33.10:9443
