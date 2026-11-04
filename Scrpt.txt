@@ -54,8 +54,22 @@ docker restart portainer
 
 [5] PERINTAH DATABASE MYSQL
 --------------------------------------------------------------------------------
-# Masuk ke MySQL di dalam container:
-docker exec -it pbl_database mysql -u root -ppasswordkuat123 pbl_db
+A. Cara Masuk Normal / Interaktif (Ketik Password Sendiri):
+   # 1. Di terminal VM, ketik perintah ini lalu Enter:
+   mysql -h 127.0.0.1 -u root -p pbl_db
+
+   # 2. Saat muncul "Enter password:", ketik:
+   passwordkuat123
+   (catatan: saat ketik password, teks memang tidak tampil/blank demi keamanan, langsung tekan Enter saja)
+
+B. Cara Masuk ke Dalam Shell Container Terlebih Dahulu:
+   docker exec -it pbl_database bash
+   # Setelah masuk ke root container, ketik:
+   mysql -u root -p pbl_db
+   # Masukkan password: passwordkuat123
+
+C. Cara Cepat Satu Baris (Langsung Terbuka):
+   docker exec -it pbl_database mysql -u root -ppasswordkuat123 pbl_db
 
 # Query penting di dalam MySQL:
 SHOW TABLES;
