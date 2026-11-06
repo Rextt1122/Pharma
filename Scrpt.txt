@@ -30,6 +30,7 @@ B. Manual via Terminal VM
 
 [3] MENYALAKAN DOCKER-COMPOSE
 --------------------------------------------------------------------------------
+
 cd /home/fabian/pbl-project
 docker compose up -d
 
@@ -39,10 +40,10 @@ docker ps
 # Restart semua container aplikasi:
 docker compose restart
 
-# Atau jalankan ulang semua 4 node sekaligus:
+# Atau jalankan ulang 4 node:
 bash /home/fabian/pbl-project/start-nodes.sh
 
-# Hentikan semua container aplikasi:
+# Hentikan semua container:
 docker compose down
 
 
@@ -94,15 +95,40 @@ ALTER TABLE users AUTO_INCREMENT = 1;
 # Simulasi Bencana (Hapus Database untuk Uji Auto-Restore):
 DROP DATABASE pbl_db;
 
+# Cek Index & Event Auto-Purge:
+SHOW INDEX FROM sensor_data;
+SHOW EVENTS FROM pbl_db;
+
 # Keluar dari MySQL:
 exit;
 
 
-[6] PENGUJIAN TELEMETRI SENSOR MQTT
+[6] PENGUJIAN TELEMETRI SENSOR & SIMULATOR HARDWARE ESP32-S3
 --------------------------------------------------------------------------------
 
-# Kirim payload data sensor manual ke Broker Mosquitto:
-docker -H tcp://127.0.0.1:2377 exec pbl_mqtt mosquitto_pub -h 127.0.0.1 -t 'pharma/sensor' -m '{"device_id":"device_1","suhu":4.2,"kelembapan":45.5,"kadar_gas":8.0,"status_pintu":0,"status_uv":0}'
+A. Menjalankan Simulator Otomatis & Interaktif (ESP32-S3 Node 1 & Node 2):
+
+   # Jalankan di terminal VM:
+   cd /home/fabian/pbl-project
+   python3 scripts/simulator.py
+
+   # Atau jalankan di terminal Laptop (Windows):
+   uv run --with paho-mqtt python scripts/simulator.py
+
+   # Tombol Cepat Keyboard saat simulator berjalan:
+   #  p + Enter : Buka / Tutup Pintu (Simulasi Reed Switch)
+   #  g + Enter : Simulasi Gerakan Manusia (Sensor PIR)
+   #  u + Enter : Nyalakan / Matikan Sinar UV-C
+   #  b + Enter : Nyalakan / Matikan Sirine Buzzer Alarm
+   #  (Atau pencet tombol langsung di aplikasi Flutter di HP!)
+
+B. Kirim Payload Sensor Manual Sekali Tembak:
+
+   # Node 1 (Rak Penyimpanan):
+   docker -H tcp://127.0.0.1:2377 exec pbl_mqtt mosquitto_pub -h 127.0.0.1 -t 'pharma/sensor' -m '{"device_id":"device_1","suhu":4.2,"kelembapan":45.5,"kadar_gas":8.0,"status_pintu":0,"status_uv":0}'
+
+   # Node 2 (Keamanan & Sterilisasi):
+   docker -H tcp://127.0.0.1:2377 exec pbl_mqtt mosquitto_pub -h 127.0.0.1 -t 'pharma/sensor' -m '{"device_id":"device_2","status_pintu":0,"deteksi_gerak":0,"jarak_stok":20.5,"status_uv":0}'
 
 
 [7] CEK LOG RECOVERY
@@ -117,4 +143,29 @@ docker -H tcp://127.0.0.1:2378 logs -f pbl_backup
 - Portainer UI     : https://192.168.33.10:9443
 - REST API Root    : http://192.168.33.10:8001/
 - IP Hotspot Laptop: 192.168.253.238 (Untuk input Server IP di aplikasi HP)
+
+
+[9] SYSTEM DESIGN & ARSITEKTUR ALUR DATA
+--------------------------------------------------------------------------------
+
+A. File Diagram & Gambar:
+   - File Draw.io : docs/System Design & Flowchart/System Design.drawio
+   - Gambar PNG   : docs/System Design & Flowchart/System Design.png
+   - Kode PlantUML: docs/system-design/system-design-gudang-farmasi.puml
+   - File Web HTML: docs/system-design/system-design-gudang-farmasi.html
+
+B. Alur Data 5 Langkah (Atas ke Bawah):
+   1. [Panah 1a & 1b] Hardware ESP32 (Node 1 & 2) membaca kondisi fisik
+      (suhu, gas, pintu, PIR) lalu mengirim data ke Broker Mosquitto MQTT. [Status: Rencana]
+   2. [Panah 2] Broker MQTT meneruskan data telemetri ke Backend FastAPI. [Status: Rencana]
+   3. [Panah 3] Aplikasi Android Flutter memantau dan mengambil data secara realtime
+      langsung dari Broker MQTT, serta mengirim perintah tombol kontrol. [Status: Rencana]
+   4. [Panah 4] Backend FastAPI memproses dan menyimpan data riwayat sensor
+      serta akun ke Database MySQL. [Status: Sudah Aktif]
+   5. [Panah 5] Aplikasi Flutter mengambil riwayat dari Backend via REST API HTTP
+      untuk menampilkan grafik tren, tabel log, dan ekspor CSV. [Status: Sudah Aktif]
+
+C. Penjelasan Status Pengerjaan untuk Presentasi:
+   - Garis Putus-putus Oranye : Rencana (Hardware ESP32 & Integrasi MQTT).
+   - Garis Utuh Biru / Hijau  : Sudah Aktif (Backend FastAPI, Database MySQL, App Flutter).
 ================================================================================
