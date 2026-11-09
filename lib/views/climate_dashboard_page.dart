@@ -47,43 +47,90 @@ class ClimateDashboardPage extends StatelessWidget {
     final humOk = s.kelembapan >= humMin && s.kelembapan <= humMax;
     final safe = tempOk && humOk && !s.isGasBahaya && !s.isPintuTerbuka;
 
-    return ListView(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.md),
-      children: [
-        // 1. Zone Selector
-        _selector(p),
-        const SizedBox(height: AppSpacing.md),
+    final hero = _buildHeroClimateDial(
+      s: s,
+      p: p,
+      safe: safe,
+      targetMin: targetMin,
+      targetMax: targetMax,
+    );
+    final metrics = _buildBentoEnvironmentMetrics(
+      s: s,
+      p: p,
+      humMin: humMin,
+      humMax: humMax,
+      humOk: humOk,
+    );
+    final controls = _buildSmartControlTiles(context, p, s);
 
-        // 2. Hero Climate Dial
-        _buildHeroClimateDial(
-          s: s,
-          p: p,
-          safe: safe,
-          targetMin: targetMin,
-          targetMax: targetMax,
-        ),
-        const SizedBox(height: AppSpacing.lg),
+    return LayoutBuilder(
+      builder: (context, box) {
+        // Layar lebar (tablet / desktop): dua kolom penuh kiri-kanan.
+        if (box.maxWidth >= 760) {
+          return ListView(
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.sm,
+              AppSpacing.lg,
+              AppSpacing.lg,
+            ),
+            children: [
+              _selector(p),
+              const SizedBox(height: AppSpacing.md),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(flex: 5, child: hero),
+                  const SizedBox(width: AppSpacing.lg),
+                  Expanded(
+                    flex: 6,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _buildSectionTitle('PARAMETER LINGKUNGAN'),
+                        metrics,
+                        const SizedBox(height: AppSpacing.lg),
+                        _buildSectionTitle('KONTROL AKTUATOR'),
+                        controls,
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              _connection(p),
+            ],
+          );
+        }
 
-        // 3. Bento Environment & Security Metrics
-        _buildSectionTitle('PARAMETER LINGKUNGAN'),
-        _buildBentoEnvironmentMetrics(
-          s: s,
-          p: p,
-          humMin: humMin,
-          humMax: humMax,
-          humOk: humOk,
-        ),
-        const SizedBox(height: AppSpacing.lg),
+        return ListView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.md),
+          children: [
+            // 1. Zone Selector
+            _selector(p),
+            const SizedBox(height: AppSpacing.md),
 
-        // 4. Tactile Smart Controls
-        _buildSectionTitle('KONTROL AKTUATOR'),
-        _buildSmartControlTiles(context, p, s),
-        const SizedBox(height: AppSpacing.lg),
+            // 2. Hero Climate Dial
+            hero,
+            const SizedBox(height: AppSpacing.lg),
 
-        // 5. Connection Status
-        _connection(p),
-      ],
+            // 3. Bento Environment & Security Metrics
+            _buildSectionTitle('PARAMETER LINGKUNGAN'),
+            metrics,
+            const SizedBox(height: AppSpacing.lg),
+
+            // 4. Tactile Smart Controls
+            _buildSectionTitle('KONTROL AKTUATOR'),
+            controls,
+            const SizedBox(height: AppSpacing.lg),
+
+            // 5. Connection Status
+            _connection(p),
+          ],
+        );
+      },
     );
   }
 
