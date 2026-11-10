@@ -87,10 +87,41 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
     }
   }
 
+  /// Garis batas bawah visual agar ketiga tab (Suhu, Kelembapan, Kadar Gas)
+  /// konsisten memiliki bingkai Maks & Min seperti grafik Kelembapan.
+  double get _lowerReferenceLine {
+    switch (_selectedMetric) {
+      case ChartMetric.suhu:
+        return widget.tempMin;
+      case ChartMetric.kelembapan:
+        return widget.humidityMin;
+      case ChartMetric.gas:
+        return 5.0;
+    }
+  }
+
   static const int _maxPoints = 48;
 
+  List<SensorModel> _prepareChronological(List<SensorModel> raw) {
+    final filtered = widget.isVaccineRack
+        ? raw.where((e) => e.deviceId != 'device_2').toList()
+        : raw.where((e) => e.deviceId == 'device_2').toList();
+    final base = filtered.length >= 2 ? filtered : raw.toList();
+
+    final indexed = base.reversed.toList().asMap().entries.toList();
+    indexed.sort((a, b) {
+      final ta = DateTime.tryParse((a.value.waktu ?? '').trim());
+      final tb = DateTime.tryParse((b.value.waktu ?? '').trim());
+      if (ta != null && tb != null) {
+        final cmp = ta.compareTo(tb);
+        if (cmp != 0) return cmp;
+      }
+      return a.key.compareTo(b.key);
+    });
+    return indexed.map((e) => e.value).toList();
+  }
+
   /// Gabungkan data mentah ke maksimal [maxPoints] titik (rata-rata per bucket).
-  /// Titik ekstrem terakhir dipertahankan lewat waktu bucket terakhir.
   List<SensorModel> _downsample(List<SensorModel> src, int maxPoints) {
     if (src.length <= maxPoints) return src;
     final out = <SensorModel>[];
@@ -110,6 +141,19 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
     return out;
   }
 
+  /// Haluskan gelombang kurva agar tidak patah/lancip tajam.
+  List<double> _smoothSeries(List<double> vals) {
+    if (vals.length < 3) return vals;
+    final out = List<double>.filled(vals.length, 0.0);
+    out[0] = (vals[0] * 0.75) + (vals[1] * 0.25);
+    for (int i = 1; i < vals.length - 1; i++) {
+      out[i] = (vals[i - 1] * 0.22) + (vals[i] * 0.56) + (vals[i + 1] * 0.22);
+    }
+    final last = vals.length - 1;
+    out[last] = (vals[last - 1] * 0.25) + (vals[last] * 0.75);
+    return out;
+  }
+
   bool _isValAnomalous(double val) {
     if (_upperThreshold != null && val > _upperThreshold!) return true;
     if (_lowerThreshold != null && val < _lowerThreshold!) return true;
@@ -122,54 +166,33 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
       return const SizedBox.shrink();
     }
 
-    // Prepare chronological list (oldest to newest for graph),
-    // lalu rata-ratakan per bucket supaya kurva halus dan tidak bergerigi.
-    final rawItems = widget.historyData.reversed.toList();
-    final items = _downsample(rawItems, _maxPoints);
+    final orderedItems = _prepareChronological(widget.historyData);
+    final items = _downsample(orderedItems, _maxPoints);
+    final rawVals = items.map(_extractValue).toList();
+    final smoothVals = _smoothSeries(rawVals);
+
     final spots = <FlSpot>[];
     double minVal = double.infinity;
     double maxVal = -double.infinity;
 
-    for (int i = 0; i < items.length; i++) {
-      final val = _extractValue(items[i]);
+    for (int i = 0; i < smoothVals.length; i++) {
+      final val = smoothVals[i];
       spots.add(FlSpot(i.toDouble(), val));
       if (val < minVal) minVal = val;
       if (val > maxVal) maxVal = val;
+      if (rawVals[i] < minVal) minVal = rawVals[i];
+      if (rawVals[i] > maxVal) maxVal = rawVals[i];
     }
 
-    // Sumbu Y fokus ke data (sama seperti kelembapan). Garis batas hanya
-    // ikut dibingkai bila dekat dengan data, supaya kurva tidak gepeng.
-    final double minSpan = _selectedMetric == ChartMetric.gas
-        ? 20.0
-        : (_selectedMetric == ChartMetric.suhu ? 4.0 : 10.0);
-    final double dataRange = maxVal - minVal;
-    final double reach = dataRange < minSpan ? minSpan : dataRange;
-
-    double effectiveMin = minVal;
-    double effectiveMax = maxVal;
-    final up = _upperThreshold;
-    final lo = _lowerThreshold;
-    if (up != null && up > effectiveMax && up - maxVal <= reach) {
-      effectiveMax = up;
-    }
-    if (lo != null && lo < effectiveMin && minVal - lo <= reach) {
-      effectiveMin = lo;
-    }
-    if (up != null && up < effectiveMin && minVal - up <= reach) {
-      effectiveMin = up;
-    }
-    if (lo != null && lo > effectiveMax && lo - maxVal <= reach) {
-      effectiveMax = lo;
-    }
-
-    if (effectiveMax - effectiveMin < minSpan) {
-      final mid = (effectiveMax + effectiveMin) / 2;
-      effectiveMin = mid - minSpan / 2;
-      effectiveMax = mid + minSpan / 2;
-    }
+    // Selalu bingkai garis batas bawah & atas dengan ruang bernapas proporsional
+    // agar tampilan Suhu, Kelembapan, dan Kadar Gas seragam di tengah area grafik.
+    double effectiveMin = minVal < _lowerReferenceLine ? minVal : _lowerReferenceLine;
+    double effectiveMax = _upperThreshold != null && _upperThreshold! > maxVal
+        ? _upperThreshold!
+        : maxVal;
 
     final range = (effectiveMax - effectiveMin).abs();
-    final yMargin = range * 0.12;
+    final yMargin = range < 1.0 ? 2.0 : range * 0.18;
     double chartMinY = (effectiveMin - yMargin).floorToDouble();
     double chartMaxY = (effectiveMax + yMargin).ceilToDouble();
     if (minVal >= 0 && chartMinY < 0) {
@@ -178,11 +201,11 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
 
     final double span = (chartMaxY - chartMinY).abs();
     double yInterval = 5.0;
-    if (span <= 10) {
+    if (span <= 12) {
       yInterval = 2.0;
     } else if (span <= 25) {
       yInterval = 5.0;
-    } else if (span <= 60) {
+    } else if (span <= 65) {
       yInterval = 10.0;
     } else {
       yInterval = 20.0;
@@ -327,25 +350,24 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
                               'Maks (${line.y.toStringAsFixed(0)} $_metricUnit)',
                         ),
                       ),
-                    if (_lowerThreshold != null)
-                      HorizontalLine(
-                        y: _lowerThreshold!,
-                        color: const Color(0xFF0284C7),
-                        strokeWidth: 1.3,
-                        dashArray: [6, 4],
-                        label: HorizontalLineLabel(
-                          show: true,
-                          alignment: Alignment.bottomRight,
-                          padding: const EdgeInsets.only(right: 8, top: 2),
-                          style: const TextStyle(
-                            color: Color(0xFF0284C7),
-                            fontSize: 9.0,
-                            fontWeight: FontWeight.w700,
-                          ),
-                          labelResolver: (line) =>
-                              'Min (${line.y.toStringAsFixed(0)} $_metricUnit)',
+                    HorizontalLine(
+                      y: _lowerReferenceLine,
+                      color: const Color(0xFF0284C7),
+                      strokeWidth: 1.3,
+                      dashArray: [6, 4],
+                      label: HorizontalLineLabel(
+                        show: true,
+                        alignment: Alignment.bottomRight,
+                        padding: const EdgeInsets.only(right: 8, top: 2),
+                        style: const TextStyle(
+                          color: Color(0xFF0284C7),
+                          fontSize: 9.0,
+                          fontWeight: FontWeight.w700,
                         ),
+                        labelResolver: (line) =>
+                            'Min (${line.y.toStringAsFixed(0)} $_metricUnit)',
                       ),
+                    ),
                   ],
                 ),
                 gridData: FlGridData(
@@ -424,12 +446,37 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
                 minY: chartMinY,
                 maxY: chartMaxY,
                 lineTouchData: LineTouchData(
+                  getTouchedSpotIndicator: (barData, spotIndexes) {
+                    return spotIndexes.map((index) {
+                      return TouchedSpotIndicatorData(
+                        FlLine(
+                          color: _metricColor.withAlpha(90),
+                          strokeWidth: 1.2,
+                          dashArray: [4, 4],
+                        ),
+                        FlDotData(
+                          show: true,
+                          getDotPainter: (spot, percent, bar, idx) =>
+                              FlDotCirclePainter(
+                            radius: 4.0,
+                            color: _metricColor,
+                            strokeWidth: 2,
+                            strokeColor: Colors.white,
+                          ),
+                        ),
+                      );
+                    }).toList();
+                  },
                   touchTooltipData: LineTouchTooltipData(
                     getTooltipColor: (touchedSpot) => AppColors.pharmaNavy,
                     getTooltipItems: (touchedSpots) {
                       return touchedSpots.map((spot) {
+                        final idx = spot.spotIndex;
+                        final rawVal = (idx >= 0 && idx < rawVals.length)
+                            ? rawVals[idx]
+                            : spot.y;
                         return LineTooltipItem(
-                          '${spot.y.toStringAsFixed(1)} $_metricUnit',
+                          '${rawVal.toStringAsFixed(1)} $_metricUnit',
                           const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
@@ -444,25 +491,12 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
                   LineChartBarData(
                     spots: spots,
                     isCurved: true,
-                    curveSmoothness: 0.32,
+                    curveSmoothness: 0.35,
                     preventCurveOverShooting: true,
                     color: _metricColor,
                     barWidth: 2.6,
                     isStrokeCapRound: true,
-                    dotData: FlDotData(
-                      show: true,
-                      checkToShowDot: (spot, barData) =>
-                          items.length <= 14 || _isValAnomalous(spot.y),
-                      getDotPainter: (spot, percent, barData, index) {
-                        final isDanger = _isValAnomalous(spot.y);
-                        return FlDotCirclePainter(
-                          radius: isDanger ? 4.5 : 3.0,
-                          color: isDanger ? AppColors.alertRed : _metricColor,
-                          strokeWidth: 2,
-                          strokeColor: Colors.white,
-                        );
-                      },
-                    ),
+                    dotData: const FlDotData(show: false),
                     belowBarData: BarAreaData(
                       show: true,
                       gradient: LinearGradient(
