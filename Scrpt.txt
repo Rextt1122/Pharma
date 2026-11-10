@@ -168,4 +168,26 @@ B. Alur Data 5 Langkah (Atas ke Bawah):
 C. Penjelasan Status Pengerjaan untuk Presentasi:
    - Garis Putus-putus Oranye : Rencana (Hardware ESP32 & Integrasi MQTT).
    - Garis Utuh Biru / Hijau  : Sudah Aktif (Backend FastAPI, Database MySQL, App Flutter).
+
+
+[10] CLOUD VPS AZURE & DOMAIN PRODUKSI
+--------------------------------------------------------------------------------
+
+A. Akses SSH Cloud:
+   ssh -i ~/.ssh/id_ed25519 azureuser@api.pharma.web.id
+   (atau: ssh azureuser@172.197.249.136)
+
+B. Alamat Layanan Publik:
+   - REST API (HTTPS)  : https://api.pharma.web.id/
+   - Swagger Docs      : https://api.pharma.web.id/docs
+   - Web Dashboard     : https://api.pharma.web.id/dashboard
+   - MQTT Broker (TCP) : mqtt.pharma.web.id:1883 (Untuk ESP32 Hardware)
+   - MQTT WebSocket    : wss://mqtt.pharma.web.id (Untuk Flutter Web / Browser)
+
+C. Perintah Docker di VPS Azure:
+   cd /home/azureuser
+   docker ps                  # Cek 5 kontainer berjalan
+   docker compose restart     # Restart semua layanan
+   docker compose logs -f     # Pantau log realtime
+   docker exec -it pbl_database mysql -u root -pfabian100607 pbl_db # Masuk MySQL
 ================================================================================
