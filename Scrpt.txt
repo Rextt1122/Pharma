@@ -227,4 +227,39 @@ E. Masuk ke Database MySQL di Cloud VPS:
    SELECT id, username, email, role FROM users;
    SELECT * FROM sensor_data ORDER BY id DESC LIMIT 5;
    exit;
+
+F. Tips Navigasi Folder Linux di VPS:
+   # 1. Pindah ke sub-folder (tanpa tanda '/' di depan):
+   cd backend          # Benar (jika sedang di /home/azureuser)
+   # atau pakai path lengkap:
+   cd /home/azureuser/backend
+
+   # 2. Kembali ke folder sebelumnya (naik 1 tingkat):
+   cd ..
+
+   # 3. Kembali langsung ke folder home user:
+   cd ~
+
+   # 4. Cek posisi folder saat ini:
+   pwd
+
+G. Perintah Cek Spesifikasi & Kesehatan VPS (Untuk Demo ke Dosen):
+   neofetch                                      # Info lengkap OS, CPU, RAM & Logo Ubuntu
+   lscpu | grep -E 'Model name|CPU\(s\):'        # Cek detail CPU AMD EPYC (2 Core)
+   free -h                                       # Cek pemakaian RAM (Total 4 GB, Terpakai ~1.2 GB)
+   df -h /                                       # Cek sisa storage SSD (Total 30 GB, sisa ~20 GB)
+   curl -s ipinfo.io                             # Cek IP publik & Lokasi Data Center Azure
+   docker stats --no-stream                      # Bukti efisiensi kontainer (FastAPI cuma ~41 MB)
+   docker -H tcp://127.0.0.1:2378 logs --tail 8 pbl_backup # Bukti Auto-Disaster Recovery aktif
+
+H. Fungsi Tombol Kontrol & Simulasi di Web Dashboard:
+   1. Tombol Aktuator Hardware:
+      - UV (ON / OFF)     : Kirim pesan MQTT ke topik 'pharma/control/uv' untuk saklar lampu sterilisasi.
+      - Sirine (ON / OFF) : Kirim pesan MQTT ke topik 'pharma/control/buzzer' untuk sirine alarm.
+
+   2. 4 Tombol Preset Simulasi Sensor (Untuk Uji Coba Tanpa Alat Fisik):
+      - 'Vaksin 4.4 C'    : Kirim data suhu ideal cold-chain (rentang 2 - 8 °C). Indikator: Optimal / Aman (Hijau).
+      - 'Steril 19.5 C'   : Kirim data suhu ruangan sterilisasi (rentang 15 - 25 °C). Indikator: Aman (Hijau).
+      - 'Suhu 9.6 C'      : Simulasi suhu naik melebihi batas aman vaksin (> 8 °C). Indikator: Peringatan (Kuning).
+      - 'Alert Gas'       : Simulasi kebocoran gas berbahaya (> 50 ppm) & pintu terbuka. Indikator: Bahaya (Merah).
 ================================================================================
