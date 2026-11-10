@@ -173,7 +173,7 @@ C. Penjelasan Status Pengerjaan untuk Presentasi:
 [10] CLOUD VPS AZURE & DOMAIN PRODUKSI
 --------------------------------------------------------------------------------
 
-A. Akses SSH Cloud:
+A. Akses SSH Cloud (Dari PowerShell Laptop):
    ssh -i ~/.ssh/id_ed25519 azureuser@api.pharma.web.id
    (atau: ssh azureuser@172.197.249.136)
 
@@ -185,12 +185,46 @@ B. Alamat Layanan Publik:
    - MQTT Broker (TCP) : mqtt.pharma.web.id:1883 (Untuk ESP32 Hardware)
    - MQTT WebSocket    : wss://mqtt.pharma.web.id (Untuk Flutter Web / Browser)
 
-C. Perintah Docker 4-Node di VPS Azure:
+C. Navigasi Folder & Melihat File Kodingan di VPS:
+
+   1. Folder Utama Konfigurasi Server:
+      cd /home/azureuser
+      ls -la                        # Lihat daftar file & folder
+      cat docker-compose.yml        # Lihat konfigurasi semua service
+      cat Caddyfile                 # Lihat konfigurasi SSL domain & reverse proxy
+      bash start-nodes.sh           # Jalankan / sinkronisasi ulang 4 node
+
+   2. Folder Kodingan Backend FastAPI (Untuk Presentasi / Ditanya Dosen):
+      cd /home/azureuser/backend
+      ls -la                        # Lihat file backend
+      cat Dockerfile                # Lihat instruksi build container backend
+      cat main.py                   # Lihat logika REST API & MQTT listener
+      cat dashboard.html            # Lihat source code web dashboard
+
+   3. Folder Konfigurasi MQTT Broker:
+      cd /home/azureuser/mosquitto
+      ls -la
+      cat mosquitto.conf            # Lihat listener port 1883 & 9001
+
+   4. Folder Database & Auto-Disaster Recovery:
+      cd /home/azureuser/backups
+      ls -lh                        # Cek ukuran file latest_backup.sql
+      cat watcher.sh                # Lihat skrip auto-restore database
+
+D. Perintah Docker 4-Node di VPS Azure:
    cd /home/azureuser
-   docker ps                                  # Cek kontainer Node 1
-   docker -H tcp://127.0.0.1:2376 ps          # Cek kontainer Node 2 (Database)
-   docker -H tcp://127.0.0.1:2377 ps          # Cek kontainer Node 3 (MQTT)
-   docker -H tcp://127.0.0.1:2378 ps          # Cek kontainer Node 4 (Backup)
-   bash /home/azureuser/start-nodes.sh        # Jalankan / sinkronisasi ulang 4 node
-   docker -H tcp://127.0.0.1:2376 exec -it pbl_database mysql -u root -pfabian100607 pbl_db # Masuk MySQL Cloud
+   docker ps                                  # Cek kontainer Node 1 (Caddy, Backend, Portainer)
+   docker -H tcp://127.0.0.1:2376 ps          # Cek kontainer Node 2 (MySQL Database)
+   docker -H tcp://127.0.0.1:2377 ps          # Cek kontainer Node 3 (Mosquitto MQTT)
+   docker -H tcp://127.0.0.1:2378 ps          # Cek kontainer Node 4 (Backup Watcher)
+
+E. Masuk ke Database MySQL di Cloud VPS:
+   cd /home/azureuser
+   docker -H tcp://127.0.0.1:2376 exec -it pbl_database mysql -u root -pfabian100607 pbl_db
+
+   # Query penting di MySQL Cloud:
+   SHOW TABLES;
+   SELECT id, username, email, role FROM users;
+   SELECT * FROM sensor_data ORDER BY id DESC LIMIT 5;
+   exit;
 ================================================================================
