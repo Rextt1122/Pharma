@@ -43,7 +43,7 @@ class _SettingsPageState extends State<SettingsPage> {
   String _userAvatar = '';
   bool _isLoading = true;
   bool _isCheckingUpdate = false;
-  String _appVersion = 'v1.0.9';
+  String _appVersion = 'v1.0.10';
 
   ImageProvider? _getAvatarImage(String base64Str) {
     if (base64Str.isEmpty) return null;
@@ -2039,7 +2039,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               const SizedBox(height: 4),
               Text(
-                'Versi $_appVersion (Build +7)',
+                'Versi $_appVersion (Build +11)',
                 style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,

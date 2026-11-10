@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:ota_update/ota_update.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -142,7 +143,11 @@ class _UpdateDialogContent extends StatefulWidget {
 }
 
 class _UpdateDialogContentState extends State<_UpdateDialogContent> {
+  static const MethodChannel _installerChannel =
+      MethodChannel('com.example.smart_greenhouse_pbl/installer');
+
   bool _isDownloading = false;
+  bool _isReadyToInstall = false;
   double _progress = 0.0;
   String _statusText = '';
 
@@ -153,9 +158,37 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
     }
   }
 
+  Future<void> _triggerNativeInstall() async {
+    try {
+      await _installerChannel.invokeMethod('installApk', {
+        'fileName': 'Pharma_update.apk',
+      });
+    } catch (_) {}
+  }
+
   Future<void> _startDownloadAndInstall() async {
+    try {
+      final canInstall = await _installerChannel
+          .invokeMethod<bool>('canRequestPackageInstalls');
+      if (canInstall == false) {
+        if (mounted) {
+          setState(() {
+            _statusText =
+                'Aktifkan izin "Pasang aplikasi tidak dikenal", lalu tekan Perbarui Sekarang lagi.';
+          });
+          AppToast.info(
+            context,
+            'Izinkan instalasi dari sumber ini, lalu kembali ke aplikasi.',
+          );
+        }
+        await _installerChannel.invokeMethod('openInstallPermissionSettings');
+        return;
+      }
+    } catch (_) {}
+
     setState(() {
       _isDownloading = true;
+      _isReadyToInstall = false;
       _progress = 0.05;
       _statusText = 'Mempersiapkan unduhan...';
     });
@@ -176,6 +209,7 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
                 final percent = int.tryParse(event.value ?? '0') ?? 0;
                 _progress = (percent / 100.0).clamp(0.0, 1.0);
                 if (percent >= 100) {
+                  _isReadyToInstall = true;
                   _statusText = 'Unduhan selesai (100%). Membuka installer...';
                 } else {
                   _statusText = 'Mengunduh pembaruan ($percent%)...';
@@ -185,11 +219,10 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
             case OtaStatus.INSTALLING:
               setState(() {
                 _progress = 1.0;
+                _isReadyToInstall = true;
                 _statusText = 'Membuka installer paket aplikasi...';
               });
-              Future.delayed(const Duration(seconds: 2), () {
-                if (mounted) Navigator.pop(context);
-              });
+              _triggerNativeInstall();
               break;
             case OtaStatus.INSTALLATION_DONE:
               if (mounted) Navigator.pop(context);
@@ -205,9 +238,10 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
                 _isDownloading = false;
                 _statusText = 'Izin instalasi aplikasi tidak dikenal belum diaktifkan.';
               });
+              _installerChannel.invokeMethod('openInstallPermissionSettings');
               AppToast.error(
                 context,
-                'Aktifkan izin pasang aplikasi tidak dikenal untuk Pharma di Pengaturan HP',
+                'Aktifkan izin pasang aplikasi tidak dikenal untuk Pharma',
               );
               break;
             case OtaStatus.INSTALLATION_ERROR:
@@ -215,8 +249,9 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
             default:
               setState(() {
                 _isDownloading = false;
-                _statusText = 'Gagal memasang otomatis (${event.value}). Silakan unduh via browser.';
+                _statusText = 'Gagal memasang otomatis (${event.value}). Tekan Pasang Sekarang.';
               });
+              _triggerNativeInstall();
               break;
           }
         },
@@ -344,6 +379,24 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
               textAlign: TextAlign.center,
               style: AppTypography.caption.copyWith(fontWeight: FontWeight.w600),
             ),
+            if (_isReadyToInstall) ...[
+              const SizedBox(height: AppSpacing.sm),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.activeGreen,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                  ),
+                ),
+                onPressed: _triggerNativeInstall,
+                icon: const Icon(Icons.install_mobile_rounded, size: 18),
+                label: const Text(
+                  'Pasang Pembaruan Sekarang',
+                  style: TextStyle(fontWeight: FontWeight.w800),
+                ),
+              ),
+            ],
             const SizedBox(height: AppSpacing.xs),
             Center(
               child: TextButton.icon(
