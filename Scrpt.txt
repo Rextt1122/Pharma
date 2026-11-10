@@ -181,13 +181,16 @@ B. Alamat Layanan Publik:
    - REST API (HTTPS)  : https://api.pharma.web.id/
    - Swagger Docs      : https://api.pharma.web.id/docs
    - Web Dashboard     : https://api.pharma.web.id/dashboard
+   - Portainer Cloud   : https://portainer.pharma.web.id
    - MQTT Broker (TCP) : mqtt.pharma.web.id:1883 (Untuk ESP32 Hardware)
    - MQTT WebSocket    : wss://mqtt.pharma.web.id (Untuk Flutter Web / Browser)
 
-C. Perintah Docker di VPS Azure:
+C. Perintah Docker 4-Node di VPS Azure:
    cd /home/azureuser
-   docker ps                  # Cek 5 kontainer berjalan
-   docker compose restart     # Restart semua layanan
-   docker compose logs -f     # Pantau log realtime
-   docker exec -it pbl_database mysql -u root -pfabian100607 pbl_db # Masuk MySQL
+   docker ps                                  # Cek kontainer Node 1
+   docker -H tcp://127.0.0.1:2376 ps          # Cek kontainer Node 2 (Database)
+   docker -H tcp://127.0.0.1:2377 ps          # Cek kontainer Node 3 (MQTT)
+   docker -H tcp://127.0.0.1:2378 ps          # Cek kontainer Node 4 (Backup)
+   bash /home/azureuser/start-nodes.sh        # Jalankan / sinkronisasi ulang 4 node
+   docker -H tcp://127.0.0.1:2376 exec -it pbl_database mysql -u root -pfabian100607 pbl_db # Masuk MySQL Cloud
 ================================================================================
