@@ -14,6 +14,18 @@ class ApiService {
   final StorageService _storageService = StorageService();
   static Future<String?>? _ongoingDiscovery;
 
+  Uri buildUrl(String ip, String path) {
+    final cleanIp = ip.trim();
+    if (cleanIp.startsWith('http://') || cleanIp.startsWith('https://')) {
+      final uri = Uri.parse(cleanIp);
+      return uri.replace(path: path);
+    }
+    if (cleanIp.contains('pharma.web.id')) {
+      return Uri.parse('https://$cleanIp$path');
+    }
+    return Uri.parse('http://$cleanIp:8001$path');
+  }
+
   Future<String> resolveReachableIp() async {
     final savedIp = await _storageService.getServerIp();
     if (_ongoingDiscovery != null) {
@@ -40,7 +52,7 @@ class ApiService {
   Future<String?> _probeIp(String ip, Duration timeout) async {
     try {
       final response = await http
-          .get(Uri.parse('http://$ip:8001/'))
+          .get(buildUrl(ip, '/'))
           .timeout(timeout);
       if (response.statusCode == 200) {
         return ip;
@@ -83,7 +95,7 @@ class ApiService {
 
     final fastHit = await _raceIps(
       fastCandidates,
-      const Duration(milliseconds: 1200),
+      const Duration(milliseconds: 3000),
     );
     if (fastHit != null) return fastHit;
 
@@ -104,7 +116,7 @@ class ApiService {
 
   Future<List<SensorModel>> fetchSensorHistory() async {
     final ip = await resolveReachableIp();
-    final url = Uri.parse('http://$ip:8001/sensor');
+    final url = buildUrl(ip, '/sensor');
 
     try {
       final token = await _storageService.getAuthToken();
@@ -115,7 +127,7 @@ class ApiService {
 
       final response = await http
           .get(url, headers: {'Authorization': 'Bearer $token'})
-          .timeout(const Duration(seconds: 7));
+          .timeout(const Duration(seconds: 12));
 
       if (response.statusCode == 401) {
         await _storageService.invalidateSession();
@@ -149,7 +161,7 @@ class ApiService {
 
   Future<Map<String, dynamic>> login(String username, String password) async {
     final ip = await resolveReachableIp();
-    final url = Uri.parse('http://$ip:8001/login');
+    final url = buildUrl(ip, '/login');
 
     try {
       final response = await http
@@ -161,7 +173,7 @@ class ApiService {
               'password': password,
             }),
           )
-          .timeout(const Duration(seconds: 5));
+          .timeout(const Duration(seconds: 12));
 
       final data = jsonDecode(response.body) as Map<String, dynamic>;
 
@@ -196,7 +208,7 @@ class ApiService {
     required String email,
   }) async {
     final ip = await resolveReachableIp();
-    final url = Uri.parse('http://$ip:8001/register');
+    final url = buildUrl(ip, '/register');
 
     try {
       final response = await http
@@ -210,7 +222,7 @@ class ApiService {
               'email': email.trim(),
             }),
           )
-          .timeout(const Duration(seconds: 5));
+          .timeout(const Duration(seconds: 12));
 
       final data = jsonDecode(response.body) as Map<String, dynamic>;
 
@@ -241,7 +253,7 @@ class ApiService {
     required String email,
   }) async {
     final ip = await resolveReachableIp();
-    final url = Uri.parse('http://$ip:8001/update-profile');
+    final url = buildUrl(ip, '/update-profile');
     final token = await _storageService.getAuthToken();
 
     try {
@@ -257,7 +269,7 @@ class ApiService {
               'email': email.trim(),
             }),
           )
-          .timeout(const Duration(seconds: 5));
+          .timeout(const Duration(seconds: 12));
 
       final data = jsonDecode(response.body) as Map<String, dynamic>;
       if (response.statusCode == 200) {
@@ -276,7 +288,7 @@ class ApiService {
     required String newPassword,
   }) async {
     final ip = await resolveReachableIp();
-    final url = Uri.parse('http://$ip:8001/change-password');
+    final url = buildUrl(ip, '/change-password');
     final token = await _storageService.getAuthToken();
 
     try {
@@ -292,7 +304,7 @@ class ApiService {
               'new_password': newPassword,
             }),
           )
-          .timeout(const Duration(seconds: 5));
+          .timeout(const Duration(seconds: 12));
 
       final data = jsonDecode(response.body) as Map<String, dynamic>;
       if (response.statusCode == 200) {
@@ -308,7 +320,7 @@ class ApiService {
 
   Future<List<Map<String, dynamic>>> fetchUsers() async {
     final ip = await resolveReachableIp();
-    final url = Uri.parse('http://$ip:8001/users');
+    final url = buildUrl(ip, '/users');
     final token = await _storageService.getAuthToken();
 
     try {
@@ -318,7 +330,7 @@ class ApiService {
           'Content-Type': 'application/json',
           if (token != null) 'Authorization': 'Bearer $token',
         },
-      ).timeout(const Duration(seconds: 5));
+      ).timeout(const Duration(seconds: 12));
 
       if (response.statusCode == 200) {
         final List<dynamic> list = jsonDecode(response.body);
@@ -344,7 +356,7 @@ class ApiService {
     required String role,
   }) async {
     final ip = await resolveReachableIp();
-    final url = Uri.parse('http://$ip:8001/users/role');
+    final url = buildUrl(ip, '/users/role');
     final token = await _storageService.getAuthToken();
 
     try {
@@ -360,7 +372,7 @@ class ApiService {
               'role': role.trim().toLowerCase(),
             }),
           )
-          .timeout(const Duration(seconds: 5));
+          .timeout(const Duration(seconds: 12));
 
       final data = jsonDecode(response.body) as Map<String, dynamic>;
       if (response.statusCode == 200) {
@@ -382,7 +394,7 @@ class ApiService {
 
   Future<Map<String, dynamic>> deleteUser(int userId) async {
     final ip = await resolveReachableIp();
-    final url = Uri.parse('http://$ip:8001/users/$userId');
+    final url = buildUrl(ip, '/users/$userId');
     final token = await _storageService.getAuthToken();
 
     try {
@@ -392,7 +404,7 @@ class ApiService {
           'Content-Type': 'application/json',
           if (token != null) 'Authorization': 'Bearer $token',
         },
-      ).timeout(const Duration(seconds: 5));
+      ).timeout(const Duration(seconds: 12));
 
       final data = jsonDecode(response.body) as Map<String, dynamic>;
       if (response.statusCode == 200) {
@@ -414,7 +426,7 @@ class ApiService {
 
   Future<Map<String, dynamic>> fetchMyProfile() async {
     final ip = await resolveReachableIp();
-    final url = Uri.parse('http://$ip:8001/me');
+    final url = buildUrl(ip, '/me');
     final token = await _storageService.getAuthToken();
 
     try {
@@ -424,7 +436,7 @@ class ApiService {
           'Content-Type': 'application/json',
           if (token != null) 'Authorization': 'Bearer $token',
         },
-      ).timeout(const Duration(seconds: 5));
+      ).timeout(const Duration(seconds: 12));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
