@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
 
@@ -62,6 +63,8 @@ class ClimateDashboardPage extends StatelessWidget {
       humOk: humOk,
     );
     final controls = _buildSmartControlTiles(context, p, s);
+    final trend = _buildLiveTrendCard(p, s, safe, targetMin, targetMax);
+    final support = _buildSupportTiles(p, s);
 
     return LayoutBuilder(
       builder: (context, box) {
@@ -81,7 +84,17 @@ class ClimateDashboardPage extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(flex: 5, child: hero),
+                  Expanded(
+                    flex: 5,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        hero,
+                        const SizedBox(height: AppSpacing.md),
+                        trend,
+                      ],
+                    ),
+                  ),
                   const SizedBox(width: AppSpacing.lg),
                   Expanded(
                     flex: 6,
@@ -90,6 +103,8 @@ class ClimateDashboardPage extends StatelessWidget {
                       children: [
                         _buildSectionTitle('PARAMETER LINGKUNGAN'),
                         metrics,
+                        const SizedBox(height: AppSpacing.md),
+                        support,
                         const SizedBox(height: AppSpacing.lg),
                         _buildSectionTitle('KONTROL AKTUATOR'),
                         controls,
@@ -114,19 +129,25 @@ class ClimateDashboardPage extends StatelessWidget {
 
             // 2. Hero Climate Dial
             hero,
+            const SizedBox(height: AppSpacing.md),
+
+            // 3. Tren suhu live
+            trend,
             const SizedBox(height: AppSpacing.lg),
 
-            // 3. Bento Environment & Security Metrics
+            // 4. Bento Environment & Security Metrics
             _buildSectionTitle('PARAMETER LINGKUNGAN'),
             metrics,
+            const SizedBox(height: AppSpacing.md),
+            support,
             const SizedBox(height: AppSpacing.lg),
 
-            // 4. Tactile Smart Controls
+            // 5. Tactile Smart Controls
             _buildSectionTitle('KONTROL AKTUATOR'),
             controls,
             const SizedBox(height: AppSpacing.lg),
 
-            // 5. Connection Status
+            // 6. Connection Status
             _connection(p),
           ],
         );
@@ -675,7 +696,259 @@ class ClimateDashboardPage extends StatelessWidget {
     );
   }
 
+  Widget _buildLiveTrendCard(
+    SensorProvider p,
+    SensorModel s,
+    bool safe,
+    double targetMin,
+    double targetMax,
+  ) {
+    final data = p.liveTempTrend;
+    final color = safe ? AppColors.pharmaNavy : AppColors.alertRed;
+
+    Widget body;
+    if (data.length < 2) {
+      body = const SizedBox(
+        height: 96,
+        child: Center(
+          child: Text(
+            'Menunggu data telemetri...',
+            style: TextStyle(fontSize: 11.5, color: AppColors.textMuted, fontWeight: FontWeight.w600),
+          ),
+        ),
+      );
+    } else {
+      final lo = data.reduce(math.min);
+      final hi = data.reduce(math.max);
+      final minY = (math.min(lo, targetMin) - 1).floorToDouble();
+      final maxY = (math.max(hi, targetMax) + 1).ceilToDouble();
+      body = SizedBox(
+        height: 96,
+        child: LineChart(
+          LineChartData(
+            minX: 0,
+            maxX: (data.length - 1).toDouble(),
+            minY: minY,
+            maxY: maxY,
+            gridData: const FlGridData(show: false),
+            borderData: FlBorderData(show: false),
+            titlesData: const FlTitlesData(show: false),
+            lineTouchData: const LineTouchData(enabled: false),
+            rangeAnnotations: RangeAnnotations(
+              horizontalRangeAnnotations: [
+                HorizontalRangeAnnotation(
+                  y1: targetMin,
+                  y2: targetMax,
+                  color: AppColors.activeGreen.withAlpha(22),
+                ),
+              ],
+            ),
+            lineBarsData: [
+              LineChartBarData(
+                spots: [
+                  for (int i = 0; i < data.length; i++) FlSpot(i.toDouble(), data[i]),
+                ],
+                isCurved: true,
+                curveSmoothness: 0.3,
+                preventCurveOverShooting: true,
+                color: color,
+                barWidth: 2.4,
+                isStrokeCapRound: true,
+                dotData: FlDotData(
+                  show: true,
+                  checkToShowDot: (spot, bar) => spot.x == data.length - 1,
+                  getDotPainter: (spot, percent, bar, index) => FlDotCirclePainter(
+                    radius: 4,
+                    color: color,
+                    strokeWidth: 2,
+                    strokeColor: Colors.white,
+                  ),
+                ),
+                belowBarData: BarAreaData(
+                  show: true,
+                  gradient: LinearGradient(
+                    colors: [color.withAlpha(46), color.withAlpha(0)],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    String stat(String label, double? v) =>
+        v == null ? '$label —' : '$label ${v.toStringAsFixed(1)}°';
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md - 2, AppSpacing.md, AppSpacing.sm + 2),
+      decoration: BoxDecoration(
+        color: AppColors.cardWhite,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(color: AppColors.containerLow, width: 1.0),
+        boxShadow: const [
+          BoxShadow(color: Color(0x0C0E555A), blurRadius: 10, offset: Offset(0, 3)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'TREN SUHU LIVE',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.6,
+                  color: AppColors.textMuted,
+                ),
+              ),
+              Text(
+                data.length < 2
+                    ? ''
+                    : '${stat('Min', data.reduce(math.min))}  ${stat('Maks', data.reduce(math.max))}',
+                style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: AppColors.textDark),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          body,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSupportTiles(SensorProvider p, SensorModel s) {
+    Widget tile(IconData icon, String label, String value, {bool alert = false}) {
+      final c = alert ? AppColors.alertRed : AppColors.pharmaNavy;
+      return Expanded(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+          decoration: BoxDecoration(
+            color: AppColors.cardWhite,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            border: Border.all(
+              color: alert ? AppColors.alertRed.withAlpha(70) : AppColors.containerLow,
+              width: 1.0,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(icon, size: 17, color: c),
+              const SizedBox(height: 6),
+              Text(
+                value,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: alert ? AppColors.alertRed : AppColors.textDark),
+              ),
+              const SizedBox(height: 1),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 10, color: AppColors.textMuted, fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    const gap = SizedBox(width: AppSpacing.sm + 2);
+    if (p.isVaccineRack) {
+      return Row(children: [
+        tile(Icons.light_mode_outlined, 'Cahaya (LDR)', '${s.cahaya.toStringAsFixed(0)} lux'),
+        gap,
+        tile(Icons.air_rounded, 'Kipas', s.isKipasAktif ? 'Menyala' : 'Mati'),
+        gap,
+        tile(Icons.water_outlined, 'Pompa', s.isPompaAktif ? 'Menyala' : 'Mati'),
+      ]);
+    }
+    final d2 = p.device2Data;
+    return Row(children: [
+      tile(
+        Icons.directions_walk_rounded,
+        'Sensor Gerak (PIR)',
+        d2.isGerakTerdeteksi ? 'Ada Orang' : 'Kosong',
+        alert: d2.isGerakTerdeteksi,
+      ),
+      gap,
+      tile(Icons.inventory_2_outlined, 'Stok (HC-SR04)', '${d2.jarakStok.toStringAsFixed(0)} cm'),
+      gap,
+      tile(Icons.light_outlined, 'LED Indikator', d2.isLedBahaya ? 'Bahaya' : 'Aman', alert: d2.isLedBahaya),
+    ]);
+  }
+
   Widget _buildSmartControlTiles(BuildContext context, SensorProvider p, SensorModel s) {
+    return Column(
+      children: [
+        _buildPrimaryControlRow(context, p, s),
+        const SizedBox(height: AppSpacing.md),
+        _buildSecondaryControlRow(context, p),
+      ],
+    );
+  }
+
+  Widget _buildSecondaryControlRow(BuildContext context, SensorProvider p) {
+    void guard(VoidCallback act) {
+      if (!p.isOperator) {
+        _showOperatorOnlySnack(context);
+        return;
+      }
+      act();
+    }
+
+    if (p.isVaccineRack) {
+      return Row(children: [
+        Expanded(
+          child: _buildTactileActionCard(
+            title: 'Kipas Darurat',
+            status: p.device1Data.isKipasAktif ? 'Menyala' : 'Siaga',
+            icon: Icons.air_rounded,
+            isActive: p.device1Data.isKipasAktif,
+            activeColor: AppColors.humidityBlue,
+            isRestricted: !p.isOperator,
+            onTap: () => guard(p.toggleKipas),
+          ),
+        ),
+        const SizedBox(width: AppSpacing.md),
+        Expanded(
+          child: _buildTactileActionCard(
+            title: 'Pompa Mini',
+            status: p.device1Data.isPompaAktif ? 'Menyala' : 'Siaga',
+            icon: Icons.water_drop_outlined,
+            isActive: p.device1Data.isPompaAktif,
+            activeColor: AppColors.pharmaTeal,
+            isRestricted: !p.isOperator,
+            onTap: () => guard(p.togglePompa),
+          ),
+        ),
+      ]);
+    }
+    return Row(children: [
+      Expanded(
+        child: _buildTactileActionCard(
+          title: 'LED Indikator',
+          status: p.device2Data.isLedBahaya ? 'Mode Bahaya' : 'Mode Aman',
+          icon: Icons.lightbulb_outline_rounded,
+          isActive: p.device2Data.isLedBahaya,
+          activeColor: AppColors.alertRed,
+          isRestricted: !p.isOperator,
+          onTap: () => guard(p.toggleLed),
+        ),
+      ),
+      const SizedBox(width: AppSpacing.md),
+      const Expanded(child: SizedBox.shrink()),
+    ]);
+  }
+
+  Widget _buildPrimaryControlRow(BuildContext context, SensorProvider p, SensorModel s) {
     return Row(
       children: [
         // UV Sterilization Tile

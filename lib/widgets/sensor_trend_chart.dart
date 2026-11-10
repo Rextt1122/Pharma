@@ -87,6 +87,29 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
     }
   }
 
+  static const int _maxPoints = 48;
+
+  /// Gabungkan data mentah ke maksimal [maxPoints] titik (rata-rata per bucket).
+  /// Titik ekstrem terakhir dipertahankan lewat waktu bucket terakhir.
+  List<SensorModel> _downsample(List<SensorModel> src, int maxPoints) {
+    if (src.length <= maxPoints) return src;
+    final out = <SensorModel>[];
+    final size = src.length / maxPoints;
+    for (int b = 0; b < maxPoints; b++) {
+      final start = (b * size).floor();
+      final end = ((b + 1) * size).floor().clamp(start + 1, src.length);
+      final bucket = src.sublist(start, end);
+      double avg(double Function(SensorModel) f) =>
+          bucket.map(f).reduce((a, c) => a + c) / bucket.length;
+      out.add(bucket.last.copyWith(
+        suhu: avg((e) => e.suhu),
+        kelembapan: avg((e) => e.kelembapan),
+        kadarGas: avg((e) => e.kadarGas),
+      ));
+    }
+    return out;
+  }
+
   bool _isValAnomalous(double val) {
     if (_upperThreshold != null && val > _upperThreshold!) return true;
     if (_lowerThreshold != null && val < _lowerThreshold!) return true;
@@ -99,8 +122,10 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
       return const SizedBox.shrink();
     }
 
-    // Prepare chronological list (oldest to newest for graph)
-    final items = widget.historyData.reversed.toList();
+    // Prepare chronological list (oldest to newest for graph),
+    // lalu rata-ratakan per bucket supaya kurva halus dan tidak bergerigi.
+    final rawItems = widget.historyData.reversed.toList();
+    final items = _downsample(rawItems, _maxPoints);
     final spots = <FlSpot>[];
     double minVal = double.infinity;
     double maxVal = -double.infinity;
@@ -339,7 +364,9 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
                     sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 22,
-                      interval: items.length > 1 ? (items.length - 1).toDouble() : 1.0,
+                      interval: items.length > 1
+                          ? ((items.length - 1) / 4).ceilToDouble().clamp(1.0, 1000.0)
+                          : 1.0,
                       getTitlesWidget: (value, meta) {
                         final idx = value.round();
                         if (idx >= 0 && idx < items.length) {
@@ -395,12 +422,15 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
                   LineChartBarData(
                     spots: spots,
                     isCurved: true,
-                    curveSmoothness: 0.18,
+                    curveSmoothness: 0.32,
+                    preventCurveOverShooting: true,
                     color: _metricColor,
-                    barWidth: 2.8,
+                    barWidth: 2.6,
                     isStrokeCapRound: true,
                     dotData: FlDotData(
                       show: true,
+                      checkToShowDot: (spot, barData) =>
+                          items.length <= 14 || _isValAnomalous(spot.y),
                       getDotPainter: (spot, percent, barData, index) {
                         final isDanger = _isValAnomalous(spot.y);
                         return FlDotCirclePainter(
