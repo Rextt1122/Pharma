@@ -21,6 +21,8 @@ class MqttService {
     final savedIp = await _storageService.getServerIp();
     final reachableIp = await _apiService.resolveReachableIp();
     final candidates = <String>{
+      'mqtt.pharma.web.id',
+      'api.pharma.web.id',
       if (reachableIp.isNotEmpty) reachableIp,
       if (savedIp.isNotEmpty) savedIp,
       '192.168.253.238',

@@ -71,6 +71,7 @@ class ApiService {
 
   Future<String?> _discoverIp(String savedIp) async {
     final fastCandidates = <String>{
+      'api.pharma.web.id',
       if (savedIp.isNotEmpty && savedIp != '192.168.1.100') savedIp,
       '192.168.253.238',
       '192.168.1.25',
