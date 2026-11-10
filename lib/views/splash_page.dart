@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../services/storage_service.dart';
 import '../theme/app_theme.dart';
 import 'login_page.dart';
@@ -68,8 +69,16 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.pharmaNavy,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+      child: Scaffold(
+        backgroundColor: AppColors.pharmaNavy,
       body: SafeArea(
         child: Stack(
           children: [
@@ -137,6 +146,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

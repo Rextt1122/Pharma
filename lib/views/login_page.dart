@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../services/api_service.dart';
 import '../services/biometric_service.dart';
 import '../services/storage_service.dart';
@@ -331,22 +332,30 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     final double headerHeight = _isSignUp ? 165.0 : 250.0;
 
-    return Scaffold(
-      resizeToAvoidBottomInset: true,
-      backgroundColor: AppColors.pharmaNavy,
-      body: SafeArea(
-        bottom: false,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: IntrinsicHeight(
-                  child: Stack(
-                    children: [
-                      // Animated top decorative organic leaves / waves & floating orbs
-                      Positioned(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+      child: Scaffold(
+        resizeToAvoidBottomInset: true,
+        backgroundColor: AppColors.pharmaNavy,
+        body: SafeArea(
+          bottom: false,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: IntrinsicHeight(
+                    child: Stack(
+                      children: [
+                        // Animated top decorative organic leaves / waves & floating orbs
+                        Positioned(
                         top: -10,
                         left: -10,
                         right: 0,
@@ -870,8 +879,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
           },
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildCleanInputField({
     required TextEditingController controller,

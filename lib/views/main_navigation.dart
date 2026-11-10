@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../providers/sensor_provider.dart';
 import '../services/update_service.dart';
@@ -189,8 +190,16 @@ class _MainNavigationState extends State<MainNavigation>
     final count = sensorProvider.notificationCount;
     final badgeText = count > 5 ? '5+' : '$count';
 
-    return Scaffold(
-      backgroundColor: AppColors.pharmaNavy,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+      child: Scaffold(
+        backgroundColor: AppColors.pharmaNavy,
       body: SafeArea(
         bottom: false,
         child: Stack(
@@ -417,8 +426,9 @@ class _MainNavigationState extends State<MainNavigation>
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildModernNavItem(
     int index,
