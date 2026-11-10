@@ -137,18 +137,39 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
       if (val > maxVal) maxVal = val;
     }
 
-    // Encompass thresholds so the danger boundary lines are always clearly framed
+    // Sumbu Y fokus ke data (sama seperti kelembapan). Garis batas hanya
+    // ikut dibingkai bila dekat dengan data, supaya kurva tidak gepeng.
+    final double minSpan = _selectedMetric == ChartMetric.gas
+        ? 20.0
+        : (_selectedMetric == ChartMetric.suhu ? 4.0 : 10.0);
+    final double dataRange = maxVal - minVal;
+    final double reach = dataRange < minSpan ? minSpan : dataRange;
+
     double effectiveMin = minVal;
     double effectiveMax = maxVal;
-    if (_upperThreshold != null && _upperThreshold! > effectiveMax) {
-      effectiveMax = _upperThreshold!;
+    final up = _upperThreshold;
+    final lo = _lowerThreshold;
+    if (up != null && up > effectiveMax && up - maxVal <= reach) {
+      effectiveMax = up;
     }
-    if (_lowerThreshold != null && _lowerThreshold! < effectiveMin) {
-      effectiveMin = _lowerThreshold!;
+    if (lo != null && lo < effectiveMin && minVal - lo <= reach) {
+      effectiveMin = lo;
+    }
+    if (up != null && up < effectiveMin && minVal - up <= reach) {
+      effectiveMin = up;
+    }
+    if (lo != null && lo > effectiveMax && lo - maxVal <= reach) {
+      effectiveMax = lo;
+    }
+
+    if (effectiveMax - effectiveMin < minSpan) {
+      final mid = (effectiveMax + effectiveMin) / 2;
+      effectiveMin = mid - minSpan / 2;
+      effectiveMax = mid + minSpan / 2;
     }
 
     final range = (effectiveMax - effectiveMin).abs();
-    final yMargin = range < 1.0 ? 2.0 : range * 0.15;
+    final yMargin = range * 0.12;
     double chartMinY = (effectiveMin - yMargin).floorToDouble();
     double chartMaxY = (effectiveMax + yMargin).ceilToDouble();
     if (minVal >= 0 && chartMinY < 0) {
@@ -284,6 +305,7 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
             height: 200,
             child: LineChart(
               LineChartData(
+                clipData: const FlClipData.all(),
                 extraLinesData: ExtraLinesData(
                   horizontalLines: [
                     if (_upperThreshold != null)

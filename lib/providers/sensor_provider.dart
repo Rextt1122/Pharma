@@ -50,21 +50,6 @@ class SensorProvider extends ChangeNotifier {
   String _selectedDeviceId = 'device_1';
   bool _buzzerActive = false;
 
-  // Buffer tren suhu live (maks 40 titik per device) untuk sparkline dashboard.
-  static const int _trendMax = 40;
-  final Map<String, List<double>> _liveTemp = {
-    'device_1': <double>[],
-    'device_2': <double>[],
-  };
-  List<double> get liveTempTrend =>
-      List.unmodifiable(_liveTemp[_selectedDeviceId] ?? const <double>[]);
-
-  void _pushTrend(SensorModel d) {
-    final list = _liveTemp[d.deviceId == 'device_2' ? 'device_2' : 'device_1']!;
-    list.add(d.suhu);
-    if (list.length > _trendMax) list.removeAt(0);
-  }
-
   bool _isConnected = false;
   bool _isInitialLoading = true;
   bool _isOperator = true;
@@ -207,11 +192,6 @@ class SensorProvider extends ChangeNotifier {
       final history = await _apiService.fetchSensorHistory();
       if (history.isNotEmpty) {
         _device1Data = history.first.copyWith(deviceId: 'device_1');
-        // Seed sparkline dari riwayat (API: terbaru dulu -> balik jadi lama ke baru).
-        final seed = history.take(_trendMax).toList().reversed;
-        _liveTemp['device_1']!
-          ..clear()
-          ..addAll(seed.map((e) => e.suhu));
         if (_device2Data.waktu == null) {
           _device2Data = _device2Data.copyWith(
             waktu: history.first.waktu,
@@ -250,7 +230,6 @@ class SensorProvider extends ChangeNotifier {
         _device1Data = data;
       }
       _isInitialLoading = false;
-      _pushTrend(data);
       _checkAndAddNotifications(data);
       notifyListeners();
     };

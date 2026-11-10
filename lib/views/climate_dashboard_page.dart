@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
 
@@ -63,7 +62,6 @@ class ClimateDashboardPage extends StatelessWidget {
       humOk: humOk,
     );
     final controls = _buildSmartControlTiles(context, p, s);
-    final trend = _buildLiveTrendCard(p, s, safe, targetMin, targetMax);
     final support = _buildSupportTiles(p, s);
 
     return LayoutBuilder(
@@ -86,14 +84,7 @@ class ClimateDashboardPage extends StatelessWidget {
                 children: [
                   Expanded(
                     flex: 5,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        hero,
-                        const SizedBox(height: AppSpacing.md),
-                        trend,
-                      ],
-                    ),
+                    child: hero,
                   ),
                   const SizedBox(width: AppSpacing.lg),
                   Expanded(
@@ -129,13 +120,9 @@ class ClimateDashboardPage extends StatelessWidget {
 
             // 2. Hero Climate Dial
             hero,
-            const SizedBox(height: AppSpacing.md),
-
-            // 3. Tren suhu live
-            trend,
             const SizedBox(height: AppSpacing.lg),
 
-            // 4. Bento Environment & Security Metrics
+            // 3. Bento Environment & Security Metrics
             _buildSectionTitle('PARAMETER LINGKUNGAN'),
             metrics,
             const SizedBox(height: AppSpacing.md),
@@ -691,132 +678,6 @@ class ClimateDashboardPage extends StatelessWidget {
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLiveTrendCard(
-    SensorProvider p,
-    SensorModel s,
-    bool safe,
-    double targetMin,
-    double targetMax,
-  ) {
-    final data = p.liveTempTrend;
-    final color = safe ? AppColors.pharmaNavy : AppColors.alertRed;
-
-    Widget body;
-    if (data.length < 2) {
-      body = const SizedBox(
-        height: 96,
-        child: Center(
-          child: Text(
-            'Menunggu data telemetri...',
-            style: TextStyle(fontSize: 11.5, color: AppColors.textMuted, fontWeight: FontWeight.w600),
-          ),
-        ),
-      );
-    } else {
-      final lo = data.reduce(math.min);
-      final hi = data.reduce(math.max);
-      final minY = (math.min(lo, targetMin) - 1).floorToDouble();
-      final maxY = (math.max(hi, targetMax) + 1).ceilToDouble();
-      body = SizedBox(
-        height: 96,
-        child: LineChart(
-          LineChartData(
-            minX: 0,
-            maxX: (data.length - 1).toDouble(),
-            minY: minY,
-            maxY: maxY,
-            gridData: const FlGridData(show: false),
-            borderData: FlBorderData(show: false),
-            titlesData: const FlTitlesData(show: false),
-            lineTouchData: const LineTouchData(enabled: false),
-            rangeAnnotations: RangeAnnotations(
-              horizontalRangeAnnotations: [
-                HorizontalRangeAnnotation(
-                  y1: targetMin,
-                  y2: targetMax,
-                  color: AppColors.activeGreen.withAlpha(22),
-                ),
-              ],
-            ),
-            lineBarsData: [
-              LineChartBarData(
-                spots: [
-                  for (int i = 0; i < data.length; i++) FlSpot(i.toDouble(), data[i]),
-                ],
-                isCurved: true,
-                curveSmoothness: 0.3,
-                preventCurveOverShooting: true,
-                color: color,
-                barWidth: 2.4,
-                isStrokeCapRound: true,
-                dotData: FlDotData(
-                  show: true,
-                  checkToShowDot: (spot, bar) => spot.x == data.length - 1,
-                  getDotPainter: (spot, percent, bar, index) => FlDotCirclePainter(
-                    radius: 4,
-                    color: color,
-                    strokeWidth: 2,
-                    strokeColor: Colors.white,
-                  ),
-                ),
-                belowBarData: BarAreaData(
-                  show: true,
-                  gradient: LinearGradient(
-                    colors: [color.withAlpha(46), color.withAlpha(0)],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    String stat(String label, double? v) =>
-        v == null ? '$label —' : '$label ${v.toStringAsFixed(1)}°';
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md - 2, AppSpacing.md, AppSpacing.sm + 2),
-      decoration: BoxDecoration(
-        color: AppColors.cardWhite,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(color: AppColors.containerLow, width: 1.0),
-        boxShadow: const [
-          BoxShadow(color: Color(0x0C0E555A), blurRadius: 10, offset: Offset(0, 3)),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'TREN SUHU LIVE',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.6,
-                  color: AppColors.textMuted,
-                ),
-              ),
-              Text(
-                data.length < 2
-                    ? ''
-                    : '${stat('Min', data.reduce(math.min))}  ${stat('Maks', data.reduce(math.max))}',
-                style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: AppColors.textDark),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          body,
         ],
       ),
     );
