@@ -55,6 +55,7 @@ class ClimateDashboardPage extends StatelessWidget {
       targetMax: targetMax,
     );
     final metrics = _buildBentoEnvironmentMetrics(
+      context: context,
       s: s,
       p: p,
       humMin: humMin,
@@ -62,7 +63,7 @@ class ClimateDashboardPage extends StatelessWidget {
       humOk: humOk,
     );
     final controls = _buildSmartControlTiles(context, p, s);
-    final support = _buildSupportTiles(p, s);
+    final support = _buildSupportTiles(context, p, s);
 
     return LayoutBuilder(
       builder: (context, box) {
@@ -472,6 +473,7 @@ class ClimateDashboardPage extends StatelessWidget {
   }
 
   Widget _buildBentoEnvironmentMetrics({
+    required BuildContext context,
     required SensorModel s,
     required SensorProvider p,
     required double humMin,
@@ -511,78 +513,92 @@ class ClimateDashboardPage extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.md),
         // Door Security Bar
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 11),
-          decoration: BoxDecoration(
-            color: s.isPintuTerbuka ? AppColors.alertRed.withAlpha(16) : AppColors.cardWhite,
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              AppToast.info(
+                context,
+                s.isPintuTerbuka
+                    ? 'Sensor Pintu: Terbuka! Periksa fisik gudang atau simulasi web.'
+                    : 'Sensor Pintu: Terkunci rapat dan aman.',
+              );
+            },
             borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-            border: Border.all(
-              color: s.isPintuTerbuka ? AppColors.alertRed.withAlpha(70) : AppColors.containerLow,
-              width: 1.0,
-            ),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x0C0E555A),
-                blurRadius: 10,
-                offset: Offset(0, 3),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(7),
-                decoration: BoxDecoration(
-                  color: (s.isPintuTerbuka ? AppColors.alertRed : AppColors.activeGreen).withAlpha(22),
-                  shape: BoxShape.circle,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 11),
+              decoration: BoxDecoration(
+                color: s.isPintuTerbuka ? AppColors.alertRed.withAlpha(16) : AppColors.cardWhite,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                border: Border.all(
+                  color: s.isPintuTerbuka ? AppColors.alertRed.withAlpha(70) : AppColors.containerLow,
+                  width: 1.0,
                 ),
-                child: Icon(
-                  s.isPintuTerbuka ? Icons.door_sliding_outlined : Icons.lock_outline_rounded,
-                  color: s.isPintuTerbuka ? AppColors.alertRed : AppColors.activeGreen,
-                  size: 18,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm + 4),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Pintu Gudang',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textDark,
-                      ),
-                    ),
-                    const SizedBox(height: 1),
-                    Text(
-                      s.isPintuTerbuka ? 'Terbuka • Perlu Ditutup' : 'Terkunci Rapat',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: s.isPintuTerbuka ? AppColors.alertRed : AppColors.textMuted,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: (s.isPintuTerbuka ? AppColors.alertRed : AppColors.activeGreen).withAlpha(20),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                ),
-                child: Text(
-                  s.isPintuTerbuka ? 'TERBUKA' : 'TERKUNCI',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                    color: s.isPintuTerbuka ? AppColors.alertRed : AppColors.activeGreen,
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x0C0E555A),
+                    blurRadius: 10,
+                    offset: Offset(0, 3),
                   ),
-                ),
+                ],
               ),
-            ],
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(7),
+                    decoration: BoxDecoration(
+                      color: (s.isPintuTerbuka ? AppColors.alertRed : AppColors.activeGreen).withAlpha(22),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      s.isPintuTerbuka ? Icons.door_sliding_outlined : Icons.lock_outline_rounded,
+                      color: s.isPintuTerbuka ? AppColors.alertRed : AppColors.activeGreen,
+                      size: 18,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm + 4),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Pintu Gudang',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.textDark,
+                          ),
+                        ),
+                        const SizedBox(height: 1),
+                        Text(
+                          s.isPintuTerbuka ? 'Terbuka • Perlu Ditutup' : 'Terkunci Rapat',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: s.isPintuTerbuka ? AppColors.alertRed : AppColors.textMuted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: (s.isPintuTerbuka ? AppColors.alertRed : AppColors.activeGreen).withAlpha(20),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                    ),
+                    child: Text(
+                      s.isPintuTerbuka ? 'TERBUKA' : 'TERKUNCI',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        color: s.isPintuTerbuka ? AppColors.alertRed : AppColors.activeGreen,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ],
@@ -683,39 +699,72 @@ class ClimateDashboardPage extends StatelessWidget {
     );
   }
 
-  Widget _buildSupportTiles(SensorProvider p, SensorModel s) {
-    Widget tile(IconData icon, String label, String value, {bool alert = false}) {
+  Widget _buildSupportTiles(BuildContext context, SensorProvider p, SensorModel s) {
+    Widget tile(IconData icon, String label, String value, {bool alert = false, String? hint}) {
       final c = alert ? AppColors.alertRed : AppColors.pharmaNavy;
       return Expanded(
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-          decoration: BoxDecoration(
-            color: AppColors.cardWhite,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              AppToast.info(
+                context,
+                hint ?? '$label: Nilai sensor dibaca otomatis dari perangkat fisik/simulasi.',
+              );
+            },
             borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-            border: Border.all(
-              color: alert ? AppColors.alertRed.withAlpha(70) : AppColors.containerLow,
-              width: 1.0,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppColors.cardWhite,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                border: Border.all(
+                  color: alert ? AppColors.alertRed.withAlpha(70) : AppColors.containerLow,
+                  width: 1.0,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Icon(icon, size: 17, color: c),
+                      Container(
+                        width: 5,
+                        height: 5,
+                        decoration: BoxDecoration(
+                          color: alert ? AppColors.alertRed : AppColors.activeGreen,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    value,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w800,
+                      color: alert ? AppColors.alertRed : AppColors.textDark,
+                    ),
+                  ),
+                  const SizedBox(height: 1),
+                  Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 10,
+                      color: AppColors.textMuted,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(icon, size: 17, color: c),
-              const SizedBox(height: 6),
-              Text(
-                value,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: alert ? AppColors.alertRed : AppColors.textDark),
-              ),
-              const SizedBox(height: 1),
-              Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 10, color: AppColors.textMuted, fontWeight: FontWeight.w600),
-              ),
-            ],
           ),
         ),
       );
@@ -735,28 +784,32 @@ class ClimateDashboardPage extends StatelessWidget {
     return Row(children: [
       tile(
         Icons.directions_walk_rounded,
-        'Sensor Gerak (PIR)',
+        'Sensor PIR',
         d2.isGerakTerdeteksi ? 'Ada Orang' : 'Kosong',
         alert: d2.isGerakTerdeteksi,
+        hint: d2.isGerakTerdeteksi
+            ? 'PIR: Terdeteksi manusia di ruangan! UV-C terkunci mati.'
+            : 'PIR: Ruangan kosong, aman untuk sterilisasi UV-C.',
       ),
       gap,
-      tile(Icons.inventory_2_outlined, 'Stok (HC-SR04)', '${d2.jarakStok.toStringAsFixed(0)} cm'),
+      tile(
+        Icons.inventory_2_outlined,
+        'Stok (HC-SR04)',
+        '${d2.jarakStok.toStringAsFixed(0)} cm',
+        hint: 'Sensor Jarak: ${d2.jarakStok.toStringAsFixed(1)} cm (${d2.teksKapasitasStok})',
+      ),
       gap,
-      tile(Icons.light_outlined, 'LED Indikator', d2.isLedBahaya ? 'Bahaya' : 'Aman', alert: d2.isLedBahaya),
+      tile(
+        Icons.light_outlined,
+        'LED Status',
+        d2.isLedBahaya ? 'Bahaya' : 'Aman',
+        alert: d2.isLedBahaya,
+        hint: 'LED Indikator Ruangan: ${d2.isLedBahaya ? "Merah (Akses Bahaya)" : "Hijau (Aman Masuk)"}',
+      ),
     ]);
   }
 
   Widget _buildSmartControlTiles(BuildContext context, SensorProvider p, SensorModel s) {
-    return Column(
-      children: [
-        _buildPrimaryControlRow(context, p, s),
-        const SizedBox(height: AppSpacing.md),
-        _buildSecondaryControlRow(context, p),
-      ],
-    );
-  }
-
-  Widget _buildSecondaryControlRow(BuildContext context, SensorProvider p) {
     void guard(VoidCallback act) {
       if (!p.isOperator) {
         _showOperatorOnlySnack(context);
@@ -766,53 +819,61 @@ class ClimateDashboardPage extends StatelessWidget {
     }
 
     if (p.isVaccineRack) {
-      return Row(children: [
-        Expanded(
-          child: _buildTactileActionCard(
-            title: 'Kipas Darurat',
-            status: p.device1Data.isKipasAktif ? 'Menyala' : 'Siaga',
-            icon: Icons.air_rounded,
-            isActive: p.device1Data.isKipasAktif,
-            activeColor: AppColors.humidityBlue,
-            isRestricted: !p.isOperator,
-            onTap: () => guard(p.toggleKipas),
+      // NODE 1: RAK VAKSIN
+      return Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _buildTactileActionCard(
+                  title: 'Alarm Sirine',
+                  status: p.buzzerActive ? 'Alarm Berbunyi' : 'Siaga Darurat',
+                  icon: Icons.notifications_active_rounded,
+                  isActive: p.buzzerActive,
+                  activeColor: AppColors.warningAmber,
+                  isRestricted: !p.isOperator,
+                  onTap: () => guard(p.toggleBuzzer),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: _buildTactileActionCard(
+                  title: 'Kipas Darurat',
+                  status: p.device1Data.isKipasAktif ? 'Menyala' : 'Siaga',
+                  icon: Icons.air_rounded,
+                  isActive: p.device1Data.isKipasAktif,
+                  activeColor: AppColors.humidityBlue,
+                  isRestricted: !p.isOperator,
+                  onTap: () => guard(p.toggleKipas),
+                ),
+              ),
+            ],
           ),
-        ),
-        const SizedBox(width: AppSpacing.md),
-        Expanded(
-          child: _buildTactileActionCard(
-            title: 'Pompa Mini',
-            status: p.device1Data.isPompaAktif ? 'Menyala' : 'Siaga',
-            icon: Icons.water_drop_outlined,
-            isActive: p.device1Data.isPompaAktif,
-            activeColor: AppColors.pharmaTeal,
-            isRestricted: !p.isOperator,
-            onTap: () => guard(p.togglePompa),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            children: [
+              Expanded(
+                child: _buildTactileActionCard(
+                  title: 'Pompa Mini',
+                  status: p.device1Data.isPompaAktif ? 'Menyala' : 'Siaga',
+                  icon: Icons.water_drop_outlined,
+                  isActive: p.device1Data.isPompaAktif,
+                  activeColor: AppColors.pharmaTeal,
+                  isRestricted: !p.isOperator,
+                  onTap: () => guard(p.togglePompa),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              const Expanded(child: SizedBox.shrink()),
+            ],
           ),
-        ),
-      ]);
+        ],
+      );
     }
-    return Row(children: [
-      Expanded(
-        child: _buildTactileActionCard(
-          title: 'LED Indikator',
-          status: p.device2Data.isLedBahaya ? 'Mode Bahaya' : 'Mode Aman',
-          icon: Icons.lightbulb_outline_rounded,
-          isActive: p.device2Data.isLedBahaya,
-          activeColor: AppColors.alertRed,
-          isRestricted: !p.isOperator,
-          onTap: () => guard(p.toggleLed),
-        ),
-      ),
-      const SizedBox(width: AppSpacing.md),
-      const Expanded(child: SizedBox.shrink()),
-    ]);
-  }
 
-  Widget _buildPrimaryControlRow(BuildContext context, SensorProvider p, SensorModel s) {
+    // NODE 2: RUANG STERIL & KEAMANAN
     return Row(
       children: [
-        // UV Sterilization Tile
         Expanded(
           child: _buildTactileActionCard(
             title: 'Sterilisasi UV-C',
@@ -838,22 +899,15 @@ class ClimateDashboardPage extends StatelessWidget {
           ),
         ),
         const SizedBox(width: AppSpacing.md),
-        // Buzzer Alarm Tile
         Expanded(
           child: _buildTactileActionCard(
-            title: 'Alarm Sirine',
-            status: p.buzzerActive ? 'Alarm Berbunyi' : 'Siaga Darurat',
-            icon: Icons.notifications_active_rounded,
-            isActive: p.buzzerActive,
-            activeColor: AppColors.warningAmber,
+            title: 'LED Indikator',
+            status: p.device2Data.isLedBahaya ? 'Mode Bahaya' : 'Mode Aman',
+            icon: Icons.lightbulb_outline_rounded,
+            isActive: p.device2Data.isLedBahaya,
+            activeColor: AppColors.alertRed,
             isRestricted: !p.isOperator,
-            onTap: () {
-              if (!p.isOperator) {
-                _showOperatorOnlySnack(context);
-                return;
-              }
-              p.toggleBuzzer();
-            },
+            onTap: () => guard(p.toggleLed),
           ),
         ),
       ],

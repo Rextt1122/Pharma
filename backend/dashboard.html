@@ -1687,6 +1687,7 @@
                   <div class="sim-check-group">
                     <label><input type="checkbox" id="sim1_kipas" /> <span>Kipas</span></label>
                     <label><input type="checkbox" id="sim1_buzzer" /> <span>Sirine</span></label>
+                    <label><input type="checkbox" id="sim1_pompa" /> <span>Pompa Mini</span></label>
                   </div>
                   <button type="submit" class="btn btn-primary" id="btnSubmitSim1" style="padding:8px 16px;">
                     <span>Kirim Node 1</span>
@@ -2964,10 +2965,14 @@
       document.getElementById('btnUv1').classList.toggle('active', v === 1);
     }
 
-    function presetSim1(suhu, kelembapan, gas) {
+    function presetSim1(suhu, kelembapan, gas, fan = 0, buzzer = 0, pompa = 0) {
       document.getElementById('sim1_suhu').value = suhu;
       document.getElementById('sim1_kelembapan').value = kelembapan;
       document.getElementById('sim1_gas').value = gas;
+      document.getElementById('sim1_kipas').checked = fan === 1;
+      document.getElementById('sim1_buzzer').checked = buzzer === 1;
+      const pompaEl = document.getElementById('sim1_pompa');
+      if (pompaEl) pompaEl.checked = pompa === 1;
       showToast(`Preset: ${suhu}°C, ${kelembapan}%, ${gas} PPM`);
     }
 
@@ -2992,6 +2997,7 @@
         cahaya: 160.0,
         status_kipas: document.getElementById('sim1_kipas').checked ? 1 : 0,
         status_buzzer: document.getElementById('sim1_buzzer').checked ? 1 : 0,
+        status_pompa: document.getElementById('sim1_pompa').checked ? 1 : 0,
         status_pintu: 0,
         status_uv: 0
       };
