@@ -262,4 +262,57 @@ H. Fungsi Tombol Kontrol & Simulasi di Web Dashboard:
       - 'Steril 19.5 C'   : Kirim data suhu ruangan sterilisasi (rentang 15 - 25 °C). Indikator: Aman (Hijau).
       - 'Suhu 9.6 C'      : Simulasi suhu naik melebihi batas aman vaksin (> 8 °C). Indikator: Peringatan (Kuning).
       - 'Alert Gas'       : Simulasi kebocoran gas berbahaya (> 50 ppm) & pintu terbuka. Indikator: Bahaya (Merah).
+
+I. Lokasi File Dashboard di Server & Laptop:
+   - Di Cloud VPS Server  : /home/azureuser/backend/dashboard.html
+   - Di Script FastAPI    : /home/azureuser/backend/main.py (Endpoint @app.get("/dashboard"))
+   - Di Project Laptop    : backend/dashboard.html & backend/main.py
+   - Akses via Browser    : https://api.pharma.web.id/dashboard
+
+
+[11] PENJELASAN TEKNIS FRONTEND WEB DASHBOARD (JAWABAN DOSEN / PENGUJI)
+--------------------------------------------------------------------------------
+
+A. Jika Dosen Bertanya: "Frontend web dashboard ini dibuat pakai framework apa?
+   Kan backend-nya pakai FastAPI (Python)?"
+
+   JAWABAN TEPAT & BERBOBOT:
+   "Frontend Web Dashboard ini dibangun menggunakan arsitektur:
+    Lightweight Embedded Single Page Application (SPA) berbasis HTML5,
+    Modern Native CSS, dan Vanilla JavaScript (ES6+).
+
+    Kami sengaja tidak menggunakan framework berat seperti React atau Next.js
+    karena beberapa pertimbangan teknis arsitektur:
+
+    1. Zero-Build Pipeline & Hemat Resource Server:
+       File dashboard.html dilayani langsung oleh FastAPI lewat HTMLResponse.
+       Tidak membutuhkan Node.js runtime terpisah di VPS, sehingga konsumsi
+       RAM container backend tetap sangat ringan (~41 MB saja).
+
+    2. Kecepatan Akses (Instant Load):
+       Karena tidak ada bundle JavaScript berukuran megabyte yang harus di-compile,
+       First Contentful Paint (FCP) dan LCP halaman dashboard tercapai di bawah
+       0.5 detik, bahkan dengan koneksi jaringan seluler standar.
+
+    3. Komunikasi Data Asynchronous (REST API & MQTT):
+       - Frontend mengambil data secara asinkron menggunakan Fetch API bawaan browser.
+       - Autentikasi menggunakan JWT Bearer Token dengan pembagian role 'operator' dan 'user'.
+       - Terintegrasi dengan endpoint /kirim-data dan /control/{device} yang otomatis
+         mem-broadcast payload ke Broker MQTT Mosquitto port 1883/9001.
+
+    4. Desain Modern & Responsif:
+       - Menggunakan CSS Grid dan Flexbox modern dengan variabel CSS untuk Dark Mode
+         dan Light Mode.
+       - Tipografi rapi menggunakan font 'Plus Jakarta Sans'.
+       - Indikator gauge busur lingkaran dinamis menggunakan elemen kurva SVG (Scalable Vector Graphics)."
+
+B. Jika Dosen Bertanya: "Lalu apa bedanya Web Dashboard ini dengan Aplikasi Flutter di HP?"
+
+   JAWABAN:
+   - "Aplikasi Flutter Android adalah Client Mobile Operasional bagi staf/teknisi lapangan
+      untuk memantau kondisi suhu cold-chain secara realtime lewat protokol MQTT,
+      menerima notifikasi darurat lokal, serta kendali saklar saat berada di gudang."
+   - "Sedangkan Web Dashboard adalah Central Admin Console berbasis browser yang ditujukan
+      untuk manajemen akun pengguna (tambah/edit/hapus staf), simulasi pengujian data IoT,
+      inspeksi endpoint REST API (Workbench & Swagger), serta ekspor laporan riwayat ke CSV."
 ================================================================================

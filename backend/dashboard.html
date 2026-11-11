@@ -1,0 +1,2939 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Pharma - Live Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root[data-theme="dark"] {
+      --bg-canvas: #071315;
+      --bg-sidebar: #0b1c1f;
+      --bg-card: #0f2529;
+      --bg-card-hover: #143035;
+      --bg-input: #091719;
+      --bg-code: #060f11;
+      --border: rgba(67, 154, 134, 0.16);
+      --border-strong: rgba(67, 154, 134, 0.28);
+      --text-main: #eef7f6;
+      --text-secondary: #9cb8b5;
+      --text-muted: #627d7f;
+      --pharma-navy: #0e555a;
+      --pharma-blue: #1f7a7c;
+      --accent: #439a86;
+      --accent-bright: #3ecf8e;
+      --accent-hover: #358270;
+      --accent-tint: rgba(67, 154, 134, 0.15);
+      --danger: #e06358;
+      --danger-tint: rgba(224, 99, 88, 0.15);
+      --warn: #d9822b;
+      --warn-tint: rgba(217, 130, 43, 0.15);
+      --info: #287c9e;
+      --info-tint: rgba(40, 124, 158, 0.16);
+      --card-shadow: 0 10px 28px -10px rgba(0, 0, 0, 0.45);
+      --watermark-opacity: 0.07;
+    }
+
+    :root[data-theme="light"] {
+      --bg-canvas: #f3f7f6;
+      --bg-sidebar: #ffffff;
+      --bg-card: #ffffff;
+      --bg-card-hover: #eaf1f0;
+      --bg-input: #eaf1f0;
+      --bg-code: #102a2c;
+      --border: #d5e5e2;
+      --border-strong: #bdd4d0;
+      --text-main: #102a2c;
+      --text-secondary: #4a6668;
+      --text-muted: #627d7f;
+      --pharma-navy: #0e555a;
+      --pharma-blue: #1f7a7c;
+      --accent: #0e555a;
+      --accent-bright: #1e8e68;
+      --accent-hover: #1f7a7c;
+      --accent-tint: rgba(14, 85, 90, 0.09);
+      --danger: #d63d42;
+      --danger-tint: rgba(214, 61, 66, 0.10);
+      --warn: #d9822b;
+      --warn-tint: rgba(217, 130, 43, 0.12);
+      --info: #287c9e;
+      --info-tint: rgba(40, 124, 158, 0.11);
+      --card-shadow: 0 8px 24px -8px rgba(14, 85, 90, 0.08);
+      --watermark-opacity: 0.06;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 88px;
+    }
+
+    #clusterSection,
+    #simulatorSection,
+    #usersSection,
+    #workbenchSection,
+    #historySection,
+    section[id],
+    .panel[id] {
+      scroll-margin-top: 88px;
+    }
+
+    .sim-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    @media (max-width: 960px) {
+      .sim-grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .sim-dev-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sim-dev-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sim-dev-title {
+      font-size: 13.5px;
+      font-weight: 800;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sim-fields-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    @media (max-width: 600px) {
+      .sim-fields-3 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .sim-item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .sim-item label {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--text-secondary);
+    }
+
+    .sim-item input[type="number"] {
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      background: var(--bg-input);
+      border: 1px solid var(--border-strong);
+      border-radius: 10px;
+      padding: 9px 12px;
+      color: var(--text-main);
+      width: 100%;
+      outline: none;
+      transition: all 0.15s ease;
+    }
+
+    .sim-item input[type="number"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-tint);
+    }
+
+    .sim-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .sim-check-group {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .sim-check-group label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    body {
+      background-color: var(--bg-canvas);
+      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      min-height: 100dvh;
+      display: grid;
+      grid-template-columns: 268px 1fr;
+    }
+
+    .mono {
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Consolas, monospace;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      background-color: var(--bg-sidebar);
+      border-right: 1px solid var(--border);
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      position: sticky;
+      top: 0;
+      height: 100dvh;
+      overflow-y: auto;
+    }
+
+    .brand-box {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(14, 85, 90, 0.16), rgba(67, 154, 134, 0.06));
+      border: 1px solid var(--border-strong);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .brand-logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(145deg, #0e555a 0%, #1f7a7c 55%, #439a86 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.28), 0 6px 14px rgba(14, 85, 90, 0.35);
+      border: 1px solid rgba(255,255,255,0.18);
+    }
+
+    .brand-title {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--text-main);
+      line-height: 1.15;
+    }
+
+    .brand-meta {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 4px;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: var(--accent-tint);
+      color: var(--accent-bright);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    :root[data-theme="light"] .brand-meta {
+      color: var(--pharma-navy);
+    }
+
+    .pulse-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent-bright);
+      box-shadow: 0 0 0 3px rgba(62, 207, 142, 0.2);
+    }
+
+    .user-profile-bar {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 9px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: var(--card-shadow);
+      transition: all 0.15s ease;
+    }
+
+
+
+    .user-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5px;
+    }
+
+    .user-name {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.25;
+    }
+
+    .user-role-wrap {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .user-status-dot {
+      width: 6.5px;
+      height: 6.5px;
+      border-radius: 50%;
+      background: var(--accent-bright);
+      box-shadow: 0 0 0 2.5px rgba(62, 207, 142, 0.25);
+      flex-shrink: 0;
+    }
+
+    .user-status-dot.offline {
+      background: var(--text-muted);
+      box-shadow: none;
+    }
+
+    .user-role-text {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      letter-spacing: 0.03em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .user-actions {
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .user-action-btn {
+      appearance: none;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .user-action-btn:hover {
+      background: var(--danger-tint);
+      color: #f87171;
+      border-color: rgba(224, 99, 88, 0.35);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      border-radius: 7px;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1.1;
+    }
+
+    .badge-ok { background: var(--accent-tint); color: var(--accent-bright); }
+    :root[data-theme="light"] .badge-ok { color: var(--pharma-navy); }
+    .badge-warn { background: var(--warn-tint); color: var(--warn); }
+    .badge-danger { background: var(--danger-tint); color: var(--danger); }
+    .badge-info { background: var(--info-tint); color: var(--info); }
+
+    .session-user {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-main);
+      word-break: break-all;
+    }
+
+    .nav-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .nav-group-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      padding: 0 10px 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .nav-btn {
+      appearance: none;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-secondary);
+      text-align: left;
+      padding: 9px 11px;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      text-decoration: none;
+      transition: all 0.15s ease;
+    }
+
+    .nav-btn-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .nav-icon {
+      width: 17px;
+      height: 17px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.9;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex-shrink: 0;
+    }
+
+    .nav-btn:hover {
+      background: var(--bg-card);
+      color: var(--text-main);
+    }
+
+    .nav-btn.active {
+      background: var(--accent-tint);
+      color: var(--accent-bright);
+      border-color: var(--border-strong);
+    }
+
+    :root[data-theme="light"] .nav-btn.active {
+      color: var(--pharma-navy);
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .brand-stamp {
+      margin-top: 10px;
+      padding: 10px 8px 2px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      opacity: 0.72;
+      text-align: center;
+    }
+
+    .brand-stamp-title {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      color: var(--text-secondary);
+    }
+
+    /* Main Content */
+    .main-wrap {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background: linear-gradient(125deg, #0e555a 0%, #143e42 60%, #0b292c 100%);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 16px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      overflow: hidden;
+    }
+
+    .topbar-wave {
+      position: absolute;
+      right: 0;
+      top: 0;
+      height: 100%;
+      width: 420px;
+      pointer-events: none;
+      opacity: 0.22;
+    }
+
+    .topbar-left {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .topbar-badge-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 11px;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      display: grid;
+      place-items: center;
+      color: #ffffff;
+    }
+
+    .topbar-left h1 {
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #ffffff;
+    }
+
+    .topbar-time {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.78);
+      margin-top: 2px;
+    }
+
+    .topbar-actions {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      appearance: none;
+      border: 1px solid var(--border-strong);
+      background: var(--bg-card);
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 700;
+      padding: 8px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      text-decoration: none;
+      transition: all 0.15s ease;
+    }
+
+    .btn:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--accent);
+    }
+
+    .btn:active { transform: scale(0.98); }
+
+    .btn-header {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.22);
+      color: #ffffff;
+    }
+
+    .btn-header:hover {
+      background: rgba(255, 255, 255, 0.2);
+      border-color: #ffffff;
+    }
+
+    .btn-header-icon {
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      border-radius: 11px;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      color: #ffffff;
+      display: inline-grid;
+      place-items: center;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .btn-header-icon:hover {
+      background: rgba(255, 255, 255, 0.24);
+      border-color: #ffffff;
+      transform: translateY(-1px);
+    }
+
+    .btn-header-icon:active {
+      transform: scale(0.95);
+    }
+
+    .btn-primary {
+      background: var(--pharma-navy);
+      border-color: var(--accent);
+      color: #ffffff;
+    }
+
+    .btn-primary:hover {
+      background: var(--pharma-blue);
+    }
+
+    .content {
+      padding: 24px 28px 60px;
+      width: 100%;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    .card-watermark {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      width: 105px;
+      height: 105px;
+      pointer-events: none;
+      opacity: var(--watermark-opacity);
+    }
+
+    .node-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+
+    .node-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--card-shadow);
+    }
+
+    .node-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .node-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .icon-tile {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--accent-tint);
+      border: 1px solid var(--border-strong);
+      display: grid;
+      place-items: center;
+      color: var(--accent-bright);
+      flex-shrink: 0;
+    }
+
+    :root[data-theme="light"] .icon-tile {
+      color: var(--pharma-navy);
+    }
+
+    .node-name {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .node-meta {
+      font-size: 12px;
+      color: var(--text-secondary);
+      position: relative;
+      z-index: 1;
+    }
+
+    .telemetry-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr) 1.2fr;
+      gap: 14px;
+    }
+
+    .metric-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--card-shadow);
+    }
+
+    .metric-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .metric-label-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .metric-label {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      color: var(--text-secondary);
+    }
+
+    .gauge-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      position: relative;
+      z-index: 1;
+      margin: 4px 0;
+    }
+
+    .metric-value {
+      font-size: 31px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--text-main);
+    }
+
+    .arc-svg {
+      width: 68px;
+      height: 44px;
+      overflow: visible;
+      flex-shrink: 0;
+    }
+
+    .metric-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-muted);
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+      position: relative;
+      z-index: 1;
+    }
+
+    .sim-btns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .sim-btn {
+      padding: 8px 10px;
+      font-size: 12px;
+      justify-content: flex-start;
+    }
+
+    .workbench {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: var(--card-shadow);
+    }
+
+    .panel-header {
+      padding: 15px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .panel-title {
+      font-size: 15px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .search-box {
+      background: var(--bg-input);
+      border: 1px solid var(--border-strong);
+      color: var(--text-main);
+      padding: 7px 12px;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 12.5px;
+      width: 200px;
+    }
+
+    .endpoint-list {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .cat-header {
+      padding: 10px 20px 6px;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--accent-bright);
+      background: rgba(67, 154, 134, 0.05);
+      border-bottom: 1px solid var(--border);
+    }
+
+    :root[data-theme="light"] .cat-header {
+      color: var(--pharma-navy);
+    }
+
+    .ep-item {
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      cursor: pointer;
+      transition: background 0.12s ease;
+    }
+
+    .ep-item:hover {
+      background: var(--bg-card-hover);
+    }
+
+    .ep-item.selected {
+      background: var(--accent-tint);
+      border-left: 3px solid var(--accent-bright);
+    }
+
+    .ep-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .method-tag {
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 8px;
+      border-radius: 7px;
+      min-width: 58px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .m-GET { background: rgba(40, 124, 158, 0.2); color: #5bc0de; }
+    :root[data-theme="light"] .m-GET { color: #1b627c; }
+    .m-POST { background: rgba(67, 154, 134, 0.2); color: #3ecf8e; }
+    :root[data-theme="light"] .m-POST { color: #0e555a; }
+    .m-DELETE { background: rgba(224, 99, 88, 0.2); color: #f28b82; }
+    :root[data-theme="light"] .m-DELETE { color: #c0392b; }
+
+    .ep-path {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .ep-desc {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .inspector {
+      position: sticky;
+      top: 84px;
+    }
+
+    .inspector-body {
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-secondary);
+    }
+
+    .input-ctrl,
+    .textarea-ctrl,
+    select.input-ctrl {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border-strong);
+      border-radius: 11px;
+      padding: 10px 14px;
+      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      font-size: 13.5px;
+      font-weight: 600;
+      line-height: 1.45;
+      outline: none;
+      transition: all 0.15s ease;
+    }
+
+    .input-ctrl:focus,
+    .textarea-ctrl:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-tint);
+    }
+
+    .role-toggle-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-strong);
+      border-radius: 12px;
+      padding: 4px;
+    }
+
+    .role-toggle-btn {
+      appearance: none;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 9px;
+      padding: 9px 12px;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .role-toggle-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .role-toggle-btn.active {
+      background: var(--pharma-navy);
+      border-color: var(--accent);
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(14, 85, 90, 0.35);
+    }
+
+    :root[data-theme="light"] .role-toggle-btn.active {
+      background: #0e555a;
+      border-color: #0e555a;
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(14, 85, 90, 0.2);
+    }
+
+    .textarea-ctrl {
+      min-height: 115px;
+      resize: vertical;
+      line-height: 1.45;
+    }
+
+    .response-box {
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      color: #d8f3dc;
+      font-size: 12px;
+      max-height: 320px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    th {
+      padding: 11px 16px;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border);
+      background: rgba(67, 154, 134, 0.04);
+    }
+
+    td {
+      padding: 11px 16px;
+      font-size: 12.5px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.72);
+      display: none;
+      place-items: center;
+      z-index: 100;
+      padding: 16px;
+    }
+
+    .modal-backdrop.open { display: grid; }
+
+    .modal-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-strong);
+      border-radius: 18px;
+      width: 100%;
+      max-width: 420px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    @media (max-width: 1100px) {
+      .node-grid, .telemetry-grid { grid-template-columns: repeat(2, 1fr); }
+      .workbench { grid-template-columns: 1fr; }
+      .inspector { position: static; }
+    }
+
+    @media (max-width: 768px) {
+      body { grid-template-columns: 1fr; }
+      .sidebar { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
+      .node-grid, .telemetry-grid { grid-template-columns: 1fr; }
+    }
+
+    .btn-danger {
+      background: var(--danger-tint);
+      border-color: rgba(224, 99, 88, 0.45);
+      color: #f87171;
+    }
+    :root[data-theme="light"] .btn-danger { color: #c0392b; }
+    .btn-danger:hover { background: var(--danger); color: #ffffff; }
+
+    .btn-warn {
+      background: var(--warn-tint);
+      border-color: rgba(217, 130, 43, 0.45);
+      color: #f59e0b;
+    }
+    :root[data-theme="light"] .btn-warn { color: #b86814; }
+    .btn-warn:hover { background: var(--warn); color: #ffffff; }
+
+    .btn-sm {
+      padding: 5px 9px;
+      font-size: 11.5px;
+      border-radius: 8px;
+    }
+
+    .user-cell {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      background: var(--accent-tint);
+      color: var(--accent-bright);
+      font-weight: 800;
+      font-size: 13px;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      border: 1px solid var(--border);
+    }
+    :root[data-theme="light"] .user-avatar { color: var(--pharma-navy); }
+
+    .action-group {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      justify-content: flex-end;
+    }
+
+    .toast-stack {
+      position: fixed;
+      bottom: 22px;
+      right: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 200;
+    }
+
+    .toast {
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      background: var(--bg-card);
+      border: 1px solid var(--border-strong);
+      color: var(--text-main);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.4);
+      animation: toastIn 0.2s ease;
+    }
+    .toast.ok { border-left: 4px solid var(--accent-bright); }
+    .toast.err { border-left: 4px solid var(--danger); }
+
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+  </style>
+</head>
+<body>
+
+  <svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="vec-botanic" viewBox="0 0 110 110">
+      <path d="M16 104 Q55 60 94 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+      <g transform="translate(38,79) rotate(-37)">
+        <path d="M0 0 Q11 -9 24 0 Q11 9 0 0 Z" fill="currentColor" fill-opacity="0.35" stroke="currentColor" stroke-width="1.6"/>
+        <line x1="0" y1="0" x2="18" y2="0" stroke="currentColor" stroke-width="1"/>
+      </g>
+      <g transform="translate(46,71) rotate(43)">
+        <path d="M0 0 Q10 -8 22 0 Q10 8 0 0 Z" fill="currentColor" fill-opacity="0.35" stroke="currentColor" stroke-width="1.6"/>
+        <line x1="0" y1="0" x2="16" y2="0" stroke="currentColor" stroke-width="1"/>
+      </g>
+      <g transform="translate(62,53) rotate(-40)">
+        <path d="M0 0 Q12 -10 26 0 Q12 10 0 0 Z" fill="currentColor" fill-opacity="0.35" stroke="currentColor" stroke-width="1.6"/>
+        <line x1="0" y1="0" x2="19" y2="0" stroke="currentColor" stroke-width="1"/>
+      </g>
+      <g transform="translate(70,44) rotate(39)">
+        <path d="M0 0 Q11 -9 24 0 Q11 9 0 0 Z" fill="currentColor" fill-opacity="0.35" stroke="currentColor" stroke-width="1.6"/>
+        <line x1="0" y1="0" x2="18" y2="0" stroke="currentColor" stroke-width="1"/>
+      </g>
+      <g transform="translate(82,26) rotate(-18)">
+        <path d="M0 0 Q13 -10 28 0 Q13 10 0 0 Z" fill="currentColor" fill-opacity="0.45" stroke="currentColor" stroke-width="1.6"/>
+      </g>
+    </symbol>
+
+    <symbol id="vec-pharma-logo" viewBox="0 0 40 40">
+      <path d="M20 4 C11 4 6 10 6 19 C6 28 13 34 20 36 C27 34 34 28 34 19 C34 10 29 4 20 4 Z" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"/>
+      <path d="M20 12 Q27 6 31 11 Q27 17 20 14 Z" fill="#74e3b8"/>
+      <rect x="17.5" y="12" width="5" height="16" rx="2" fill="#ffffff"/>
+      <rect x="12" y="17.5" width="16" height="5" rx="2" fill="#ffffff"/>
+      <circle cx="20" cy="20" r="1.8" fill="#0e555a"/>
+    </symbol>
+
+    <symbol id="vec-pot-stamp" viewBox="0 0 36 36">
+      <path d="M18 21 Q13 9 18 2 Q23 9 18 21 Z" fill="#3d8063"/>
+      <path d="M16.5 21 Q6 16 7 7 Q15 10 17 19.5 Z" fill="#56796c"/>
+      <path d="M19.5 21 Q30 16 29 7 Q21 10 19 19.5 Z" fill="#6a9986"/>
+      <path d="M10 20 L26 20 L23.5 31.5 Q18 34 12.5 31.5 Z" fill="rgba(67,154,134,0.18)" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+      <line x1="9" y1="20" x2="27" y2="20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      <rect x="16.9" y="23" width="2.2" height="6.6" rx="1" fill="currentColor"/>
+      <rect x="14.7" y="25.2" width="6.6" height="2.2" rx="1" fill="currentColor"/>
+    </symbol>
+  </svg>
+
+  <aside class="sidebar">
+    <div class="brand-box">
+      <div class="brand-logo">
+        <svg width="28" height="28"><use href="#vec-pharma-logo"/></svg>
+      </div>
+      <div>
+        <div class="brand-title">Smart Pharma</div>
+        <div class="brand-meta mono">
+          <span class="pulse-dot"></span>
+          <span>CLOUD v2.2</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="user-profile-bar" id="userProfileBar">
+      <div class="user-info">
+        <div class="user-name" id="userNameText">Ren</div>
+        <div class="user-role-wrap">
+          <span class="user-status-dot" id="userStatusDot"></span>
+          <span class="user-role-text" id="userRoleText">OPERATOR</span>
+        </div>
+      </div>
+      <div class="user-actions">
+        <button class="user-action-btn" id="logoutBtn" onclick="logoutSession()" title="Keluar Akun" aria-label="Keluar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+        </button>
+        <button class="btn btn-primary" id="loginBtn" onclick="openLoginModal()" style="display:none; padding:6px 12px; font-size:11.5px;">
+          Login
+        </button>
+      </div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-title">Menu</div>
+      <a href="#clusterSection" class="nav-btn active">
+        <span class="nav-btn-left">
+          <svg class="nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/></svg>
+          <span>Overview</span>
+        </span>
+        <span class="mono" style="font-size:11px;">LIVE</span>
+      </a>
+      <a href="#simulatorSection" class="nav-btn">
+        <span class="nav-btn-left">
+          <svg class="nav-icon" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>
+          <span>Simulator IoT</span>
+        </span>
+        <span class="mono" style="font-size:11px;">ESP32</span>
+      </a>
+      <a href="#usersSection" class="nav-btn">
+        <span class="nav-btn-left">
+          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span>Manajemen User</span>
+        </span>
+        <span id="navUserBadge" class="mono" style="font-size:11px;">-</span>
+      </a>
+      <a href="#workbenchSection" class="nav-btn">
+        <span class="nav-btn-left">
+          <svg class="nav-icon" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          <span>Endpoints</span>
+        </span>
+        <span class="mono" style="font-size:11px;">12</span>
+      </a>
+      <a href="#historySection" class="nav-btn">
+        <span class="nav-btn-left">
+          <svg class="nav-icon" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+          <span>Riwayat</span>
+        </span>
+        <span class="mono" style="font-size:11px;">SQL</span>
+      </a>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-title">Filter</div>
+      <button class="nav-btn" onclick="filterCategory('all')">
+        <span class="nav-btn-left">
+          <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+          <span>Semua</span>
+        </span>
+      </button>
+      <button class="nav-btn" onclick="filterCategory('Telemetri')">
+        <span class="nav-btn-left">
+          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>
+          <span>Telemetri</span>
+        </span>
+      </button>
+      <button class="nav-btn" onclick="filterCategory('Autentikasi')">
+        <span class="nav-btn-left">
+          <svg class="nav-icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span>Autentikasi</span>
+        </span>
+      </button>
+      <button class="nav-btn" onclick="filterCategory('Staf')">
+        <span class="nav-btn-left">
+          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span>Staf</span>
+        </span>
+      </button>
+    </div>
+
+    <div class="sidebar-footer">
+      <a href="/docs" class="nav-btn">
+        <span class="nav-btn-left">
+          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span>Swagger UI (/docs)</span>
+        </span>
+      </a>
+      <a href="/redoc" class="nav-btn">
+        <span class="nav-btn-left">
+          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          <span>ReDoc</span>
+        </span>
+      </a>
+      <a href="https://portainer.pharma.web.id" target="_blank" class="nav-btn">
+        <span class="nav-btn-left">
+          <svg class="nav-icon" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/></svg>
+          <span>Portainer 4-Node</span>
+        </span>
+      </a>
+      <div class="brand-stamp">
+        <svg width="30" height="30"><use href="#vec-pot-stamp"/></svg>
+        <div class="brand-stamp-title">PHARMA MEDIC</div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main-wrap">
+    <header class="topbar">
+      <svg class="topbar-wave" viewBox="0 0 420 90" preserveAspectRatio="none">
+        <path d="M0 90 Q120 10 260 45 T420 15 L420 90 Z" fill="#439a86"/>
+        <path d="M80 90 Q210 25 330 60 T420 35 L420 90 Z" fill="#ffffff" fill-opacity="0.35"/>
+      </svg>
+
+      <div class="topbar-left">
+        <div class="topbar-badge-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+        </div>
+        <div>
+          <h1>Dashboard</h1>
+          <div id="liveClock" class="topbar-time mono">...</div>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <a class="btn-header-icon" href="/docs" target="_blank" rel="noopener noreferrer" title="Dokumentasi Swagger API (/docs)" aria-label="Buka Swagger Docs">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+          </svg>
+        </a>
+        <button class="btn-header-icon" id="topbarRefreshBtn" onclick="triggerManualRefresh()" title="Muat Ulang Data (Refresh)" aria-label="Muat Ulang Data">
+          <svg id="refreshIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M23 4v6h-6"/>
+            <path d="M1 20v-6h6"/>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+          </svg>
+        </button>
+        <button class="btn-header-icon" id="themeBtn" onclick="toggleTheme()" title="Ubah Mode Tema" aria-label="Ubah Mode Tema">
+        </button>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <!-- 4-Node Architecture Status -->
+      <section id="clusterSection" class="node-grid">
+        <div class="node-card">
+          <svg class="card-watermark"><use href="#vec-botanic"/></svg>
+          <div class="node-head">
+            <div class="node-title-wrap">
+              <div class="icon-tile">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+              </div>
+              <span class="node-name">Node 1</span>
+            </div>
+            <span class="badge badge-ok">UP</span>
+          </div>
+          <div class="node-meta mono">FastAPI :8001</div>
+        </div>
+
+        <div class="node-card">
+          <svg class="card-watermark"><use href="#vec-botanic"/></svg>
+          <div class="node-head">
+            <div class="node-title-wrap">
+              <div class="icon-tile">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+              </div>
+              <span class="node-name">Node 2</span>
+            </div>
+            <span class="badge badge-ok">UP</span>
+          </div>
+          <div id="dbRecordCount" class="node-meta mono">MySQL :3306</div>
+        </div>
+
+        <div class="node-card">
+          <svg class="card-watermark"><use href="#vec-botanic"/></svg>
+          <div class="node-head">
+            <div class="node-title-wrap">
+              <div class="icon-tile">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+              </div>
+              <span class="node-name">Node 3</span>
+            </div>
+            <span class="badge badge-ok">UP</span>
+          </div>
+          <div class="node-meta mono">MQTT :1883</div>
+        </div>
+
+        <div class="node-card">
+          <svg class="card-watermark"><use href="#vec-botanic"/></svg>
+          <div class="node-head">
+            <div class="node-title-wrap">
+              <div class="icon-tile">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+              </div>
+              <span class="node-name">Node 4</span>
+            </div>
+            <span class="badge badge-ok">UP</span>
+          </div>
+          <div class="node-meta mono">Auto-Backup</div>
+        </div>
+      </section>
+
+      <!-- Live Telemetry Cards with Curved SVG Radial Arc Gauges -->
+      <section class="telemetry-grid">
+        <div class="metric-card">
+          <svg class="card-watermark"><use href="#vec-botanic"/></svg>
+          <div class="metric-top">
+            <div class="metric-label-wrap">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-bright)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>
+              <span class="metric-label">SUHU</span>
+            </div>
+            <span id="tempStatusBadge" class="badge badge-ok">Optimal</span>
+          </div>
+          <div class="gauge-row">
+            <div id="valTemp" class="metric-value mono">--.- C</div>
+            <svg class="arc-svg" viewBox="0 0 80 50">
+              <path d="M 8 42 A 32 32 0 0 1 72 42" fill="none" stroke="var(--border-strong)" stroke-width="7" stroke-linecap="round"/>
+              <path id="tempArc" d="M 8 42 A 32 32 0 0 1 72 42" fill="none" stroke="var(--accent-bright)" stroke-width="7" stroke-linecap="round" stroke-dasharray="100.5" stroke-dashoffset="65"/>
+            </svg>
+          </div>
+          <div class="metric-foot">
+            <span>2 - 8 C</span>
+            <span id="valAvgTemp" class="mono">Avg: --</span>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <svg class="card-watermark"><use href="#vec-botanic"/></svg>
+          <div class="metric-top">
+            <div class="metric-label-wrap">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--info)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+              <span class="metric-label">KELEMBAPAN</span>
+            </div>
+            <span class="badge badge-info">RH</span>
+          </div>
+          <div class="gauge-row">
+            <div id="valHum" class="metric-value mono">--.- %</div>
+            <svg class="arc-svg" viewBox="0 0 80 50">
+              <path d="M 8 42 A 32 32 0 0 1 72 42" fill="none" stroke="var(--border-strong)" stroke-width="7" stroke-linecap="round"/>
+              <path id="humArc" d="M 8 42 A 32 32 0 0 1 72 42" fill="none" stroke="var(--info)" stroke-width="7" stroke-linecap="round" stroke-dasharray="100.5" stroke-dashoffset="54"/>
+            </svg>
+          </div>
+          <div class="metric-foot">
+            <span>35 - 60 %</span>
+            <span id="valAvgHum" class="mono">Avg: --</span>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <svg class="card-watermark"><use href="#vec-botanic"/></svg>
+          <div class="metric-top">
+            <div class="metric-label-wrap">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-bright)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <span class="metric-label">GAS &amp; PINTU</span>
+            </div>
+            <span id="secBadge" class="badge badge-ok">Aman</span>
+          </div>
+          <div class="gauge-row">
+            <div id="valGas" class="metric-value mono">-- ppm</div>
+            <svg class="arc-svg" viewBox="0 0 80 50">
+              <path d="M 8 42 A 32 32 0 0 1 72 42" fill="none" stroke="var(--border-strong)" stroke-width="7" stroke-linecap="round"/>
+              <path id="gasArc" d="M 8 42 A 32 32 0 0 1 72 42" fill="none" stroke="var(--accent-bright)" stroke-width="7" stroke-linecap="round" stroke-dasharray="100.5" stroke-dashoffset="85"/>
+            </svg>
+          </div>
+          <div class="metric-foot">
+            <span id="valDoor">Tertutup</span>
+            <span id="valUv">UV Off</span>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <svg class="card-watermark"><use href="#vec-botanic"/></svg>
+          <div class="metric-top">
+            <div class="metric-label-wrap">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-bright)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              <span class="metric-label">SIMULASI</span>
+            </div>
+            <span class="badge badge-ok">TEST</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin:2px 0 4px; z-index:1; position:relative;">
+            <span style="font-size:11px; font-weight:700; color:var(--text-secondary);">Aktuator:</span>
+            <div style="display:flex; gap:6px;">
+              <button id="btnUvQuick" class="btn btn-sm" onclick="toggleUvRemote()">UV: OFF</button>
+              <button id="btnBuzzerQuick" class="btn btn-sm" onclick="toggleBuzzerRemote()">Sirine: OFF</button>
+            </div>
+          </div>
+          <div class="sim-btns">
+            <button class="btn sim-btn" onclick="sendQuickTelemetry(4.4, 46.0, 8.5, 0, 0)">Vaksin 4.4 C</button>
+            <button class="btn sim-btn" onclick="sendQuickTelemetry(19.5, 51.0, 9.0, 0, 1)">Steril 19.5 C</button>
+            <button class="btn sim-btn" onclick="sendQuickTelemetry(9.6, 58.0, 14.0, 0, 0)">Suhu 9.6 C</button>
+            <button class="btn sim-btn" onclick="sendQuickTelemetry(5.1, 49.0, 65.0, 1, 0)">Alert Gas</button>
+          </div>
+          <div class="metric-foot">
+            <span id="simFeedback">Siap</span>
+            <a href="#simulatorSection" style="color:var(--accent-bright); text-decoration:none; font-weight:700; font-size:11px; display:inline-flex; align-items:center; gap:4px;">
+              <span>Form Lengkap</span>
+              <span>&rarr;</span>
+            </a>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- Simulasi Perangkat Section -->
+      <section id="simulatorSection" class="panel" style="position:relative; overflow:hidden;">
+        <div class="panel-header" style="position:relative; z-index:1;">
+          <span class="panel-title">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--accent-bright)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="4" y="4" width="16" height="16" rx="2"/>
+              <rect x="9" y="9" width="6" height="6"/>
+              <line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/>
+              <line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/>
+            </svg>
+            <span>Simulasi Perangkat</span>
+          </span>
+          <span class="mono" style="font-size:11.5px; color:var(--text-muted);">Broadcast Realtime &bull; MQTT &amp; Database</span>
+        </div>
+
+        <div style="padding:18px; position:relative; z-index:1;">
+          <div class="sim-grid-2">
+
+            <!-- KARTU DEVICE 1 -->
+            <div class="sim-dev-card">
+              <div class="sim-dev-head">
+                <span class="sim-dev-title">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent-bright)" stroke-width="2.2"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>
+                  <span>Device 1 &bull; Rak Vaksin</span>
+                </span>
+                <div style="display:flex; gap:5px;">
+                  <button type="button" class="btn btn-sm" onclick="presetSim1(4.2, 46.0, 9.0)">Aman (4.2°)</button>
+                  <button type="button" class="btn btn-sm btn-warn" onclick="presetSim1(9.8, 62.0, 14.0)">Bocor (9.8°)</button>
+                  <button type="button" class="btn btn-sm btn-danger" onclick="presetSim1(5.5, 49.0, 68.0)">Gas Bahaya</button>
+                </div>
+              </div>
+
+              <form id="formSim1" onsubmit="event.preventDefault(); submitFormSim1();" style="display:flex; flex-direction:column; gap:12px;">
+                <div class="sim-fields-3">
+                  <div class="sim-item">
+                    <label>Suhu (°C)</label>
+                    <input type="number" id="sim1_suhu" step="0.1" value="4.5" required />
+                  </div>
+                  <div class="sim-item">
+                    <label>Kelembapan (%)</label>
+                    <input type="number" id="sim1_kelembapan" step="0.5" value="48.0" required />
+                  </div>
+                  <div class="sim-item">
+                    <label>Kadar Gas (PPM)</label>
+                    <input type="number" id="sim1_gas" step="0.5" value="12.0" required />
+                  </div>
+                </div>
+
+                <div class="sim-foot">
+                  <div class="sim-check-group">
+                    <label><input type="checkbox" id="sim1_kipas" /> <span>Kipas</span></label>
+                    <label><input type="checkbox" id="sim1_buzzer" /> <span>Sirine</span></label>
+                  </div>
+                  <button type="submit" class="btn btn-primary" id="btnSubmitSim1" style="padding:8px 16px;">
+                    <span>Kirim Node 1</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- KARTU DEVICE 2 -->
+            <div class="sim-dev-card">
+              <div class="sim-dev-head">
+                <span class="sim-dev-title">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--info)" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                  <span>Device 2 &bull; Keamanan &amp; UV</span>
+                </span>
+                <div style="display:flex; gap:5px;">
+                  <button type="button" class="btn btn-sm" onclick="presetSim2(0, 0, 1)">Steril ON</button>
+                  <button type="button" class="btn btn-sm btn-warn" onclick="presetSim2(1, 0, 0)">Pintu Buka</button>
+                  <button type="button" class="btn btn-sm btn-danger" onclick="presetSim2(0, 1, 0)">Ada Orang</button>
+                </div>
+              </div>
+
+              <form id="formSim2" onsubmit="event.preventDefault(); submitFormSim2();" style="display:flex; flex-direction:column; gap:12px;">
+                <div class="sim-fields-3">
+                  <div class="sim-item">
+                    <label>Status Pintu</label>
+                    <input type="hidden" id="sim2_pintu" value="0" />
+                    <div class="role-toggle-group">
+                      <button type="button" class="role-toggle-btn active" id="btnPintu0" onclick="setSim2Pintu(0)">Terkunci</button>
+                      <button type="button" class="role-toggle-btn" id="btnPintu1" onclick="setSim2Pintu(1)">Terbuka</button>
+                    </div>
+                  </div>
+
+                  <div class="sim-item">
+                    <label>Sensor PIR</label>
+                    <input type="hidden" id="sim2_pir" value="0" />
+                    <div class="role-toggle-group">
+                      <button type="button" class="role-toggle-btn active" id="btnPir0" onclick="setSim2Pir(0)">Kosong</button>
+                      <button type="button" class="role-toggle-btn" id="btnPir1" onclick="setSim2Pir(1)">Ada Orang</button>
+                    </div>
+                  </div>
+
+                  <div class="sim-item">
+                    <label>Lampu UV-C</label>
+                    <input type="hidden" id="sim2_uv" value="0" />
+                    <div class="role-toggle-group">
+                      <button type="button" class="role-toggle-btn active" id="btnUv0" onclick="setSim2Uv(0)">Mati</button>
+                      <button type="button" class="role-toggle-btn" id="btnUv1" onclick="setSim2Uv(1)">Menyala</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="sim-foot">
+                  <div style="font-size:11.5px; color:var(--text-muted);">
+                    Safety Interlock otomatis jika ada orang masuk
+                  </div>
+                  <button type="submit" class="btn btn-primary" id="btnSubmitSim2" style="padding:8px 16px;">
+                    <span>Kirim Node 2</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- Live User Management Section -->
+      <section id="usersSection" class="panel" style="position:relative; overflow:hidden;">
+        <svg class="card-watermark"><use href="#vec-botanic"/></svg>
+        <div class="panel-header" style="position:relative; z-index:1;">
+          <span class="panel-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-bright)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            <span>Manajemen Pengguna &amp; Staf</span>
+          </span>
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <input type="text" id="userSearchBox" class="search-box" placeholder="Cari nama, username..." oninput="renderUsersTable()" style="width:170px;" />
+            <select id="userRoleFilter" class="search-box" style="width:120px;" onchange="renderUsersTable()">
+              <option value="all">Semua Role</option>
+              <option value="operator">Operator</option>
+              <option value="user">User</option>
+            </select>
+            <button class="btn btn-primary" onclick="openAddUserModal()">+ Tambah User</button>
+          </div>
+        </div>
+
+        <div style="padding:10px 20px; display:flex; gap:10px; align-items:center; flex-wrap:wrap; border-bottom:1px solid var(--border); background:rgba(67,154,134,0.03); position:relative; z-index:1;">
+          <span class="badge badge-info mono" id="chipTotalUsers">Total: 0 Akun</span>
+          <span class="badge badge-ok mono" id="chipTotalOp">Operator: 0</span>
+          <span class="badge badge-warn mono" id="chipTotalReg">User: 0</span>
+          <span style="font-size:11.5px; color:var(--text-muted); margin-left:auto;">MySQL 8.0 Node 2</span>
+        </div>
+
+        <div id="userTableWrap" class="table-wrap" style="position:relative; z-index:1;">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Pengguna</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Terdaftar</th>
+                <th style="text-align:right;">Aksi Manajemen</th>
+              </tr>
+            </thead>
+            <tbody id="userTableBody">
+              <tr><td colspan="6" style="color:var(--text-secondary); text-align:center; padding:18px;">Silakan login dengan akun Operator untuk mengelola staf.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Interactive API Workbench -->
+      <section id="workbenchSection" class="workbench">
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--accent-bright)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              <span>Endpoints</span>
+            </span>
+            <input type="text" id="epSearch" class="search-box" placeholder="Cari..." oninput="renderEndpoints()" />
+          </div>
+          <div id="endpointList" class="endpoint-list"></div>
+        </div>
+
+        <div class="panel inspector">
+          <div class="panel-header">
+            <div>
+              <div id="inspTitle" class="panel-title">Status</div>
+              <div id="inspPath" class="mono" style="font-size:12px; color:var(--accent-bright); margin-top:2px;">GET /</div>
+            </div>
+            <button class="btn btn-primary" onclick="executeSelectedEndpoint()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              <span>Kirim</span>
+            </button>
+          </div>
+          <div class="inspector-body">
+            <div id="paramBox" class="field-group" style="display:none;">
+              <label id="paramLabel" class="field-label">Parameter</label>
+              <input type="text" id="paramInput" class="input-ctrl mono" />
+            </div>
+
+            <div id="bodyBox" class="field-group" style="display:none;">
+              <label class="field-label">Body (JSON)</label>
+              <textarea id="bodyInput" class="textarea-ctrl mono"></textarea>
+            </div>
+
+            <div class="field-group">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span class="field-label">Response</span>
+                <span id="respStatus" class="badge badge-info mono">Siap</span>
+              </div>
+              <pre id="respOutput" class="response-box mono">// Klik Kirim</pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Live Sensor History Table -->
+      <section id="historySection" class="panel">
+        <div class="panel-header">
+          <span class="panel-title">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--accent-bright)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20v-6M6 20V10M18 20V4"/></svg>
+            <span>Riwayat Sensor</span>
+          </span>
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <select id="historyLimitSelect" class="search-box" style="width:105px;" onchange="refreshDashboardData()">
+              <option value="10">10 data</option>
+              <option value="25">25 data</option>
+              <option value="50" selected>50 data</option>
+              <option value="100">100 data</option>
+            </select>
+            <button id="btnSortOrder" class="btn" onclick="toggleSensorSort()" title="Balik urutan (Terbaru / Terlama)">
+              <svg id="sortIcon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 5v14M19 12l-7 7-7-7"/>
+              </svg>
+              <span id="sortLabel">Urut: Terbaru</span>
+            </button>
+            <button class="btn" onclick="exportSensorsCsv()">Download CSV</button>
+            <button class="btn btn-primary" onclick="refreshDashboardData()">Refresh</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th onclick="toggleSensorSort()" style="cursor:pointer; user-select:none;" title="Klik untuk balik urutan (Terbaru / Terlama)">
+                  <span style="display:inline-flex; align-items:center; gap:4px;">
+                    <span>ID</span>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 15l5 5 5-5M7 9l5-5 5 5"/></svg>
+                  </span>
+                </th>
+                <th>Device</th>
+                <th>Suhu</th>
+                <th>RH</th>
+                <th>Gas</th>
+                <th>Pintu</th>
+                <th>UV</th>
+                <th>Status</th>
+                <th>Waktu</th>
+              </tr>
+            </thead>
+            <tbody id="sensorTableBody">
+              <tr><td colspan="9" style="color:var(--text-secondary);">Memuat...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Login Modal -->
+  <div id="loginModal" class="modal-backdrop">
+    <div class="modal-card">
+      <svg class="card-watermark"><use href="#vec-botanic"/></svg>
+      <div style="display:flex; justify-content:space-between; align-items:center; position:relative; z-index:1;">
+        <h3 style="font-size:16px; font-weight:800;">Login Staf / Operator</h3>
+        <button class="btn" style="padding:4px 9px;" onclick="closeLoginModal()">X</button>
+      </div>
+      <form onsubmit="event.preventDefault(); submitCustomLogin();" style="position:relative; z-index:1; display:flex; flex-direction:column; gap:12px;">
+        <div class="field-group">
+          <label class="field-label">Username</label>
+          <input type="text" id="loginUser" class="input-ctrl" placeholder="Masukkan username (contoh: Ren)" required />
+        </div>
+        <div class="field-group">
+          <label class="field-label">Password</label>
+          <input type="password" id="loginPass" class="input-ctrl" placeholder="Masukkan password akun" required />
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%; padding:10px;">Masuk</button>
+      </form>
+    </div>
+  </div>
+  <!-- Tambah User Modal -->
+  <div id="modalAddUser" class="modal-backdrop">
+    <div class="modal-card">
+      <svg class="card-watermark"><use href="#vec-botanic"/></svg>
+      <div style="display:flex; justify-content:space-between; align-items:center; position:relative; z-index:1;">
+        <h3 style="font-size:16px; font-weight:800;">Tambah Pengguna Baru</h3>
+        <button class="btn" style="padding:4px 9px;" onclick="closeModal('modalAddUser')">X</button>
+      </div>
+      <form id="formAddUser" style="position:relative; z-index:1; display:flex; flex-direction:column; gap:12px;">
+        <div class="field-group">
+          <label class="field-label">Username</label>
+          <input type="text" id="addUsername" class="input-ctrl" required placeholder="Contoh: ahmad" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">Nama Lengkap</label>
+          <input type="text" id="addFullName" class="input-ctrl" required placeholder="Contoh: Ahmad Pratama" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">Email</label>
+          <input type="email" id="addEmail" class="input-ctrl" required placeholder="Contoh: ahmad@pharma.web.id" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">Password (min 6 karakter)</label>
+          <input type="password" id="addPassword" class="input-ctrl" required minlength="6" placeholder="Masukkan password" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">Role Akses</label>
+          <input type="hidden" id="addRole" value="user" />
+          <div class="role-toggle-group">
+            <button type="button" class="role-toggle-btn active" id="btnAddRoleUser" onclick="setAddRole('user')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              <span>User (Staf)</span>
+            </button>
+            <button type="button" class="role-toggle-btn" id="btnAddRoleOperator" onclick="setAddRole('operator')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+              <span>Operator (Admin)</span>
+            </button>
+          </div>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
+          <button type="button" class="btn" onclick="closeModal('modalAddUser')">Batal</button>
+          <button type="submit" class="btn btn-primary">Simpan User</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit User Modal -->
+  <div id="modalEditUser" class="modal-backdrop">
+    <div class="modal-card">
+      <svg class="card-watermark"><use href="#vec-botanic"/></svg>
+      <div style="display:flex; justify-content:space-between; align-items:center; position:relative; z-index:1;">
+        <h3 style="font-size:16px; font-weight:800;">Edit Pengguna</h3>
+        <button class="btn" style="padding:4px 9px;" onclick="closeModal('modalEditUser')">X</button>
+      </div>
+      <form id="formEditUser" style="position:relative; z-index:1; display:flex; flex-direction:column; gap:12px;">
+        <input type="hidden" id="editUserId" />
+        <div class="field-group">
+          <label class="field-label">Nama Lengkap</label>
+          <input type="text" id="editFullName" class="input-ctrl" required />
+        </div>
+        <div class="field-group">
+          <label class="field-label">Email</label>
+          <input type="email" id="editEmail" class="input-ctrl" required />
+        </div>
+        <div class="field-group">
+          <label class="field-label">Role Akses</label>
+          <input type="hidden" id="editRole" value="user" />
+          <div class="role-toggle-group">
+            <button type="button" class="role-toggle-btn active" id="btnRoleUser" onclick="setEditRole('user')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              <span>User (Petugas)</span>
+            </button>
+            <button type="button" class="role-toggle-btn" id="btnRoleOperator" onclick="setEditRole('operator')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+              <span>Operator (Admin)</span>
+            </button>
+          </div>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
+          <button type="button" class="btn" onclick="closeModal('modalEditUser')">Batal</button>
+          <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Reset Password Modal -->
+  <div id="modalResetPw" class="modal-backdrop">
+    <div class="modal-card">
+      <svg class="card-watermark"><use href="#vec-botanic"/></svg>
+      <div style="display:flex; justify-content:space-between; align-items:center; position:relative; z-index:1;">
+        <h3 style="font-size:16px; font-weight:800;">Reset Password</h3>
+        <button class="btn" style="padding:4px 9px;" onclick="closeModal('modalResetPw')">X</button>
+      </div>
+      <div id="resetPwSub" style="font-size:12px; color:var(--text-secondary); position:relative; z-index:1;">-</div>
+      <form id="formResetPw" style="position:relative; z-index:1; display:flex; flex-direction:column; gap:12px;">
+        <input type="hidden" id="resetPwUserId" />
+        <div class="field-group">
+          <label class="field-label">Password Baru (min 6 karakter)</label>
+          <input type="password" id="resetNewPw" class="input-ctrl" required minlength="6" placeholder="Masukkan password baru" />
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
+          <button type="button" class="btn" onclick="closeModal('modalResetPw')">Batal</button>
+          <button type="submit" class="btn btn-warn">Setel Password Baru</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="toastStack" class="toast-stack"></div>
+
+
+  <script>
+    const ENDPOINTS = [
+      { id: "root", cat: "Sistem", method: "GET", path: "/", title: "Status", auth: false },
+      { id: "sensor_list", cat: "Telemetri", method: "GET", path: "/sensor", title: "Log Sensor", auth: true, queryLabel: "Query", queryDefault: "limit=10" },
+      { id: "sensor_summary", cat: "Telemetri", method: "GET", path: "/sensor/summary", title: "Ringkasan", auth: true },
+      {
+        id: "kirim_data", cat: "Telemetri", method: "POST", path: "/kirim-data", title: "Kirim Data", auth: true,
+        body: { device_id: "device_1", suhu: 4.3, kelembapan: 46.5, kadar_gas: 9.0, status_pintu: 0, status_uv: 0 }
+      },
+      {
+        id: "login", cat: "Autentikasi", method: "POST", path: "/login", title: "Login", auth: false,
+        body: { username: "fabian", password: "********" }
+      },
+      {
+        id: "register", cat: "Autentikasi", method: "POST", path: "/register", title: "Register", auth: false,
+        body: { username: "staf_baru", password: "password123", full_name: "Staf", email: "staf@pharma.web.id" }
+      },
+      { id: "me", cat: "Autentikasi", method: "GET", path: "/me", title: "Profil", auth: true },
+      {
+        id: "update_profile", cat: "Autentikasi", method: "POST", path: "/update-profile", title: "Edit Profil", auth: true,
+        body: { full_name: "Fabian", email: "fabian@polije.ac.id" }
+      },
+      {
+        id: "change_password", cat: "Autentikasi", method: "POST", path: "/change-password", title: "Password", auth: true,
+        body: { old_password: "********", new_password: "********" }
+      },
+      { id: "users_list", cat: "Staf", method: "GET", path: "/users", title: "Daftar User", auth: true },
+      { id: "admin_add_user", cat: "Staf", method: "POST", path: "/admin/users", title: "Tambah User (Admin)", auth: true, body: { username: "petugas_baru", password: "password123", full_name: "Nama Lengkap", email: "petugas@pharma.web.id", role: "user" } },
+      { id: "admin_reset_pw", cat: "Staf", method: "POST", path: "/users/{user_id}/reset-password", title: "Reset Password User", auth: true, queryLabel: "User ID", queryDefault: "2", body: { new_password: "passwordbaru123" } },
+      { id: "control_actuator", cat: "Telemetri", method: "POST", path: "/control/uv", title: "Kontrol Aktuator MQTT", auth: true, body: { state: 1, device_id: "device_2" } },
+
+      {
+        id: "users_role", cat: "Staf", method: "POST", path: "/users/role", title: "Ubah Role", auth: true,
+        body: { user_id: 2, role: "operator" }
+      },
+      { id: "users_delete", cat: "Staf", method: "DELETE", path: "/users/{user_id}", title: "Hapus User", auth: true, queryLabel: "User ID", queryDefault: "99" }
+    ];
+
+    let activeCategory = "all";
+    let selectedEp = ENDPOINTS[0];
+    let bearerToken = localStorage.getItem("pharma_console_token") || "";
+    let activeUser = localStorage.getItem("pharma_console_user") || "";
+
+    function updateClock() {
+      const now = new Date();
+      const hari = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"][now.getDay()];
+      const bulan = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"][now.getMonth()];
+      const tgl = String(now.getDate()).padStart(2, "0");
+      const jam = String(now.getHours()).padStart(2, "0");
+      const mnt = String(now.getMinutes()).padStart(2, "0");
+      const dtk = String(now.getSeconds()).padStart(2, "0");
+      document.getElementById("liveClock").textContent = `${hari}, ${tgl} ${bulan} ${now.getFullYear()} • ${jam}:${mnt}:${dtk} WIB`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    function applyTheme(mode) {
+      document.documentElement.setAttribute("data-theme", mode);
+      localStorage.setItem("pharma_console_theme", mode);
+      const btn = document.getElementById("themeBtn");
+      if (btn) {
+        if (mode === "dark") {
+          btn.innerHTML = `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`;
+          btn.setAttribute("title", "Ganti ke Mode Terang");
+          btn.setAttribute("aria-label", "Ganti ke Mode Terang");
+        } else {
+          btn.innerHTML = `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+          btn.setAttribute("title", "Ganti ke Mode Gelap");
+          btn.setAttribute("aria-label", "Ganti ke Mode Gelap");
+        }
+      }
+    }
+
+    async function triggerManualRefresh() {
+      const refIcon = document.getElementById("refreshIcon");
+      if (refIcon) {
+        refIcon.style.transition = "transform 0.55s cubic-bezier(0.16, 1, 0.3, 1)";
+        refIcon.style.transform = "rotate(360deg)";
+        setTimeout(() => {
+          if (refIcon) {
+            refIcon.style.transition = "none";
+            refIcon.style.transform = "rotate(0deg)";
+          }
+        }, 550);
+      }
+      await refreshDashboardData();
+    }
+    function toggleTheme() {
+      const cur = document.documentElement.getAttribute("data-theme");
+      applyTheme(cur === "dark" ? "light" : "dark");
+    }
+    applyTheme(localStorage.getItem("pharma_console_theme") || "dark");
+
+    function updateAuthUi() {
+      const nameEl = document.getElementById("userNameText");
+      const roleEl = document.getElementById("userRoleText");
+      const dotEl = document.getElementById("userStatusDot");
+      const lOut = document.getElementById("logoutBtn");
+      const lIn = document.getElementById("loginBtn");
+
+      if (bearerToken) {
+        let name = "Ren";
+        let role = "Operator";
+        if (activeUser) {
+          const parts = activeUser.split(" (");
+          name = parts[0] || activeUser;
+          if (parts[1]) {
+            role = parts[1].replace(")", "");
+          }
+        }
+        if (nameEl) nameEl.textContent = name;
+        if (roleEl) roleEl.textContent = role.toUpperCase();
+        if (dotEl) dotEl.className = "user-status-dot";
+        if (lOut) lOut.style.display = "grid";
+        if (lIn) lIn.style.display = "none";
+      } else {
+        if (nameEl) nameEl.textContent = "Tamu";
+        if (roleEl) roleEl.textContent = "Belum login";
+        if (dotEl) dotEl.className = "user-status-dot offline";
+        if (lOut) lOut.style.display = "none";
+        if (lIn) lIn.style.display = "inline-flex";
+      }
+    }
+
+    async function loginWithCredentials(username, password) {
+      try {
+        const res = await fetch("/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (res.ok && data.token) {
+          bearerToken = data.token;
+          activeUser = `${data.user.username} (${data.user.role})`;
+          localStorage.setItem("pharma_console_token", bearerToken);
+          localStorage.setItem("pharma_console_user", activeUser);
+          updateAuthUi();
+          showToast("Login berhasil: " + activeUser);
+          await refreshDashboardData();
+          await loadUsersData();
+          return true;
+        } else {
+          alert(data.detail || "Login gagal");
+          return false;
+        }
+      } catch (e) {
+        alert("Gagal: " + e.message);
+        return false;
+      }
+    }
+
+    function logoutSession() {
+      bearerToken = "";
+      activeUser = "";
+      usersCache = [];
+      localStorage.removeItem("pharma_console_token");
+      localStorage.removeItem("pharma_console_user");
+      updateAuthUi();
+      document.getElementById("userTableBody").innerHTML = '<tr><td colspan="6" style="color:var(--text-secondary); text-align:center; padding:18px;">Silakan login untuk melihat &amp; mengelola data staf.</td></tr>';
+      document.getElementById("navUserBadge").textContent = "-";
+      showToast("Berhasil keluar dari sesi");
+    }
+
+    function openLoginModal() { document.getElementById("loginModal").classList.add("open"); }
+    function closeLoginModal() { document.getElementById("loginModal").classList.remove("open"); }
+    async function submitCustomLogin() {
+      const u = document.getElementById("loginUser").value.trim();
+      const p = document.getElementById("loginPass").value;
+      if (await loginWithCredentials(u, p)) closeLoginModal();
+    }
+
+    function filterCategory(cat) {
+      activeCategory = cat;
+      renderEndpoints();
+    }
+
+    function renderEndpoints() {
+      const q = document.getElementById("epSearch").value.trim().toLowerCase();
+      const container = document.getElementById("endpointList");
+      container.innerHTML = "";
+
+      const groups = {};
+      ENDPOINTS.forEach(ep => {
+        if (activeCategory !== "all" && ep.cat !== activeCategory) return;
+        if (q && !ep.path.toLowerCase().includes(q) && !ep.title.toLowerCase().includes(q)) return;
+        if (!groups[ep.cat]) groups[ep.cat] = [];
+        groups[ep.cat].push(ep);
+      });
+
+      Object.keys(groups).forEach(cat => {
+        const h = document.createElement("div");
+        h.className = "cat-header";
+        h.textContent = cat;
+        container.appendChild(h);
+
+        groups[cat].forEach(ep => {
+          const row = document.createElement("div");
+          row.className = "ep-item" + (selectedEp.id === ep.id ? " selected" : "");
+          row.onclick = () => selectEndpoint(ep);
+          row.innerHTML = `
+            <div class="ep-left">
+              <span class="method-tag m-${ep.method} mono">${ep.method}</span>
+              <div>
+                <div class="ep-path mono">${ep.path}</div>
+                <div class="ep-desc">${ep.title}</div>
+              </div>
+            </div>
+            <span class="badge ${ep.auth ? 'badge-info' : 'badge-ok'}">${ep.auth ? 'Bearer' : 'Publik'}</span>
+          `;
+          container.appendChild(row);
+        });
+      });
+    }
+
+    function selectEndpoint(ep) {
+      selectedEp = ep;
+      renderEndpoints();
+      document.getElementById("inspTitle").textContent = ep.title;
+      document.getElementById("inspPath").textContent = `${ep.method} ${ep.path}`;
+
+      const paramBox = document.getElementById("paramBox");
+      const bodyBox = document.getElementById("bodyBox");
+
+      if (ep.queryLabel) {
+        paramBox.style.display = "flex";
+        document.getElementById("paramLabel").textContent = ep.queryLabel;
+        document.getElementById("paramInput").value = ep.queryDefault || "";
+      } else {
+        paramBox.style.display = "none";
+      }
+
+      if (ep.body) {
+        bodyBox.style.display = "flex";
+        document.getElementById("bodyInput").value = JSON.stringify(ep.body, null, 2);
+      } else {
+        bodyBox.style.display = "none";
+      }
+    }
+
+    async function executeSelectedEndpoint() {
+      const ep = selectedEp;
+      const statusBadge = document.getElementById("respStatus");
+      const out = document.getElementById("respOutput");
+
+      if (ep.auth && !bearerToken) { openLoginModal(); return; }
+
+      let url = ep.path;
+      const paramVal = document.getElementById("paramInput").value.trim();
+      if (url.includes("{user_id}")) {
+        url = url.replace("{user_id}", encodeURIComponent(paramVal || "99"));
+      } else if (ep.queryLabel && paramVal) {
+        url += (paramVal.startsWith("?") ? paramVal : "?" + paramVal);
+      }
+
+      const headers = { "Accept": "application/json" };
+      if (bearerToken) headers["Authorization"] = "Bearer " + bearerToken;
+
+      const opts = { method: ep.method, headers };
+      if (ep.body) {
+        headers["Content-Type"] = "application/json";
+        opts.body = document.getElementById("bodyInput").value;
+      }
+
+      statusBadge.className = "badge badge-warn mono";
+      statusBadge.textContent = "...";
+      const t0 = performance.now();
+
+      try {
+        const res = await fetch(url, opts);
+        const ms = Math.round(performance.now() - t0);
+        const data = await res.json();
+
+        if (ep.id === "login" && res.ok && data.token) {
+          bearerToken = data.token;
+          activeUser = `${data.user.username} (${data.user.role})`;
+          localStorage.setItem("pharma_console_token", bearerToken);
+          localStorage.setItem("pharma_console_user", activeUser);
+          updateAuthUi();
+        }
+
+        statusBadge.className = `badge ${res.ok ? 'badge-ok' : 'badge-danger'} mono`;
+        statusBadge.textContent = `${res.status} (${ms} ms)`;
+        out.textContent = JSON.stringify(data, null, 2);
+
+        if (ep.id === "kirim_data" && res.ok) refreshDashboardData();
+      } catch (err) {
+        statusBadge.className = "badge badge-danger mono";
+        statusBadge.textContent = "Error";
+        out.textContent = err.toString();
+      }
+    }
+
+    function setArcProgress(id, value, maxVal) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const pct = Math.max(0, Math.min(1, value / maxVal));
+      const total = 100.5;
+      el.setAttribute("stroke-dashoffset", String((total * (1 - pct)).toFixed(1)));
+    }
+
+    async function refreshDashboardData() {
+      if (!bearerToken) return;
+
+      try {
+        const headers = { "Authorization": "Bearer " + bearerToken };
+        const [sumRes, listRes] = await Promise.all([
+          fetch("/sensor/summary", { headers }),
+          fetch("/sensor?limit=" + (document.getElementById("historyLimitSelect") ? document.getElementById("historyLimitSelect").value : "50"), { headers })
+        ]);
+
+        if (sumRes.ok) {
+          const sum = await sumRes.json();
+          document.getElementById("dbRecordCount").textContent = `MySQL (${sum.total_records || 0} log)`;
+          document.getElementById("valAvgTemp").textContent = `Avg ${sum.avg_suhu ?? '--'} C`;
+          document.getElementById("valAvgHum").textContent = `Avg ${sum.avg_kelembapan ?? '--'} %`;
+        }
+
+        if (listRes.ok) {
+          const rows = await listRes.json();
+          sensorsCache = rows;
+          if (rows && rows.length > 0) {
+            const latest = rows[0];
+            const suhu = Number(latest.suhu);
+            const hum = Number(latest.kelembapan);
+            const gas = Number(latest.kadar_gas);
+
+            document.getElementById("valTemp").textContent = `${suhu.toFixed(1)} C`;
+            document.getElementById("valHum").textContent = `${hum.toFixed(1)} %`;
+            document.getElementById("valGas").textContent = `${gas.toFixed(1)} ppm`;
+            document.getElementById("valDoor").textContent = latest.status_pintu == 1 ? "Terbuka" : "Tertutup";
+            document.getElementById("valUv").textContent = latest.status_uv == 1 ? "UV On" : "UV Off";
+
+            setArcProgress("tempArc", suhu, 25);
+            setArcProgress("humArc", hum, 100);
+            setArcProgress("gasArc", gas, 100);
+
+            const tBadge = document.getElementById("tempStatusBadge");
+            if (suhu >= 2 && suhu <= 8) {
+              tBadge.className = "badge badge-ok";
+              tBadge.textContent = "Optimal";
+            } else {
+              tBadge.className = "badge badge-warn";
+              tBadge.textContent = "Peringatan";
+            }
+
+            const sBadge = document.getElementById("secBadge");
+            if (latest.status === "Bahaya") {
+              sBadge.className = "badge badge-danger";
+              sBadge.textContent = "Bahaya";
+            } else if (latest.status === "Peringatan") {
+              sBadge.className = "badge badge-warn";
+              sBadge.textContent = "Peringatan";
+            } else {
+              sBadge.className = "badge badge-ok";
+              sBadge.textContent = "Aman";
+            }
+
+            renderSensorTable();
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function sendQuickTelemetry(suhu, kelembapan, kadar_gas, status_pintu, status_uv) {
+      if (!bearerToken) { openLoginModal(); return; }
+      const fb = document.getElementById("simFeedback");
+      fb.textContent = "...";
+      try {
+        const res = await fetch("/kirim-data", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + bearerToken
+          },
+          body: JSON.stringify({
+            device_id: suhu > 12 ? "device_2" : "device_1",
+            suhu,
+            kelembapan,
+            kadar_gas,
+            status_pintu,
+            status_uv
+          })
+        });
+        if (res.ok) {
+          fb.textContent = `Tersimpan (${suhu} C)`;
+          await refreshDashboardData();
+        }
+      } catch (e) {
+        fb.textContent = "Gagal";
+      }
+    }
+
+
+    let usersCache = [];
+    let sensorsCache = [];
+    let uvState = 0;
+    let buzzerState = 0;
+
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function showToast(msg, ok = true) {
+      const stack = document.getElementById('toastStack');
+      if (!stack) return;
+      const el = document.createElement('div');
+      el.className = 'toast ' + (ok ? 'ok' : 'err');
+      el.textContent = msg;
+      stack.appendChild(el);
+      setTimeout(() => el.remove(), 3200);
+    }
+
+    function openModal(id) { document.getElementById(id).classList.add('open'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+    function openAddUserModal() {
+      if (!bearerToken) { openLoginModal(); return; }
+      document.getElementById('formAddUser').reset();
+      setAddRole('user');
+      openModal('modalAddUser');
+    }
+
+    document.getElementById('formAddUser').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = {
+        username: document.getElementById('addUsername').value.trim(),
+        full_name: document.getElementById('addFullName').value.trim(),
+        email: document.getElementById('addEmail').value.trim(),
+        password: document.getElementById('addPassword').value,
+        role: document.getElementById('addRole').value
+      };
+      try {
+        const res = await fetch('/admin/users', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + bearerToken
+          },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showToast(data.message || 'Pengguna berhasil ditambahkan');
+          closeModal('modalAddUser');
+          await loadUsersData();
+        } else {
+          showToast(data.detail || 'Gagal menambah user', false);
+        }
+      } catch (err) {
+        showToast(err.message, false);
+      }
+    });
+
+    function setEditRole(role) {
+      document.getElementById('editRole').value = role;
+      const btnUser = document.getElementById('btnRoleUser');
+      const btnOp = document.getElementById('btnRoleOperator');
+      if (btnUser && btnOp) {
+        if (role === 'operator' || role === 'admin') {
+          btnOp.classList.add('active');
+          btnUser.classList.remove('active');
+        } else {
+          btnUser.classList.add('active');
+          btnOp.classList.remove('active');
+        }
+      }
+    }
+
+    function setAddRole(role) {
+      document.getElementById('addRole').value = role;
+      const btnUser = document.getElementById('btnAddRoleUser');
+      const btnOp = document.getElementById('btnAddRoleOperator');
+      if (btnUser && btnOp) {
+        if (role === 'operator' || role === 'admin') {
+          btnOp.classList.add('active');
+          btnUser.classList.remove('active');
+        } else {
+          btnUser.classList.add('active');
+          btnOp.classList.remove('active');
+        }
+      }
+    }
+
+    function openEditUserModal(id) {
+      const u = usersCache.find(x => x.id === id);
+      if (!u) return;
+      document.getElementById('editUserId').value = u.id;
+      document.getElementById('editFullName').value = u.full_name || '';
+      document.getElementById('editEmail').value = u.email || '';
+      const r = (u.role === 'operator' || u.role === 'admin') ? 'operator' : 'user';
+      setEditRole(r);
+      openModal('modalEditUser');
+    }
+
+    document.getElementById('formEditUser').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const uid = document.getElementById('editUserId').value;
+      const payload = {
+        full_name: document.getElementById('editFullName').value.trim(),
+        email: document.getElementById('editEmail').value.trim(),
+        role: document.getElementById('editRole').value
+      };
+      try {
+        const res = await fetch(`/users/${uid}/update`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + bearerToken
+          },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showToast(data.message || 'Data pengguna diperbarui');
+          closeModal('modalEditUser');
+          await loadUsersData();
+        } else {
+          showToast(data.detail || 'Gagal mengubah user', false);
+        }
+      } catch (err) {
+        showToast(err.message, false);
+      }
+    });
+
+    function openResetPwModal(id, username) {
+      document.getElementById('resetPwUserId').value = id;
+      document.getElementById('resetPwSub').textContent = `Setel password baru untuk akun @${username}`;
+      document.getElementById('resetNewPw').value = '';
+      openModal('modalResetPw');
+    }
+
+    document.getElementById('formResetPw').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const uid = document.getElementById('resetPwUserId').value;
+      const pw = document.getElementById('resetNewPw').value;
+      try {
+        const res = await fetch(`/users/${uid}/reset-password`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + bearerToken
+          },
+          body: JSON.stringify({ new_password: pw })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showToast(data.message || 'Password berhasil direset');
+          closeModal('modalResetPw');
+        } else {
+          showToast(data.detail || 'Gagal reset password', false);
+        }
+      } catch (err) {
+        showToast(err.message, false);
+      }
+    });
+
+    async function deleteUserAction(id, username) {
+      if (!confirm(`Hapus akun @${username} secara permanen dari database?`)) return;
+      try {
+        const res = await fetch(`/users/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': 'Bearer ' + bearerToken }
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showToast(data.message || 'Akun dihapus');
+          await loadUsersData();
+        } else {
+          showToast(data.detail || 'Gagal menghapus user', false);
+        }
+      } catch (err) {
+        showToast(err.message, false);
+      }
+    }
+
+    async function loadUsersData() {
+      if (!bearerToken) return;
+      try {
+        const res = await fetch('/users', {
+          headers: { 'Authorization': 'Bearer ' + bearerToken }
+        });
+        if (res.ok) {
+          const list = await res.json();
+          usersCache = Array.isArray(list) ? list : [];
+          document.getElementById('navUserBadge').textContent = usersCache.length;
+          document.getElementById('chipTotalUsers').textContent = `Total: ${usersCache.length} Akun`;
+          document.getElementById('chipTotalOp').textContent = `Operator: ${usersCache.filter(u => u.role === 'operator' || u.role === 'admin').length}`;
+          document.getElementById('chipTotalReg').textContent = `User: ${usersCache.filter(u => u.role !== 'operator' && u.role !== 'admin').length}`;
+          renderUsersTable();
+        } else if (res.status === 403) {
+          document.getElementById('userTableBody').innerHTML = `
+            <tr><td colspan="6" style="text-align:center; padding:22px; color:var(--warn);">
+              Akun Anda berstatus <b>User</b>. Silakan login dengan akun <b>Operator</b> untuk mengelola data staf.
+            </td></tr>
+          `;
+        } else if (res.status === 401) {
+          logoutSession();
+        }
+      } catch (_) {}
+    }
+
+    function renderUsersTable() {
+      const q = (document.getElementById('userSearchBox').value || '').toLowerCase().trim();
+      const roleF = document.getElementById('userRoleFilter').value;
+
+      const filtered = usersCache.filter(u => {
+        if (roleF !== 'all' && u.role !== roleF) return false;
+        if (!q) return true;
+        return (u.username || '').toLowerCase().includes(q) ||
+               (u.full_name || '').toLowerCase().includes(q) ||
+               (u.email || '').toLowerCase().includes(q);
+      });
+
+      const tbody = document.getElementById('userTableBody');
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:var(--text-muted);">Tidak ada pengguna ditemukan</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(u => {
+        const isOp = u.role === 'operator' || u.role === 'admin';
+        const roleBadge = isOp
+          ? '<span class="badge badge-ok">Operator</span>'
+          : '<span class="badge badge-warn">User</span>';
+        const initial = (u.full_name || u.username || 'U').charAt(0).toUpperCase();
+
+        return `
+          <tr>
+            <td class="mono">#${u.id}</td>
+            <td>
+              <div style="font-weight:700; color:var(--text-main);">${escapeHtml(u.full_name || u.username)}</div>
+              <div class="mono" style="font-size:11px; color:var(--text-muted); margin-top:2px;">@${escapeHtml(u.username)}</div>
+            </td>
+            <td>${escapeHtml(u.email)}</td>
+            <td>${roleBadge}</td>
+            <td class="mono" style="font-size:12px; color:var(--text-secondary);">${escapeHtml(u.created_at || '-')}</td>
+            <td style="text-align:right;">
+              <div class="action-group">
+                <button class="btn btn-sm" onclick="openEditUserModal(${u.id})">Edit</button>
+                <button class="btn btn-sm btn-warn" onclick="openResetPwModal(${u.id}, '${escapeHtml(u.username)}')">Reset PW</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteUserAction(${u.id}, '${escapeHtml(u.username)}')">Hapus</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function toggleUvRemote() {
+      if (!bearerToken) { openLoginModal(); return; }
+      uvState = uvState === 1 ? 0 : 1;
+      try {
+        const res = await fetch('/control/uv', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + bearerToken },
+          body: JSON.stringify({ state: uvState, device_id: 'device_2' })
+        });
+        const d = await res.json();
+        const btn = document.getElementById('btnUvQuick');
+        if (btn) {
+          btn.textContent = uvState ? 'UV: ON' : 'UV: OFF';
+          btn.className = 'btn btn-sm ' + (uvState ? 'btn-primary' : '');
+        }
+        showToast(d.message || `Lampu UV diubah ke ${uvState ? 'ON' : 'OFF'}`);
+      } catch (err) {
+        showToast(err.message, false);
+      }
+    }
+
+    async function toggleBuzzerRemote() {
+      if (!bearerToken) { openLoginModal(); return; }
+      buzzerState = buzzerState === 1 ? 0 : 1;
+      try {
+        const res = await fetch('/control/buzzer', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + bearerToken },
+          body: JSON.stringify({ state: buzzerState, device_id: 'device_1' })
+        });
+        const d = await res.json();
+        const btn = document.getElementById('btnBuzzerQuick');
+        if (btn) {
+          btn.textContent = buzzerState ? 'Sirine: ON' : 'Sirine: OFF';
+          btn.className = 'btn btn-sm ' + (buzzerState ? 'btn-danger' : '');
+        }
+        showToast(d.message || `Sirine Buzzer diubah ke ${buzzerState ? 'ON' : 'OFF'}`);
+      } catch (err) {
+        showToast(err.message, false);
+      }
+    }
+
+    let sensorSortAsc = false; // false = DESC (Terbaru di atas), true = ASC (Terlama di atas)
+
+    function toggleSensorSort() {
+      sensorSortAsc = !sensorSortAsc;
+      updateSortUi();
+      renderSensorTable();
+      showToast(sensorSortAsc ? 'Urutan: Terlama ke Terbaru (ASC)' : 'Urutan: Terbaru ke Terlama (DESC)');
+    }
+
+    function updateSortUi() {
+      const lbl = document.getElementById('sortLabel');
+      const icon = document.getElementById('sortIcon');
+      if (lbl) lbl.textContent = sensorSortAsc ? 'Urut: Terlama' : 'Urut: Terbaru';
+      if (icon) {
+        if (sensorSortAsc) {
+          icon.innerHTML = '<path d="M12 19V5M5 12l7-7 7 7"/>';
+        } else {
+          icon.innerHTML = '<path d="M12 5v14M19 12l-7 7-7-7"/>';
+        }
+      }
+    }
+
+    function renderSensorTable() {
+      if (!sensorsCache || sensorsCache.length === 0) return;
+
+      const sorted = [...sensorsCache].sort((a, b) => {
+        const idA = Number(a.id) || 0;
+        const idB = Number(b.id) || 0;
+        return sensorSortAsc ? (idA - idB) : (idB - idA);
+      });
+
+      const tbody = document.getElementById("sensorTableBody");
+      if (!tbody) return;
+
+      tbody.innerHTML = sorted.map(r => {
+        const bClass = r.status === "Bahaya" ? "badge-danger" : (r.status === "Peringatan" ? "badge-warn" : "badge-ok");
+        return `
+          <tr>
+            <td class="mono">#${r.id ?? '-'}</td>
+            <td class="mono">${r.device_id}</td>
+            <td class="mono" style="font-weight:700;">${Number(r.suhu).toFixed(1)} C</td>
+            <td class="mono">${Number(r.kelembapan).toFixed(1)} %</td>
+            <td class="mono">${Number(r.kadar_gas).toFixed(1)} ppm</td>
+            <td>${r.status_pintu == 1 ? 'Terbuka' : 'Tertutup'}</td>
+            <td>${r.status_uv == 1 ? 'On' : 'Off'}</td>
+            <td><span class="badge ${bClass}">${r.status}</span></td>
+            <td class="mono" style="color:var(--text-secondary);">${r.created_at || r.waktu || '-'}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function exportSensorsCsv() {
+      if (!sensorsCache || sensorsCache.length === 0) {
+        showToast('Belum ada data sensor', false);
+        return;
+      }
+      const headers = ['ID', 'Device', 'Suhu', 'Kelembapan', 'Gas', 'Pintu', 'UV', 'Status', 'Waktu'];
+      const rows = sensorsCache.map(r => [
+        r.id ?? '', r.device_id, r.suhu, r.kelembapan, r.kadar_gas,
+        r.status_pintu == 1 ? 'Terbuka' : 'Tertutup',
+        r.status_uv == 1 ? 'ON' : 'OFF',
+        r.status, r.waktu || r.created_at || ''
+      ]);
+      const csv = [headers, ...rows].map(e => e.join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `pharma_sensor_${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('File CSV berhasil diunduh');
+    }
+
+    updateAuthUi();
+    selectEndpoint(ENDPOINTS[0]);
+    if (bearerToken) {
+      refreshDashboardData();
+      loadUsersData();
+    } else {
+      openLoginModal();
+    }
+    setInterval(() => { if (bearerToken) refreshDashboardData(); }, 5000);
+
+    // Smooth Anchor Navigation & ScrollSpy for Sidebar
+    document.querySelectorAll('.nav-group a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        const targetId = this.getAttribute('href');
+        const targetEl = document.querySelector(targetId);
+        if (targetEl) {
+          e.preventDefault();
+          const topbar = document.querySelector('.topbar');
+          const topbarHeight = topbar ? topbar.offsetHeight : 75;
+          const targetPos = targetEl.getBoundingClientRect().top + window.pageYOffset - topbarHeight - 16;
+          window.scrollTo({
+            top: targetPos > 0 ? targetPos : 0,
+            behavior: 'smooth'
+          });
+          history.pushState(null, null, targetId);
+          document.querySelectorAll('.nav-group a[href^="#"]').forEach(a => a.classList.remove('active'));
+          this.classList.add('active');
+        }
+      });
+    });
+
+    const navSections = [
+      { id: '#clusterSection', el: document.getElementById('clusterSection') },
+      { id: '#simulatorSection', el: document.getElementById('simulatorSection') },
+      { id: '#usersSection', el: document.getElementById('usersSection') },
+      { id: '#workbenchSection', el: document.getElementById('workbenchSection') },
+      { id: '#historySection', el: document.getElementById('historySection') }
+    ];
+
+    function setSim2Pintu(v) {
+      document.getElementById('sim2_pintu').value = v;
+      document.getElementById('btnPintu0').classList.toggle('active', v === 0);
+      document.getElementById('btnPintu1').classList.toggle('active', v === 1);
+    }
+
+    function setSim2Pir(v) {
+      document.getElementById('sim2_pir').value = v;
+      document.getElementById('btnPir0').classList.toggle('active', v === 0);
+      document.getElementById('btnPir1').classList.toggle('active', v === 1);
+      if (v === 1 && document.getElementById('sim2_uv').value == '1') {
+        setSim2Uv(0);
+        showToast('Safety: UV dimatikan otomatis karena ada orang di ruangan');
+      }
+    }
+
+    function setSim2Uv(v) {
+      if (v === 1 && document.getElementById('sim2_pir').value == '1') {
+        showToast('Dicegah: Tidak boleh menyalakan UV saat ada orang', false);
+        return;
+      }
+      document.getElementById('sim2_uv').value = v;
+      document.getElementById('btnUv0').classList.toggle('active', v === 0);
+      document.getElementById('btnUv1').classList.toggle('active', v === 1);
+    }
+
+    function presetSim1(suhu, kelembapan, gas) {
+      document.getElementById('sim1_suhu').value = suhu;
+      document.getElementById('sim1_kelembapan').value = kelembapan;
+      document.getElementById('sim1_gas').value = gas;
+      showToast(`Preset: ${suhu}°C, ${kelembapan}%, ${gas} PPM`);
+    }
+
+    function presetSim2(pintu, pir, uv) {
+      setSim2Pintu(pintu);
+      setSim2Pir(pir);
+      setSim2Uv(uv);
+      showToast(`Preset: Pintu=${pintu ? 'Buka' : 'Terkunci'}, PIR=${pir ? 'Orang' : 'Kosong'}, UV=${uv ? 'ON' : 'OFF'}`);
+    }
+
+    async function submitFormSim1() {
+      if (!bearerToken) { openLoginModal(); return; }
+      const btn = document.getElementById('btnSubmitSim1');
+      btn.disabled = true;
+      btn.textContent = 'Mengirim...';
+
+      const payload = {
+        device_id: 'device_1',
+        suhu: parseFloat(document.getElementById('sim1_suhu').value) || 4.5,
+        kelembapan: parseFloat(document.getElementById('sim1_kelembapan').value) || 48.0,
+        kadar_gas: parseFloat(document.getElementById('sim1_gas').value) || 12.0,
+        cahaya: 160.0,
+        status_kipas: document.getElementById('sim1_kipas').checked ? 1 : 0,
+        status_buzzer: document.getElementById('sim1_buzzer').checked ? 1 : 0,
+        status_pintu: 0,
+        status_uv: 0
+      };
+
+      try {
+        const res = await fetch('/kirim-data', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + bearerToken
+          },
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          showToast(`Device 1 terkirim: ${payload.suhu}°C | ${payload.kelembapan}% | ${payload.kadar_gas} PPM`);
+          await refreshDashboardData();
+        } else {
+          showToast('Gagal mengirim data', false);
+        }
+      } catch (e) {
+        showToast('Koneksi gagal: ' + e.message, false);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Kirim Node 1';
+      }
+    }
+
+    async function submitFormSim2() {
+      if (!bearerToken) { openLoginModal(); return; }
+      const btn = document.getElementById('btnSubmitSim2');
+      btn.disabled = true;
+      btn.textContent = 'Mengirim...';
+
+      const pVal = parseInt(document.getElementById('sim2_pintu').value) || 0;
+      const pirVal = parseInt(document.getElementById('sim2_pir').value) || 0;
+      const uvVal = parseInt(document.getElementById('sim2_uv').value) || 0;
+
+      const payload = {
+        device_id: 'device_2',
+        suhu: 20.0,
+        kelembapan: 50.0,
+        kadar_gas: 8.5,
+        status_pintu: pVal,
+        deteksi_gerak: pirVal,
+        status_uv: uvVal,
+        jarak_stok: 22.0,
+        status_led: pVal === 1 || pirVal === 1 ? 1 : 0
+      };
+
+      try {
+        const res = await fetch('/kirim-data', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + bearerToken
+          },
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          showToast(`Device 2 terkirim: Pintu=${pVal ? 'Terbuka' : 'Terkunci'} | UV=${uvVal ? 'ON' : 'OFF'}`);
+          await refreshDashboardData();
+        } else {
+          showToast('Gagal mengirim data', false);
+        }
+      } catch (e) {
+        showToast('Koneksi gagal: ' + e.message, false);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Kirim Node 2';
+      }
+    }
+
+    window.addEventListener('scroll', () => {
+      const scrollPos = window.pageYOffset + 130;
+      let currentId = '#clusterSection';
+      for (const sec of navSections) {
+        if (sec.el && sec.el.offsetTop <= scrollPos) {
+          currentId = sec.id;
+        }
+      }
+      document.querySelectorAll('.nav-group a[href^="#"]').forEach(a => {
+        if (a.getAttribute('href') === currentId) {
+          a.classList.add('active');
+        } else {
+          a.classList.remove('active');
+        }
+      });
+    }, { passive: true });
+
+    // Handle initial hash in URL (e.g. #historySection)
+    if (window.location.hash) {
+      const target = document.querySelector(window.location.hash);
+      if (target) {
+        setTimeout(() => {
+          const topbar = document.querySelector('.topbar');
+          const topbarHeight = topbar ? topbar.offsetHeight : 75;
+          const targetPos = target.getBoundingClientRect().top + window.pageYOffset - topbarHeight - 16;
+          window.scrollTo({
+            top: targetPos > 0 ? targetPos : 0,
+            behavior: 'smooth'
+          });
+        }, 150);
+      }
+    }
+
+  </script>
+</body>
+</html>
