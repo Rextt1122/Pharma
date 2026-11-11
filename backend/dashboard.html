@@ -1700,30 +1700,24 @@
           <svg class="card-watermark"><use href="#vec-botanic"/></svg>
           <div class="metric-top">
             <div class="metric-label-wrap">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-bright)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-              <span class="metric-label">SIMULASI</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--warn)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="4"/>
+                <path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>
+              </svg>
+              <span class="metric-label">CAHAYA</span>
             </div>
-            <span class="badge badge-ok">TEST</span>
+            <span id="luxStatusBadge" class="badge badge-ok">Optimal</span>
           </div>
-          <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin:2px 0 4px; z-index:1; position:relative;">
-            <span style="font-size:11px; font-weight:700; color:var(--text-secondary);">Aktuator:</span>
-            <div style="display:flex; gap:6px;">
-              <button id="btnUvQuick" class="btn btn-sm" onclick="toggleUvRemote()">UV: OFF</button>
-              <button id="btnBuzzerQuick" class="btn btn-sm" onclick="toggleBuzzerRemote()">Sirine: OFF</button>
-            </div>
-          </div>
-          <div class="sim-btns">
-            <button class="btn sim-btn" onclick="sendQuickTelemetry(4.4, 46.0, 8.5, 0, 0)">Vaksin 4.4 C</button>
-            <button class="btn sim-btn" onclick="sendQuickTelemetry(19.5, 51.0, 9.0, 0, 1)">Steril 19.5 C</button>
-            <button class="btn sim-btn" onclick="sendQuickTelemetry(9.6, 58.0, 14.0, 0, 0)">Suhu 9.6 C</button>
-            <button class="btn sim-btn" onclick="sendQuickTelemetry(5.1, 49.0, 65.0, 1, 0)">Alert Gas</button>
+          <div class="gauge-row">
+            <div id="valLux" class="metric-value mono">-- Lux</div>
+            <svg class="arc-svg" viewBox="0 0 80 50">
+              <path d="M 8 42 A 32 32 0 0 1 72 42" fill="none" stroke="var(--border-strong)" stroke-width="7" stroke-linecap="round"/>
+              <path id="luxArc" d="M 8 42 A 32 32 0 0 1 72 42" fill="none" stroke="var(--warn)" stroke-width="7" stroke-linecap="round" stroke-dasharray="100.5" stroke-dashoffset="60"/>
+            </svg>
           </div>
           <div class="metric-foot">
-            <span id="simFeedback">Siap</span>
-            <a href="#simulatorSection" style="color:var(--accent-bright); text-decoration:none; font-weight:700; font-size:11px; display:inline-flex; align-items:center; gap:4px;">
-              <span>Form Lengkap</span>
-              <span>&rarr;</span>
-            </a>
+            <span>Standar: &lt; 300 Lux</span>
+            <span id="valAvgLux" class="mono">Avg: --</span>
           </div>
         </div>
       </section>
@@ -1985,6 +1979,7 @@
                 <th>Suhu</th>
                 <th>RH</th>
                 <th>Gas</th>
+                <th>Cahaya</th>
                 <th>Pintu</th>
                 <th>UV</th>
                 <th>Status</th>
@@ -1992,7 +1987,7 @@
               </tr>
             </thead>
             <tbody id="sensorTableBody">
-              <tr><td colspan="9" style="color:var(--text-secondary);">Memuat...</td></tr>
+              <tr><td colspan="10" style="color:var(--text-secondary);">Memuat...</td></tr>
             </tbody>
           </table>
         </div>
@@ -2488,6 +2483,8 @@
           document.getElementById("dbRecordCount").textContent = `MySQL (${sum.total_records || 0} log)`;
           document.getElementById("valAvgTemp").textContent = `Avg ${sum.avg_suhu ?? '--'} C`;
           document.getElementById("valAvgHum").textContent = `Avg ${sum.avg_kelembapan ?? '--'} %`;
+          const avgLuxEl = document.getElementById("valAvgLux");
+          if (avgLuxEl) avgLuxEl.textContent = `Avg ${sum.avg_cahaya ?? '--'} Lux`;
         }
 
         if (listRes.ok) {
@@ -2498,16 +2495,21 @@
             const suhu = Number(latest.suhu);
             const hum = Number(latest.kelembapan);
             const gas = Number(latest.kadar_gas);
+            const lux = Number(latest.cahaya ?? 0);
 
             document.getElementById("valTemp").textContent = `${suhu.toFixed(1)} C`;
             document.getElementById("valHum").textContent = `${hum.toFixed(1)} %`;
             document.getElementById("valGas").textContent = `${gas.toFixed(1)} ppm`;
+            const luxValEl = document.getElementById("valLux");
+            if (luxValEl) luxValEl.textContent = `${Math.round(lux)} Lux`;
+
             document.getElementById("valDoor").textContent = latest.status_pintu == 1 ? "Terbuka" : "Tertutup";
             document.getElementById("valUv").textContent = latest.status_uv == 1 ? "UV On" : "UV Off";
 
             setArcProgress("tempArc", suhu, 25);
             setArcProgress("humArc", hum, 100);
             setArcProgress("gasArc", gas, 100);
+            setArcProgress("luxArc", lux, 500);
 
             const tBadge = document.getElementById("tempStatusBadge");
             if (suhu >= 2 && suhu <= 8) {
@@ -2528,6 +2530,20 @@
             } else {
               sBadge.className = "badge badge-ok";
               sBadge.textContent = "Aman";
+            }
+
+            const lBadge = document.getElementById("luxStatusBadge");
+            if (lBadge) {
+              if (lux > 0 && lux <= 300) {
+                lBadge.className = "badge badge-ok";
+                lBadge.textContent = "Optimal";
+              } else if (lux > 300) {
+                lBadge.className = "badge badge-warn";
+                lBadge.textContent = "Terang";
+              } else {
+                lBadge.className = "badge badge-neutral";
+                lBadge.textContent = "Redup";
+              }
             }
 
             renderSensorTable();
@@ -2969,6 +2985,7 @@
             <td class="mono" style="font-weight:700;">${Number(r.suhu).toFixed(1)} C</td>
             <td class="mono">${Number(r.kelembapan).toFixed(1)} %</td>
             <td class="mono">${Number(r.kadar_gas).toFixed(1)} ppm</td>
+            <td class="mono">${Math.round(Number(r.cahaya ?? 0))} Lux</td>
             <td>${r.status_pintu == 1 ? 'Terbuka' : 'Tertutup'}</td>
             <td>${r.status_uv == 1 ? 'On' : 'Off'}</td>
             <td><span class="badge ${bClass}">${r.status}</span></td>
@@ -2983,9 +3000,9 @@
         showToast('Belum ada data sensor', false);
         return;
       }
-      const headers = ['ID', 'Device', 'Suhu', 'Kelembapan', 'Gas', 'Pintu', 'UV', 'Status', 'Waktu'];
+      const headers = ['ID', 'Device', 'Suhu', 'Kelembapan', 'Gas', 'Cahaya (Lux)', 'Pintu', 'UV', 'Status', 'Waktu'];
       const rows = sensorsCache.map(r => [
-        r.id ?? '', r.device_id, r.suhu, r.kelembapan, r.kadar_gas,
+        r.id ?? '', r.device_id, r.suhu, r.kelembapan, r.kadar_gas, Math.round(Number(r.cahaya ?? 0)),
         r.status_pintu == 1 ? 'Terbuka' : 'Tertutup',
         r.status_uv == 1 ? 'ON' : 'OFF',
         r.status, r.waktu || r.created_at || ''

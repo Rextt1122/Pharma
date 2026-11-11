@@ -223,6 +223,7 @@ def init_db():
                 suhu FLOAT NOT NULL,
                 kelembapan FLOAT NOT NULL,
                 kadar_gas FLOAT DEFAULT 0.0,
+                cahaya FLOAT DEFAULT 0.0,
                 status_pintu INT DEFAULT 0,
                 status_uv INT DEFAULT 0,
                 status VARCHAR(50) DEFAULT 'Aman',
@@ -317,6 +318,7 @@ class SensorItem(BaseModel):
     suhu: float
     kelembapan: float
     kadar_gas: float
+    cahaya: Optional[float] = 0.0
     status_pintu: int
     status_uv: int
     status: str
@@ -330,6 +332,7 @@ class SensorSummary(BaseModel):
     max_suhu: Optional[float] = None
     avg_kelembapan: Optional[float] = None
     avg_gas: Optional[float] = None
+    avg_cahaya: Optional[float] = None
 
 class GenericResponse(BaseModel):
     success: bool
@@ -342,6 +345,7 @@ def process_and_save_sensor_data(data: dict):
     suhu = float(data.get("suhu", 0.0))
     kelembapan = float(data.get("kelembapan", 0.0))
     kadar_gas = float(data.get("kadar_gas", data.get("gas", 0.0)))
+    cahaya = float(data.get("cahaya", data.get("lux", 0.0)))
     status_pintu = int(data.get("status_pintu", 0))
     status_uv = int(data.get("status_uv", 0))
 
@@ -356,14 +360,14 @@ def process_and_save_sensor_data(data: dict):
         conn = get_db()
         cursor = conn.cursor()
         query = """
-            INSERT INTO sensor_data (device_id, suhu, kelembapan, kadar_gas, status_pintu, status_uv, status, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, NOW())
+            INSERT INTO sensor_data (device_id, suhu, kelembapan, kadar_gas, cahaya, status_pintu, status_uv, status, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW())
         """
-        cursor.execute(query, (device_id, suhu, kelembapan, kadar_gas, status_pintu, status_uv, status))
+        cursor.execute(query, (device_id, suhu, kelembapan, kadar_gas, cahaya, status_pintu, status_uv, status))
         conn.commit()
         cursor.close()
         conn.close()
-        print(f"[DATA SAVED] {device_id} | Suhu: {suhu}°C | Status: {status}")
+        print(f"[DATA SAVED] {device_id} | Suhu: {suhu}°C | Cahaya: {cahaya} Lux | Status: {status}")
     except Exception as e:
         print(f"[SAVE ERROR] {e}")
 
@@ -774,6 +778,7 @@ def get_sensor_data(limit: int = 50, _user: dict = Depends(require_user)):
                 "suhu": 4.5,
                 "kelembapan": 45.0,
                 "kadar_gas": 12.0,
+                "cahaya": 120.0,
                 "status_pintu": 0,
                 "status_uv": 0,
                 "status": "Aman",
@@ -788,6 +793,7 @@ def get_sensor_data(limit: int = 50, _user: dict = Depends(require_user)):
             "suhu": 4.5,
             "kelembapan": 45.0,
             "kadar_gas": 12.0,
+            "cahaya": 120.0,
             "status_pintu": 0,
             "status_uv": 0,
             "status": "Aman",
@@ -821,7 +827,8 @@ def get_sensor_summary(_user: dict = Depends(require_user)):
                 ROUND(MIN(suhu), 2) as min_suhu,
                 ROUND(MAX(suhu), 2) as max_suhu,
                 ROUND(AVG(kelembapan), 2) as avg_kelembapan,
-                ROUND(AVG(kadar_gas), 2) as avg_gas
+                ROUND(AVG(kadar_gas), 2) as avg_gas,
+                ROUND(AVG(cahaya), 1) as avg_cahaya
             FROM sensor_data
         """)
         summary = cursor.fetchone()
