@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Smart Pharma - Live Dashboard</title>
+  <title>Pharma Dashboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -1149,31 +1149,107 @@
 
     .toast-stack {
       position: fixed;
-      bottom: 22px;
-      right: 22px;
+      bottom: 24px;
+      right: 24px;
       display: flex;
-      flex-direction: column;
-      gap: 8px;
-      z-index: 200;
+      flex-direction: column-reverse;
+      gap: 10px;
+      z-index: 999;
+      pointer-events: none;
+      max-width: 420px;
     }
 
     .toast {
-      padding: 10px 16px;
-      border-radius: 10px;
+      pointer-events: auto;
+      padding: 12px 16px;
+      border-radius: 14px;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
       font-size: 13px;
       font-weight: 600;
+      line-height: 1.45;
       background: var(--bg-card);
       border: 1px solid var(--border-strong);
       color: var(--text-main);
-      box-shadow: 0 10px 24px rgba(0,0,0,0.4);
-      animation: toastIn 0.2s ease;
+      box-shadow: 0 16px 36px -6px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--border);
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      backdrop-filter: blur(16px);
+      animation: toastSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      transition: all 0.22s ease;
     }
-    .toast.ok { border-left: 4px solid var(--accent-bright); }
-    .toast.err { border-left: 4px solid var(--danger); }
 
-    @keyframes toastIn {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
+    :root[data-theme="light"] .toast {
+      background: rgba(255, 255, 255, 0.96);
+      box-shadow: 0 14px 34px -4px rgba(14, 85, 90, 0.16), 0 0 0 1px var(--border);
+    }
+
+    .toast.ok {
+      border-left: 4px solid var(--accent-bright);
+    }
+
+    .toast.err {
+      border-left: 4px solid #f87171;
+    }
+
+    .toast-icon {
+      width: 22px;
+      height: 22px;
+      flex-shrink: 0;
+      display: grid;
+      place-items: center;
+    }
+
+    .toast.ok .toast-icon {
+      color: var(--accent-bright);
+    }
+
+    :root[data-theme="light"] .toast.ok .toast-icon {
+      color: var(--pharma-navy);
+    }
+
+    .toast.err .toast-icon {
+      color: #f87171;
+    }
+
+    .toast-text {
+      flex: 1;
+      word-break: break-word;
+    }
+
+    .toast-close {
+      appearance: none;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 3px;
+      display: grid;
+      place-items: center;
+      border-radius: 6px;
+      transition: color 0.15s ease;
+      flex-shrink: 0;
+    }
+
+    .toast-close:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .toast.toast-hiding {
+      opacity: 0;
+      transform: translateY(12px) scale(0.95);
+    }
+
+    @keyframes toastSlideUp {
+      from {
+        opacity: 0;
+        transform: translateY(16px) scale(0.94);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
     }
 
   </style>
@@ -1959,7 +2035,31 @@
     </div>
   </div>
 
-  <div id="toastStack" class="toast-stack"></div>
+  <!-- Modal Konfirmasi Hapus Akun -->
+  <div id="modalConfirmDelete" class="modal-backdrop">
+    <div class="modal-card" style="max-width: 400px;">
+      <svg class="card-watermark"><use href="#vec-botanic"/></svg>
+      <div style="display:flex; align-items:flex-start; gap:14px; position:relative; z-index:1;">
+        <div style="width:42px; height:42px; border-radius:12px; background:var(--danger-tint); border:1px solid rgba(248, 113, 113, 0.3); display:grid; place-items:center; color:#f87171; flex-shrink:0;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        <div style="flex:1;">
+          <h3 style="font-size:16px; font-weight:800; color:var(--text-main);">Hapus Pengguna</h3>
+          <p id="deleteModalDesc" style="font-size:12.5px; color:var(--text-secondary); margin-top:4px; line-height:1.45;">Hapus akun ini secara permanen dari database?</p>
+        </div>
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px; position:relative; z-index:1;">
+        <button type="button" class="btn" onclick="closeModal('modalConfirmDelete')">Batal</button>
+        <button type="button" class="btn btn-danger" id="btnConfirmDeleteExec" onclick="executeConfirmDelete()" style="padding:9px 16px; font-weight:800;">Hapus Akun</button>
+      </div>
+    </div>
+  </div>
+
+    <div id="toastStack" class="toast-stack"></div>
 
 
   <script>
@@ -2378,9 +2478,34 @@
       if (!stack) return;
       const el = document.createElement('div');
       el.className = 'toast ' + (ok ? 'ok' : 'err');
-      el.textContent = msg;
+
+      const iconSvg = ok
+        ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'
+        : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+
+      el.innerHTML = `
+        <span class="toast-icon">${iconSvg}</span>
+        <span class="toast-text">${escapeHtml(msg)}</span>
+        <button class="toast-close" title="Tutup">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      `;
+
       stack.appendChild(el);
-      setTimeout(() => el.remove(), 3200);
+
+      const dismissTimer = setTimeout(() => {
+        el.classList.add('toast-hiding');
+        setTimeout(() => el.remove(), 220);
+      }, 3400);
+
+      const closeBtn = el.querySelector('.toast-close');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+          clearTimeout(dismissTimer);
+          el.classList.add('toast-hiding');
+          setTimeout(() => el.remove(), 220);
+        });
+      }
     }
 
     function openModal(id) { document.getElementById(id).classList.add('open'); }
@@ -2527,22 +2652,52 @@
       }
     });
 
-    async function deleteUserAction(id, username) {
-      if (!confirm(`Hapus akun @${username} secara permanen dari database?`)) return;
+    let pendingDeleteUserId = null;
+    let pendingDeleteUsername = "";
+
+    function deleteUserAction(id, username) {
+      pendingDeleteUserId = id;
+      pendingDeleteUsername = username;
+      const descEl = document.getElementById('deleteModalDesc');
+      if (descEl) {
+        descEl.innerHTML = `Hapus akun <b style="color:var(--text-main);">@${escapeHtml(username)}</b> secara permanen dari database? Tindakan ini tidak dapat dibatalkan.`;
+      }
+      openModal('modalConfirmDelete');
+    }
+
+    async function executeConfirmDelete() {
+      if (!pendingDeleteUserId) return;
+      const id = pendingDeleteUserId;
+      const username = pendingDeleteUsername;
+      const btn = document.getElementById('btnConfirmDeleteExec');
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Menghapus...';
+      }
+
       try {
         const res = await fetch(`/users/${id}`, {
           method: 'DELETE',
           headers: { 'Authorization': 'Bearer ' + bearerToken }
         });
         const data = await res.json();
+        closeModal('modalConfirmDelete');
         if (res.ok) {
-          showToast(data.message || 'Akun dihapus');
+          showToast(data.message || `Akun @${username} berhasil dihapus`);
           await loadUsersData();
         } else {
           showToast(data.detail || 'Gagal menghapus user', false);
         }
       } catch (err) {
+        closeModal('modalConfirmDelete');
         showToast(err.message, false);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'Hapus Akun';
+        }
+        pendingDeleteUserId = null;
+        pendingDeleteUsername = "";
       }
     }
 
