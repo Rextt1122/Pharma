@@ -150,19 +150,9 @@ def input_listener():
 def main():
     global mqtt_client
     print("=" * 70)
-    print("   SIMULATOR HARDWARE ESP32-S3 — GUDANG FARMASI PHARMA MEDIC")
+    print("   SIMULATOR TELEMETRI IOT ESP32-S3 (PHARMA MEDIC)")
+    print("   Aktuator UV & Sirine dikendalikan live dari Web Dashboard / HP")
     print("=" * 70)
-    print("Target Payload disesuaikan 100% dengan firmware ESP32-S3:")
-    print("  - Node 1: Suhu Vaksin (2-8°C), Kelembapan, Gas MQ-2")
-    print("  - Node 2: Pintu Reed Switch, PIR Gerak, HC-SR04 Stok, Relay UV-C")
-    print("-" * 70)
-    print("KONTROL CEPAT KEYBOARD:")
-    print("  Ketik 'p' + Enter : Buka / Tutup Pintu (Reed Switch)")
-    print("  Ketik 'g' + Enter : Ada Orang / Ruangan Kosong (PIR)")
-    print("  Ketik 'u' + Enter : Nyalakan / Matikan Sinar UV-C")
-    print("  Ketik 'b' + Enter : Nyalakan / Matikan Buzzer Alarm")
-    print("  (Atau tekan tombol langsung di aplikasi Flutter HP kamu!)")
-    print("-" * 70)
 
     try:
         client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
