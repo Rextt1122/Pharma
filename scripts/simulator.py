@@ -29,7 +29,9 @@ except ImportError:
 
 # ---------- KONFIGURASI BROKER ----------
 BROKER_CANDIDATES = [
-    "127.0.0.1",       # Local host / USB adb reverse
+    "127.0.0.1",       # Local host / VPS localhost
+    "mqtt.pharma.web.id",
+    "api.pharma.web.id",
     "192.168.1.25",    # IP Wi-Fi Laptop
     "192.168.33.10",   # IP VM Debian
     "192.168.33.12",
@@ -162,7 +164,10 @@ def main():
     print("  (Atau tekan tombol langsung di aplikasi Flutter HP kamu!)")
     print("-" * 70)
 
-    client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+    try:
+        client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+    except AttributeError:
+        client = mqtt.Client()
     client.on_connect = on_connect
     client.on_message = on_message
     mqtt_client = client

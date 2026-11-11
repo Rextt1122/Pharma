@@ -269,6 +269,32 @@ I. Lokasi File Dashboard di Server & Laptop:
    - Di Project Laptop    : backend/dashboard.html & backend/main.py
    - Akses via Browser    : https://api.pharma.web.id/dashboard
 
+J. Menjalankan Simulasi Sensor & Hardware di Cloud VPS Azure:
+
+   1. Menjalankan Simulator Python Interaktif (ESP32-S3 Node 1 & Node 2):
+      cd /home/azureuser
+      python3 scripts/simulator.py
+
+      # Tombol Cepat Keyboard saat simulator berjalan di VPS:
+      #  p + Enter : Buka / Tutup Pintu (Reed Switch)
+      #  g + Enter : Simulasi Gerakan Manusia (Sensor PIR)
+      #  u + Enter : Nyalakan / Matikan Sinar UV-C
+      #  b + Enter : Nyalakan / Matikan Sirine Buzzer Alarm
+      #  (Tekan Ctrl + C untuk keluar dari simulator)
+
+   2. Kirim Payload Sensor Manual Sekali Tembak (Via Mosquitto CLI di VPS):
+      # Kirim Suhu Vaksin Normal 4.4°C:
+      mosquitto_pub -h 127.0.0.1 -t 'pharma/sensor' -m '{"device_id":"device_1","suhu":4.4,"kelembapan":46.0,"kadar_gas":8.5,"status_pintu":0,"status_uv":0}'
+
+      # Kirim Simulasi Suhu Hangat Peringatan 9.6°C:
+      mosquitto_pub -h 127.0.0.1 -t 'pharma/sensor' -m '{"device_id":"device_1","suhu":9.6,"kelembapan":58.0,"kadar_gas":14.0,"status_pintu":0,"status_uv":0}'
+
+      # Kirim Simulasi Bahaya Gas & Pintu Terbuka:
+      mosquitto_pub -h 127.0.0.1 -t 'pharma/sensor' -m '{"device_id":"device_1","suhu":5.1,"kelembapan":49.0,"kadar_gas":65.0,"status_pintu":1,"status_uv":0}'
+
+   3. Memantau Pesan Sensor yang Masuk Realtime (Subscriber di Terminal VPS):
+      mosquitto_sub -h 127.0.0.1 -t 'pharma/#' -v
+
 
 [11] PENJELASAN TEKNIS FRONTEND WEB DASHBOARD (JAWABAN DOSEN / PENGUJI)
 --------------------------------------------------------------------------------
