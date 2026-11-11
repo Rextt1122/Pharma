@@ -43,7 +43,7 @@ class _SettingsPageState extends State<SettingsPage> {
   String _userAvatar = '';
   bool _isLoading = true;
   bool _isCheckingUpdate = false;
-  String _appVersion = 'v1.0.10';
+  String _appVersion = 'v1.0.11';
 
   ImageProvider? _getAvatarImage(String base64Str) {
     if (base64Str.isEmpty) return null;
