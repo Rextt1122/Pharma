@@ -29,12 +29,11 @@ except ImportError:
 
 # ---------- KONFIGURASI BROKER ----------
 BROKER_CANDIDATES = [
-    "127.0.0.1",       # Local host / VPS localhost
-    "mqtt.pharma.web.id",
     "api.pharma.web.id",
+    "172.197.249.136",
+    "127.0.0.1",       # Local host / VPS localhost
     "192.168.1.25",    # IP Wi-Fi Laptop
     "192.168.33.10",   # IP VM Debian
-    "192.168.33.12",
 ]
 PORT = 1883
 
@@ -48,9 +47,10 @@ state_node1 = {
     "suhu": 4.5,            # Rentang aman vaksin: 2.0 - 8.0 °C
     "kelembapan": 50.0,     # Standar: 45 - 60 %
     "kadar_gas": 12.0,      # MQ-2 bersih: < 20 PPM
-    "cahaya": 120.0,
+    "cahaya": 160.0,
     "status_kipas": 0,
     "status_buzzer": 0,
+    "status_pompa": 0,
 }
 
 # Node 2: Keamanan & Sterilisasi Sinar UV-C
@@ -112,6 +112,12 @@ def on_message(client, userdata, msg):
             state_node1["status_kipas"] = state
             status_text = "MENYALA (Pendinginan)" if state == 1 else "MATI"
             print(f"\n>> [HP KONTROL -> KIPAS] Relay Kipas: {status_text}")
+
+        # 4. Perintah Pompa Mini (Node 1)
+        elif actuator == "pump" or "pump" in msg.topic:
+            state_node1["status_pompa"] = state
+            status_text = "MENYALA (Sirkulasi)" if state == 1 else "MATI"
+            print(f"\n>> [HP KONTROL -> POMPA] Pompa Mini: {status_text}")
 
     except Exception as e:
         print(f"[PARSE ERROR KONTROL] {e}")
@@ -223,6 +229,7 @@ def main():
                 "cahaya": state_node1["cahaya"],
                 "status_kipas": state_node1["status_kipas"],
                 "status_buzzer": state_node1["status_buzzer"],
+                "status_pompa": state_node1["status_pompa"],
                 "status_pintu": state_node2["status_pintu"],
                 "status_uv": state_node2["status_uv"],
                 "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")

@@ -7,43 +7,49 @@
         <mxCell id="title" parent="1" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontStyle=1;fontColor=#0F172A;" value="ALUR SYSTEM DESIGN GUDANG FARMASI &amp;amp; STERILISASI SINAR UV-C" vertex="1">
           <mxGeometry height="30" width="740" x="80" y="20" as="geometry" />
         </mxCell>
-        <mxCell id="n1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;strokeWidth=2;dashed=1;fontSize=12;fontColor=#1E293B;align=left;spacingLeft=14;" value="&lt;b&gt;NODE 1: RAK PENYIMPANAN (ESP32)&lt;/b&gt;&lt;br&gt;• Sensor Suhu &amp;amp; Lembap (DHT22), Gas (MQ-2)&lt;br&gt;• Relay Kipas &amp;amp; Buzzer Alarm" vertex="1">
-          <mxGeometry height="95" width="340" x="31" y="90" as="geometry" />
+        <mxCell id="n1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;strokeWidth=2;fontSize=12;fontColor=#1E293B;align=left;spacingLeft=14;" value="&lt;b&gt;NODE 1: RAK PENYIMPANAN (ESP32)&lt;/b&gt;&lt;br&gt;• Sensor Suhu &amp;amp; Lembap (DHT22), Gas (MQ-2), Cahaya (LDR)&lt;br&gt;• Relay Kipas &amp;amp; Buzzer Alarm" vertex="1">
+          <mxGeometry height="95" width="370" x="30" y="75" as="geometry" />
         </mxCell>
-        <mxCell id="n2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;strokeWidth=2;dashed=1;fontSize=12;fontColor=#1E293B;align=left;spacingLeft=14;" value="&lt;b&gt;NODE 2: KEAMANAN &amp;amp; SINAR UV-C (ESP32)&lt;/b&gt;&lt;br&gt;• Sensor Pintu (Reed Switch) &amp;amp; Gerak (PIR)&lt;br&gt;• Relay Sinar UV-C (Auto mati jika ada orang yang masuk)" vertex="1">
-          <mxGeometry height="95" width="340" x="520" y="90" as="geometry" />
+        <mxCell id="n2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;strokeWidth=2;fontSize=12;fontColor=#1E293B;align=left;spacingLeft=14;" value="&lt;b&gt;NODE 2: KEAMANAN &amp;amp; SINAR UV-C (ESP32)&lt;/b&gt;&lt;br&gt;• Sensor Pintu (Reed Switch) &amp;amp; Gerak (PIR)&lt;br&gt;• Relay Sinar UV-C (Auto-mati jika ada orang masuk)" vertex="1">
+          <mxGeometry height="95" width="370" x="500" y="75" as="geometry" />
         </mxCell>
-        <mxCell id="docker_env" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0F9FF;strokeColor=#0284C7;strokeWidth=2;dashed=1;fontSize=13;fontColor=#0369A1;verticalAlign=top;align=left;spacingLeft=18;spacingTop=10;arcSize=8;" value="&lt;b&gt;SERVER VM — LINGKUNGAN CONTAINER DOCKER (VIRTUALBOX)&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#0284C7&quot;&gt;• Layanan server berjalan terisolasi di dalam Docker: pbl_mqtt, pbl_backend, pbl_database&lt;/font&gt;" vertex="1">
-          <mxGeometry height="340" width="870" x="25" y="240" as="geometry" />
+        <mxCell id="docker_env" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0F9FF;strokeColor=#0284C7;strokeWidth=2;dashed=1;fontSize=13;fontColor=#0369A1;verticalAlign=top;align=left;spacingLeft=18;spacingTop=10;arcSize=8;" value="&lt;b&gt;AZURE CLOUD VPS — LINGKUNGAN CONTAINER DOCKER (pharma.web.id)&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#0284C7&quot;&gt;• Arsitektur 4-Node Microservices (Caddy SSL, Backend, Database MySQL, Mosquitto MQTT, Auto-Backup)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="390" width="860" x="20" y="215" as="geometry" />
         </mxCell>
-        <mxCell id="mqtt" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFEDD5;strokeColor=#EA580C;strokeWidth=2;dashed=1;fontSize=13;fontColor=#1E293B;" value="&lt;b&gt;BROKER MQTT (MOSQUITTO)&lt;/b&gt; — &lt;font color=&quot;#0369A1&quot;&gt;[Container: pbl_mqtt]&lt;/font&gt;&amp;nbsp;&lt;font color=&quot;#B45309&quot;&gt;(Rencana Integrasi)&lt;/font&gt;&lt;br&gt;Jembatan Publish / Subscribe untuk pengiriman data sensor &amp;amp; perintah tombol aktuator" vertex="1">
-          <mxGeometry height="75" width="540" x="170" y="300" as="geometry" />
+        <mxCell id="mqtt" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=2;fontSize=12;fontColor=#1E293B;" value="&lt;b&gt;NODE 3: BROKER MQTT (MOSQUITTO) [Aktif]&lt;/b&gt;&lt;br&gt;Jembatan Publish / Subscribe telemetri &amp;amp; perintah kontrol aktuator (Port 1883 TCP &amp;amp; 9001 WSS)" vertex="1">
+          <mxGeometry height="70" width="560" x="170" y="290" as="geometry" />
         </mxCell>
-        <mxCell id="api" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#16A34A;strokeWidth=2;fontSize=12;fontColor=#1E293B;" value="&lt;b&gt;BACKEND REST API (FastAPI)&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#0369A1&quot;&gt;[Container: pbl_backend]&lt;/font&gt;&amp;nbsp;&lt;font color=&quot;#15803D&quot;&gt;[Aktif]&lt;/font&gt;&lt;br&gt;Autentikasi Login, Role &amp;amp; Riwayat Sensor" vertex="1">
-          <mxGeometry height="80" width="240" x="320" y="460" as="geometry" />
+        <mxCell id="api" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#16A34A;strokeWidth=2;fontSize=12;fontColor=#1E293B;" value="&lt;b&gt;NODE 1: BACKEND REST API (FastAPI) [Aktif]&lt;/b&gt;&lt;br&gt;Otorisasi JWT, Admin Panel, Caddy SSL HTTPS (Port 443 / 8001)" vertex="1">
+          <mxGeometry height="80" width="260" x="50" y="445" as="geometry" />
         </mxCell>
-        <mxCell id="db" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#E0E7FF;strokeColor=#4F46E5;strokeWidth=2;fontSize=12;fontColor=#1E293B;" value="&lt;b&gt;DATABASE (MySQL)&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#0369A1&quot;&gt;[Container: pbl_database]&lt;/font&gt;&lt;br&gt;Tabel User &amp;amp; Log Sensor" vertex="1">
-          <mxGeometry height="90" width="180" x="690" y="455" as="geometry" />
+        <mxCell id="db" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#E0E7FF;strokeColor=#4F46E5;strokeWidth=2;fontSize=12;fontColor=#1E293B;" value="&lt;b&gt;NODE 2: DATABASE (MySQL 8.0) [Aktif]&lt;/b&gt;&lt;br&gt;Tabel users &amp;amp; sensor_data (Port 3306)" vertex="1">
+          <mxGeometry height="85" width="240" x="350" y="442" as="geometry" />
         </mxCell>
-        <mxCell id="app" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DBEAFE;strokeColor=#2563EB;strokeWidth=2;fontSize=13;fontColor=#1E293B;" value="&lt;b&gt;APLIKASI MOBILE ANDROID (FLUTTER)&lt;/b&gt;&amp;nbsp;&lt;div&gt;&lt;font color=&quot;#1D4ED8&quot;&gt;[Aktif]&lt;/font&gt;&lt;br&gt;Dashboard Suhu &amp;amp; Pintu • Grafik • Riwayat &amp;amp; Export CSV • Tombol Kontrol UV-C &amp;amp; Alarm&lt;/div&gt;" vertex="1">
-          <mxGeometry height="80" width="540" x="170" y="650" as="geometry" />
+        <mxCell id="backup" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3E8FF;strokeColor=#9333EA;strokeWidth=2;fontSize=12;fontColor=#1E293B;" value="&lt;b&gt;NODE 4: AUTO-BACKUP [Aktif]&lt;/b&gt;&lt;br&gt;Disaster Recovery Watcher (Auto-Restore RTO 4 Detik)" vertex="1">
+          <mxGeometry height="80" width="210" x="635" y="445" as="geometry" />
         </mxCell>
-        <mxCell id="e1" edge="1" parent="1" source="n1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#D97706;strokeWidth=2;dashed=1;startArrow=none;endArrow=block;endFill=1;fontSize=11;fontColor=#92400E;labelBackgroundColor=#FFFFFF;exitX=0.5;exitY=1;entryX=0.25;entryY=0;" target="mqtt" value="1a. Kirim kondisi suhu &amp;amp; gas (Rencana)">
+        <mxCell id="app" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DBEAFE;strokeColor=#2563EB;strokeWidth=2;fontSize=13;fontColor=#1E293B;" value="&lt;b&gt;APLIKASI MOBILE ANDROID (FLUTTER)&lt;/b&gt;&amp;nbsp;&lt;div&gt;&lt;font color=&quot;#1D4ED8&quot;&gt;[Aktif - v1.0.10]&lt;/font&gt;&lt;br&gt;Monitoring Suhu &amp;amp; Pintu Realtime • Grafik Tren • Ekspor CSV • Kontrol UV-C &amp;amp; Sirine&lt;/div&gt;" vertex="1">
+          <mxGeometry height="85" width="560" x="170" y="640" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="n1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#D97706;strokeWidth=2;startArrow=classic;endArrow=classic;endFill=1;startFill=1;fontSize=11;fontColor=#92400E;labelBackgroundColor=#FFFFFF;exitX=0.5;exitY=1;entryX=0.25;entryY=0;" target="mqtt" value="1a. Telemetri Sensor &amp;amp; Kontrol Kipas/Buzzer">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e2" edge="1" parent="1" source="n2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#D97706;strokeWidth=2;dashed=1;startArrow=none;endArrow=block;endFill=1;fontSize=11;fontColor=#92400E;labelBackgroundColor=#FFFFFF;exitX=0.5;exitY=1;entryX=0.75;entryY=0;" target="mqtt" value="1b. Kirim status pintu &amp;amp; PIR (Rencana)">
+        <mxCell id="e2" edge="1" parent="1" source="n2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#D97706;strokeWidth=2;startArrow=classic;endArrow=classic;endFill=1;startFill=1;fontSize=11;fontColor=#92400E;labelBackgroundColor=#FFFFFF;exitX=0.5;exitY=1;entryX=0.75;entryY=0;" target="mqtt" value="1b. Status Pintu/PIR &amp;amp; Kontrol UV-C">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e3" edge="1" parent="1" source="mqtt" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#D97706;strokeWidth=2;dashed=1;startArrow=none;endArrow=block;endFill=1;fontSize=11;fontColor=#92400E;labelBackgroundColor=#FFFFFF;" target="api" value="2. Kirim data sensor ke Backend (Rencana)">
+        <mxCell id="e3" edge="1" parent="1" source="mqtt" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#16A34A;strokeWidth=2;startArrow=none;endArrow=classic;endFill=1;fontSize=11;fontColor=#166534;labelBackgroundColor=#FFFFFF;exitX=0.25;exitY=1;entryX=0.5;entryY=0;" target="api" value="2. Teruskan Telemetri ke Backend (Aktif)">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e4" edge="1" parent="1" source="mqtt" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#D97706;strokeWidth=2;dashed=1;startArrow=none;endArrow=block;endFill=1;fontSize=11;fontColor=#92400E;labelBackgroundColor=#FFFFFF;exitX=0.15;exitY=1;entryX=0.15;entryY=0;" target="app" value="3. Ambil hasil realtime di Broker&amp;nbsp;&lt;div&gt;(Rencana)&lt;/div&gt;">
+        <mxCell id="e4" edge="1" parent="1" source="mqtt" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#0284C7;strokeWidth=2;startArrow=classic;endArrow=classic;endFill=1;startFill=1;fontSize=11;fontColor=#0369A1;labelBackgroundColor=#FFFFFF;exitX=0.08;exitY=1;entryX=0.08;entryY=0;" target="app" value="3. Data Realtime &amp;amp; Kontrol Aktuator (Aktif)">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e5" edge="1" parent="1" source="api" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#16A34A;strokeWidth=2;startArrow=none;endArrow=block;endFill=1;fontSize=11;fontColor=#166534;labelBackgroundColor=#FFFFFF;" target="db" value="4. Simpan di Database">
+        <mxCell id="e5" edge="1" parent="1" source="api" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#16A34A;strokeWidth=2;startArrow=none;endArrow=classic;endFill=1;fontSize=11;fontColor=#166534;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="db" value="4. Simpan Log &amp;amp; Akun">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e6" edge="1" parent="1" source="api" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#2563EB;strokeWidth=2;startArrow=none;endArrow=block;endFill=1;fontSize=11;fontColor=#1E40AF;labelBackgroundColor=#FFFFFF;" target="app" value="5. Tampilkan grafik, riwayat &amp;amp; CSV (Aktif)">
+        <mxCell id="e5b" edge="1" parent="1" source="db" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9333EA;strokeWidth=2;dashed=1;startArrow=classic;endArrow=classic;endFill=1;startFill=1;fontSize=11;fontColor=#7E22CE;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="backup" value="Auto-Restore (4s)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="api" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#2563EB;strokeWidth=2;startArrow=none;endArrow=classic;endFill=1;fontSize=11;fontColor=#1E40AF;labelBackgroundColor=#FFFFFF;exitX=0.5;exitY=1;entryX=0.3;entryY=0;" target="app" value="5. REST API HTTPS: Riwayat, Grafik &amp;amp; CSV (Aktif)">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
       </root>
