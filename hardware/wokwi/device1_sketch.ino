@@ -82,21 +82,22 @@ void callbackMQTT(char* topic, byte* payload, unsigned int length) {
 void tungguWiFi() {
   Serial.println("[WIFI] Menghubungkan ke Wokwi-GUEST...");
   WiFi.mode(WIFI_STA);
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  // Channel 6 wajib di Wokwi agar langsung lock ke AP virtual tanpa scan lama
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD, 6);
 
   int retry = 0;
-  while (WiFi.status() != WL_CONNECTED && retry < 25) {
-    delay(500);
+  while (WiFi.status() != WL_CONNECTED && retry < 60) {
+    delay(150);
     Serial.print(".");
     retry++;
   }
 
   if (WiFi.status() == WL_CONNECTED) {
-    Serial.println("\n[WIFI] Berhasil Terhubung!");
+    Serial.println("\n[WIFI] Berhasil Terhubung ke Wokwi-GUEST!");
     Serial.print("[WIFI] IP Address: ");
     Serial.println(WiFi.localIP());
   } else {
-    Serial.println("\n[WIFI] Timeout, tetap lanjut ke sensor...");
+    Serial.println("\n[WIFI] Timeout, tetap lanjut membaca sensor...");
   }
 }
 
