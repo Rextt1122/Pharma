@@ -47,13 +47,20 @@ class ClimateDashboardPage extends StatelessWidget {
     final humOk = s.kelembapan >= humMin && s.kelembapan <= humMax;
     final safe = tempOk && humOk && !s.isGasBahaya && !s.isPintuTerbuka;
 
-    final hero = _buildHeroClimateDial(
-      s: s,
-      p: p,
-      safe: safe,
-      targetMin: targetMin,
-      targetMax: targetMax,
-    );
+    final hero = p.isVaccineRack
+        ? _buildHeroClimateDial(
+            s: s,
+            p: p,
+            safe: safe,
+            targetMin: targetMin,
+            targetMax: targetMax,
+          )
+        : _buildCleanroomSecurityHero(
+            context: context,
+            s: s,
+            p: p,
+            safe: safe,
+          );
     final metrics = _buildBentoEnvironmentMetrics(
       context: context,
       s: s,
@@ -93,11 +100,13 @@ class ClimateDashboardPage extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        _buildSectionTitle('PARAMETER LINGKUNGAN'),
-                        metrics,
-                        const SizedBox(height: AppSpacing.md),
-                        support,
-                        const SizedBox(height: AppSpacing.lg),
+                        if (p.isVaccineRack) ...[
+                          _buildSectionTitle('PARAMETER LINGKUNGAN'),
+                          metrics,
+                          const SizedBox(height: AppSpacing.md),
+                          support,
+                          const SizedBox(height: AppSpacing.lg),
+                        ],
                         _buildSectionTitle('KONTROL AKTUATOR'),
                         controls,
                       ],
@@ -119,23 +128,25 @@ class ClimateDashboardPage extends StatelessWidget {
             _selector(p),
             const SizedBox(height: AppSpacing.md),
 
-            // 2. Hero Climate Dial
+            // 2. Hero Card / Climate Dial
             hero,
             const SizedBox(height: AppSpacing.lg),
 
-            // 3. Bento Environment & Security Metrics
-            _buildSectionTitle('PARAMETER LINGKUNGAN'),
-            metrics,
-            const SizedBox(height: AppSpacing.md),
-            support,
-            const SizedBox(height: AppSpacing.lg),
+            // 3. Parameter Lingkungan (Khusus Rak Vaksin)
+            if (p.isVaccineRack) ...[
+              _buildSectionTitle('PARAMETER LINGKUNGAN'),
+              metrics,
+              const SizedBox(height: AppSpacing.md),
+              support,
+              const SizedBox(height: AppSpacing.lg),
+            ],
 
-            // 5. Tactile Smart Controls
+            // 4. Tactile Smart Controls
             _buildSectionTitle('KONTROL AKTUATOR'),
             controls,
             const SizedBox(height: AppSpacing.lg),
 
-            // 6. Connection Status
+            // 5. Connection Status
             _connection(p),
           ],
         );
@@ -433,6 +444,252 @@ class ClimateDashboardPage extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildCleanroomSecurityHero({
+    required BuildContext context,
+    required SensorModel s,
+    required SensorProvider p,
+    required bool safe,
+  }) {
+    final uvOn = p.isUvActive;
+    final alert = s.isPintuTerbuka || s.isGerakTerdeteksi;
+    final Color heroColor = uvOn
+        ? AppColors.uvPurple
+        : (alert ? AppColors.alertRed : AppColors.pharmaNavy);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.cardWhite,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(
+          color: alert ? AppColors.alertRed.withAlpha(80) : AppColors.containerLow,
+          width: 1.0,
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0C0E555A),
+            blurRadius: 12,
+            offset: Offset(0, 3),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 7,
+                    height: 7,
+                    decoration: BoxDecoration(
+                      color: uvOn
+                          ? AppColors.uvPurple
+                          : (alert ? AppColors.alertRed : AppColors.activeGreen),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'CLEANROOM & STERILISASI',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.6,
+                      color: uvOn
+                          ? AppColors.uvPurple
+                          : (alert ? AppColors.alertRed : AppColors.pharmaNavy),
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
+                decoration: BoxDecoration(
+                  color: AppColors.inputBg,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                ),
+                child: const Text(
+                  'Standar 15–25°C',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textDark,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: uvOn ? AppColors.uvPurple.withAlpha(16) : AppColors.inputBg,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+              border: Border.all(
+                color: uvOn ? AppColors.uvPurple.withAlpha(50) : AppColors.containerLow,
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: heroColor.withAlpha(22),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    uvOn ? Icons.cleaning_services_rounded : Icons.shield_outlined,
+                    color: heroColor,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        uvOn ? 'Sterilisasi Sinar UV-C Aktif' : 'Ruangan Steril Siaga',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          color: heroColor,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        uvOn
+                            ? 'Lampu radiasi kuman 254nm aktif membasmi patogen'
+                            : (s.isGerakTerdeteksi
+                                ? 'Ada orang terdeteksi • Radiasi UV otomatis dikunci'
+                                : 'Kondisi ruangan steril dan aman untuk personil'),
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: AppColors.textMuted,
+                          height: 1.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.inputBg,
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                    border: Border.all(color: AppColors.containerLow),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Suhu Ruangan',
+                        style: TextStyle(fontSize: 10.5, color: AppColors.textMuted, fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
+                        children: [
+                          Text(
+                            s.suhu.toStringAsFixed(1),
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textDark),
+                          ),
+                          const SizedBox(width: 2),
+                          const Text('°C', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.pharmaNavy)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm + 2),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.inputBg,
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                    border: Border.all(color: AppColors.containerLow),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Kelembapan Ruang',
+                        style: TextStyle(fontSize: 10.5, color: AppColors.textMuted, fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
+                        children: [
+                          Text(
+                            s.kelembapan.toStringAsFixed(0),
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textDark),
+                          ),
+                          const SizedBox(width: 2),
+                          const Text('%', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.humidityBlue)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm + 2),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppColors.inputBg,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+              border: Border.all(color: AppColors.containerLow, width: 0.8),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _buildDialSubStat(
+                    'Pintu Akses',
+                    s.isPintuTerbuka ? 'Terbuka' : 'Terkunci',
+                    isAlert: s.isPintuTerbuka,
+                  ),
+                ),
+                Container(height: 16, width: 1, color: AppColors.containerHigh),
+                Expanded(
+                  child: _buildDialSubStat(
+                    'Sensor Gerak',
+                    s.isGerakTerdeteksi ? 'Ada Orang' : 'Kosong',
+                    isAlert: s.isGerakTerdeteksi,
+                  ),
+                ),
+                Container(height: 16, width: 1, color: AppColors.containerHigh),
+                Expanded(
+                  child: _buildDialSubStat(
+                    'Stok Obat',
+                    '${s.jarakStok.toStringAsFixed(0)} cm',
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
