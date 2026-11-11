@@ -252,16 +252,17 @@ G. Perintah Cek Spesifikasi & Kesehatan VPS (Untuk Demo ke Dosen):
    docker stats --no-stream                      # Bukti efisiensi kontainer (FastAPI cuma ~41 MB)
    docker -H tcp://127.0.0.1:2378 logs --tail 8 pbl_backup # Bukti Auto-Disaster Recovery aktif
 
-H. Fungsi Tombol Kontrol & Simulasi di Web Dashboard:
-   1. Tombol Aktuator Hardware:
-      - UV (ON / OFF)     : Kirim pesan MQTT ke topik 'pharma/control/uv' untuk saklar lampu sterilisasi.
-      - Sirine (ON / OFF) : Kirim pesan MQTT ke topik 'pharma/control/buzzer' untuk sirine alarm.
+H. 4 Kartu Telemetri Sensor & Simulasi di Web Dashboard:
+   1. Baris 4 Kartu Telemetri (Dengan Gauge Melengkung Seragam):
+      - SUHU               : Rentang vaksin cold-chain (2 - 8 °C). Indikator: Optimal / Peringatan.
+      - KELEMBAPAN         : Kelembapan relatif ruangan (35 - 60 % RH).
+      - GAS & PINTU        : Kualitas udara MQ-2 (< 50 PPM) dan status pintu gudang.
+      - CAHAYA (LUX)       : Sensor LDR intensitas cahaya ruang obat (Standar: < 300 Lux).
 
-   2. 4 Tombol Preset Simulasi Sensor (Untuk Uji Coba Tanpa Alat Fisik):
-      - 'Vaksin 4.4 C'    : Kirim data suhu ideal cold-chain (rentang 2 - 8 °C). Indikator: Optimal / Aman (Hijau).
-      - 'Steril 19.5 C'   : Kirim data suhu ruangan sterilisasi (rentang 15 - 25 °C). Indikator: Aman (Hijau).
-      - 'Suhu 9.6 C'      : Simulasi suhu naik melebihi batas aman vaksin (> 8 °C). Indikator: Peringatan (Kuning).
-      - 'Alert Gas'       : Simulasi kebocoran gas berbahaya (> 50 ppm) & pintu terbuka. Indikator: Bahaya (Merah).
+   2. Panel Khusus Simulasi Perangkat (Di Bawah Baris Telemetri):
+      - Preset Cepat       : 'Aman (4.2°)', 'Bocor (9.8°)', 'Gas Bahaya', 'Steril ON', 'Pintu Buka', 'Ada Orang'.
+      - Kontrol Aktuator   : Switch tombol saklar Lampu UV-C, Sirine Alarm, Kipas, dan Pompa.
+      - Form Input Lengkap : Uji coba fleksibel nilai suhu, kelembapan, gas, dan cahaya secara manual.
 
 I. Lokasi File Dashboard di Server & Laptop:
    - Di Cloud VPS Server  : /home/azureuser/backend/dashboard.html
