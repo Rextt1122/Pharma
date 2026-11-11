@@ -1,6 +1,7 @@
 import 'dart:async';
-
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
+
 import '../models/sensor_model.dart';
 import '../services/api_service.dart';
 import '../services/mqtt_service.dart';
@@ -70,7 +71,7 @@ class SensorProvider extends ChangeNotifier {
   SensorModel get device1Data => _device1Data;
   SensorModel get device2Data => _device2Data;
   String get selectedDeviceId => _selectedDeviceId;
-  bool get buzzerActive => _buzzerActive;
+  bool get buzzerActive => _device1Data.isBuzzerAktif || _buzzerActive;
   bool get isUvActive => _device2Data.isUvMenyala || _device1Data.isUvMenyala;
   bool get isConnected => _isConnected;
   bool get isInitialLoading => _isInitialLoading;
@@ -126,7 +127,7 @@ class SensorProvider extends ChangeNotifier {
   // Device 1 Actuator 2: Sirine Buzzer Alarm
   bool toggleBuzzer() {
     if (!_isOperator) return false;
-    final nextState = _device1Data.statusBuzzer == 1 ? 0 : 1;
+    final nextState = buzzerActive ? 0 : 1;
     _device1Data = _device1Data.copyWith(statusBuzzer: nextState);
     _buzzerActive = nextState == 1;
     _mqttService.publish('pharma/control/device_1', '{"actuator":"buzzer","state":$nextState}');
@@ -207,6 +208,7 @@ class SensorProvider extends ChangeNotifier {
       final history = await _apiService.fetchSensorHistory();
       if (history.isNotEmpty) {
         _device1Data = history.first.copyWith(deviceId: 'device_1');
+        _buzzerActive = _device1Data.isBuzzerAktif;
         if (_device2Data.waktu == null) {
           _device2Data = _device2Data.copyWith(
             waktu: history.first.waktu,
@@ -243,6 +245,12 @@ class SensorProvider extends ChangeNotifier {
         _device2Data = data;
       } else {
         _device1Data = data;
+        _buzzerActive = data.isBuzzerAktif;
+        if (data.isBuzzerAktif) {
+          try {
+            HapticFeedback.vibrate();
+          } catch (_) {}
+        }
       }
       _isInitialLoading = false;
       _checkAndAddNotifications(data);
@@ -278,6 +286,16 @@ class SensorProvider extends ChangeNotifier {
     final double maxT = _tempMax;
 
     if (data.deviceId == 'device_1') {
+      if (data.isBuzzerAktif) {
+        _addNotificationOnce(
+          id: 'buzzer_alert',
+          title: 'Sirine Alarm Aktif',
+          message: 'Alarm sirine darurat berbunyi di Rak Penyimpanan Vaksin!',
+          isCritical: true,
+        );
+      } else {
+        _lastNotificationTime.remove('buzzer_alert');
+      }
       if (data.kadarGas > _gasMax) {
         _addNotificationOnce(
           id: 'gas_alert',
