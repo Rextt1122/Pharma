@@ -1,0 +1,143 @@
+<?xml version="1.0" ?>
+<mxfile host="app.diagrams.net">
+  <diagram id="tugas2_gudang_farmasi" name="Tugas 2 - IoT Gudang Farmasi">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="pool_t2_f" value="Sistem Pemantauan Lingkungan &amp; Tanggap Darurat Gudang Farmasi IoT" style="swimlane;html=1;childLayout=stackLayout;resizeParent=1;resizeParentMax=0;startSize=30;horizontal=1;horizontalStack=1;collapsible=0;marginBottom=0;marginTop=0;marginLeft=0;marginRight=0;strokeColor=#0f766e;strokeWidth=2;fillColor=#f0fdfa;fontSize=13;fontStyle=1;fontColor=#134e4a;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="1080" height="860" as="geometry"/>
+        </mxCell>
+        <mxCell id="lane_t2_sensor" value="Perangkat Sensor Lapangan&#10;(DHT22, Gas MQ-2, Pintu, PIR)" style="swimlane;html=1;startSize=40;horizontal=1;whiteSpace=wrap;collapsible=0;strokeColor=#0f766e;strokeWidth=1;fillColor=#ffffff;fontSize=11.5;fontStyle=1;align=center;" vertex="1" parent="pool_t2_f">
+          <mxGeometry x="0" y="30" width="200" height="830" as="geometry"/>
+        </mxCell>
+        <mxCell id="lane_t2_esp" value="Node Mikrokontroler&#10;(ESP32 Firmware)" style="swimlane;html=1;startSize=40;horizontal=1;whiteSpace=wrap;collapsible=0;strokeColor=#0f766e;strokeWidth=1;fillColor=#ffffff;fontSize=11.5;fontStyle=1;align=center;" vertex="1" parent="pool_t2_f">
+          <mxGeometry x="200" y="30" width="210" height="830" as="geometry"/>
+        </mxCell>
+        <mxCell id="lane_t2_cloud" value="Server Backend &amp; Broker&#10;(Mosquitto, FastAPI, MySQL)" style="swimlane;html=1;startSize=40;horizontal=1;whiteSpace=wrap;collapsible=0;strokeColor=#0f766e;strokeWidth=1;fillColor=#ffffff;fontSize=11.5;fontStyle=1;align=center;" vertex="1" parent="pool_t2_f">
+          <mxGeometry x="410" y="30" width="250" height="830" as="geometry"/>
+        </mxCell>
+        <mxCell id="lane_t2_app" value="Aplikasi Mobile (Flutter)&#10;(Petugas &amp; Supervisor)" style="swimlane;html=1;startSize=40;horizontal=1;whiteSpace=wrap;collapsible=0;strokeColor=#0f766e;strokeWidth=1;fillColor=#ffffff;fontSize=11.5;fontStyle=1;align=center;" vertex="1" parent="pool_t2_f">
+          <mxGeometry x="660" y="30" width="220" height="830" as="geometry"/>
+        </mxCell>
+        <mxCell id="lane_t2_act" value="Aktuator Fisik Gudang&#10;(Buzzer Alarm &amp; Relai UV-C)" style="swimlane;html=1;startSize=40;horizontal=1;whiteSpace=wrap;collapsible=0;strokeColor=#0f766e;strokeWidth=1;fillColor=#ffffff;fontSize=11.5;fontStyle=1;align=center;" vertex="1" parent="pool_t2_f">
+          <mxGeometry x="880" y="30" width="200" height="830" as="geometry"/>
+        </mxCell>
+        <mxCell id="t2_init" value="" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#0f172a;strokeColor=none;" vertex="1" parent="lane_t2_sensor">
+          <mxGeometry x="88" y="60" width="24" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="t2_baca_sensor" value="Baca Sinyal Analog &amp;amp; Digital:&#10;• Suhu/Lembap (DHT22)&#10;• Konsentrasi Gas (MQ-2)&#10;• Sensor Pintu &amp;amp; PIR" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#e0f2fe;strokeColor=#0284c7;strokeWidth=1.5;fontColor=#0f172a;fontSize=11;fontStyle=0;align=center;" vertex="1" parent="lane_t2_sensor">
+          <mxGeometry x="20" y="120" width="160" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="t2_pack_json" value="Konversi Nilai Fisik &amp;amp;&#10;Bungkus Payload JSON&#10;{temp, hum, gas, door, pir}" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#e0f2fe;strokeColor=#0284c7;strokeWidth=1.5;fontColor=#0f172a;fontSize=11;fontStyle=0;align=center;" vertex="1" parent="lane_t2_esp">
+          <mxGeometry x="25" y="120" width="160" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="t2_pub_mqtt" value="Publish Data via WiFi/MQTT&#10;ke Topik /pharma/telemetry" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#e0f2fe;strokeColor=#0284c7;strokeWidth=1.5;fontColor=#0f172a;fontSize=11;fontStyle=0;align=center;" vertex="1" parent="lane_t2_esp">
+          <mxGeometry x="25" y="220" width="160" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="t2_srv_rcv" value="Mosquitto Terima Pesan &amp;amp;&#10;FastAPI Parse JSON" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#dcfce7;strokeColor=#16a34a;strokeWidth=1.5;fontColor=#0f172a;fontSize=11;fontStyle=0;align=center;" vertex="1" parent="lane_t2_cloud">
+          <mxGeometry x="45" y="220" width="160" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="t2_simpan_db" value="Simpan Riwayat Telemetri&#10;ke Database MySQL" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#dcfce7;strokeColor=#16a34a;strokeWidth=1.5;fontColor=#0f172a;fontSize=11;fontStyle=0;align=center;" vertex="1" parent="lane_t2_cloud">
+          <mxGeometry x="45" y="305" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="t2_dec_threshold" value="" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0f172a;strokeWidth=1.5;fontColor=#0f172a;fontSize=10.5;fontStyle=1;align=center;" vertex="1" parent="lane_t2_cloud">
+          <mxGeometry x="105" y="390" width="40" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="t2_lbl_dec_th" value="&amp;lt;b&amp;gt;Ambang Batas&amp;#xa;Terlanggar?&amp;lt;/b&amp;gt;&amp;#xa;&amp;lt;i&amp;gt;(Suhu &amp;gt; 8°C / Gas &amp;gt; 400ppm /&amp;#xa;Pintu Terbuka Lama)&amp;lt;/i&amp;gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10;fontColor=#0f172a;" vertex="1" parent="lane_t2_cloud">
+          <mxGeometry x="148" y="395" width="180" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="t2_bcast_norm" value="Broadcast Telemetri Realtime&#10;via WebSocket / MQTT" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#dcfce7;strokeColor=#16a34a;strokeWidth=1.5;fontColor=#0f172a;fontSize=11;fontStyle=0;align=center;" vertex="1" parent="lane_t2_cloud">
+          <mxGeometry x="45" y="480" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="t2_mode_darurat" value="Picukan Status Darurat:&#10;• Buat Event Log Bahaya&#10;• Publish Perintah Interlock" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#fee2e2;strokeColor=#dc2626;strokeWidth=1.5;fontColor=#7f1d1d;fontSize=11;fontStyle=1;align=center;" vertex="1" parent="lane_t2_cloud">
+          <mxGeometry x="45" y="560" width="160" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="t2_fork_darurat" value="" style="shape=line;strokeWidth=5;strokeColor=#0f172a;html=1;" vertex="1" parent="lane_t2_cloud">
+          <mxGeometry x="30" y="650" width="190" height="10" as="geometry"/>
+        </mxCell>
+        <mxCell id="t2_join_darurat" value="" style="shape=line;strokeWidth=5;strokeColor=#0f172a;html=1;" vertex="1" parent="lane_t2_cloud">
+          <mxGeometry x="30" y="750" width="190" height="10" as="geometry"/>
+        </mxCell>
+        <mxCell id="t2_normalisasi" value="Kirim Perintah Reset Aktuator&#10;&amp;amp; Catat Log Pemulihan di Audit K3" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#dcfce7;strokeColor=#16a34a;strokeWidth=1.5;fontColor=#0f172a;fontSize=11;fontStyle=0;align=center;" vertex="1" parent="lane_t2_cloud">
+          <mxGeometry x="45" y="780" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="t2_update_ui" value="Update Realtime Dashboard:&#10;• Radial Gauge Suhu Vaksin&#10;• Grafik Tren &amp;amp; Status Aman" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#fef3c7;strokeColor=#d97706;strokeWidth=1.5;fontColor=#78350f;fontSize=11;fontStyle=0;align=center;" vertex="1" parent="lane_t2_app">
+          <mxGeometry x="30" y="480" width="160" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="t2_fn_normal" value="" style="ellipse;shape=endState;fillColor=#0f172a;strokeColor=#0f172a;strokeWidth=1.5;" vertex="1" parent="lane_t2_app">
+          <mxGeometry x="98" y="565" width="24" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="t2_lbl_fn_norm" value="Monitoring Normal (Idle)" style="text;html=1;align=center;verticalAlign=top;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10.5;fontStyle=1;fontColor=#0f172a;" vertex="1" parent="lane_t2_app">
+          <mxGeometry x="45" y="595" width="130" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="t2_alert_mobile" value="Terima Push Notification Bahaya&#10;&amp;amp; Bunyikan Alarm Audio di HP" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#fee2e2;strokeColor=#dc2626;strokeWidth=1.5;fontColor=#7f1d1d;fontSize=11;fontStyle=1;align=center;" vertex="1" parent="lane_t2_app">
+          <mxGeometry x="30" y="670" width="160" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="t2_buzzer_on" value="Aktivasi Sirine / Buzzer Lokal&#10;(Peringatan Evakuasi Ruang)" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#fee2e2;strokeColor=#dc2626;strokeWidth=1.5;fontColor=#7f1d1d;fontSize=11;fontStyle=1;align=center;" vertex="1" parent="lane_t2_act">
+          <mxGeometry x="20" y="670" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="t2_uv_cutoff" value="Safety Interlock Trip:&#10;Cut-Off Daya Relai Sinar UV-C&#10;(&amp;lt; 100ms demi keamanan)" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#fae8ff;strokeColor=#a21caf;strokeWidth=1.5;fontColor=#701a75;fontSize=11;fontStyle=0;align=center;" vertex="1" parent="lane_t2_act">
+          <mxGeometry x="20" y="740" width="160" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="t2_fn_darurat" value="" style="ellipse;shape=endState;fillColor=#0f172a;strokeColor=#0f172a;strokeWidth=1.5;" vertex="1" parent="lane_t2_cloud">
+          <mxGeometry x="113" y="845" width="24" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2_init_baca" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0f172a;strokeWidth=1.6;endArrow=open;endFill=0;fontSize=10.5;fontStyle=1;" edge="1" parent="1" source="t2_init" target="t2_baca_sensor">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2_baca_pack" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0f172a;strokeWidth=1.6;endArrow=open;endFill=0;fontSize=10.5;fontStyle=1;" edge="1" parent="1" source="t2_baca_sensor" target="t2_pack_json">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2_pack_pub" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0f172a;strokeWidth=1.6;endArrow=open;endFill=0;fontSize=10.5;fontStyle=1;" edge="1" parent="1" source="t2_pack_json" target="t2_pub_mqtt">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2_pub_srv" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0f172a;strokeWidth=1.6;endArrow=open;endFill=0;fontSize=10.5;fontStyle=1;" edge="1" parent="1" source="t2_pub_mqtt" target="t2_srv_rcv">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2_srv_db" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0f172a;strokeWidth=1.6;endArrow=open;endFill=0;fontSize=10.5;fontStyle=1;" edge="1" parent="1" source="t2_srv_rcv" target="t2_simpan_db">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2_db_dec" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0f172a;strokeWidth=1.6;endArrow=open;endFill=0;fontSize=10.5;fontStyle=1;" edge="1" parent="1" source="t2_simpan_db" target="t2_dec_threshold">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2_dec_norm" value="[Tidak]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0f172a;strokeWidth=1.6;endArrow=open;endFill=0;fontSize=10.5;fontStyle=1;align=right;" edge="1" parent="1" source="t2_dec_threshold" target="t2_bcast_norm">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2_norm_ui" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0f172a;strokeWidth=1.6;endArrow=open;endFill=0;fontSize=10.5;fontStyle=1;" edge="1" parent="1" source="t2_bcast_norm" target="t2_update_ui">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2_ui_fn" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0f172a;strokeWidth=1.6;endArrow=open;endFill=0;fontSize=10.5;fontStyle=1;" edge="1" parent="1" source="t2_update_ui" target="t2_fn_normal">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2_dec_dang" value="[Ya]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0f172a;strokeWidth=1.6;endArrow=open;endFill=0;fontSize=10.5;fontStyle=1;align=right;" edge="1" parent="1" source="t2_dec_threshold" target="t2_mode_darurat">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2_dang_fork" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0f172a;strokeWidth=1.6;endArrow=open;endFill=0;fontSize=10.5;fontStyle=1;" edge="1" parent="1" source="t2_mode_darurat" target="t2_fork_darurat">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2_fork_mobile" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0f172a;strokeWidth=1.6;endArrow=open;endFill=0;fontSize=10.5;fontStyle=1;" edge="1" parent="1" source="t2_fork_darurat" target="t2_alert_mobile">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2_fork_act1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0f172a;strokeWidth=1.6;endArrow=open;endFill=0;fontSize=10.5;fontStyle=1;" edge="1" parent="1" source="t2_fork_darurat" target="t2_buzzer_on">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2_buzzer_uv" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0f172a;strokeWidth=1.6;endArrow=open;endFill=0;fontSize=10.5;fontStyle=1;" edge="1" parent="1" source="t2_buzzer_on" target="t2_uv_cutoff">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2_mobile_join" value="Petugas Konfirmasi&#10;Reset / Disarm" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0f172a;strokeWidth=1.6;endArrow=open;endFill=0;fontSize=10.5;fontStyle=1;align=left;" edge="1" parent="1" source="t2_alert_mobile" target="t2_join_darurat">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2_act_join" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0f172a;strokeWidth=1.6;endArrow=open;endFill=0;fontSize=10.5;fontStyle=1;" edge="1" parent="1" source="t2_uv_cutoff" target="t2_join_darurat">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2_join_norm" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0f172a;strokeWidth=1.6;endArrow=open;endFill=0;fontSize=10.5;fontStyle=1;" edge="1" parent="1" source="t2_join_darurat" target="t2_normalisasi">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2_norm_fn" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0f172a;strokeWidth=1.6;endArrow=open;endFill=0;fontSize=10.5;fontStyle=1;" edge="1" parent="1" source="t2_normalisasi" target="t2_fn_darurat">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

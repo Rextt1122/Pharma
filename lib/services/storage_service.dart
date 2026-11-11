@@ -44,7 +44,12 @@ class StorageService {
 
   Future<String> getServerIp() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_keyServerIp) ?? defaultIp;
+    final ip = prefs.getString(_keyServerIp);
+    if (ip == null || ip == '192.168.33.10' || ip == '192.168.1.100') {
+      await prefs.setString(_keyServerIp, defaultIp);
+      return defaultIp;
+    }
+    return ip;
   }
 
   // Auth persistence: token sesi disimpan terenkripsi (Keystore / Keychain)

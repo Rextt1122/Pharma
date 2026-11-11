@@ -9,8 +9,24 @@ import '../widgets/botanic_vector_decor.dart';
 import '../widgets/sensor_trend_chart.dart';
 import '../widgets/shimmer_loading.dart';
 
-class HistoryPage extends StatelessWidget {
+class HistoryPage extends StatefulWidget {
   const HistoryPage({super.key});
+
+  @override
+  State<HistoryPage> createState() => _HistoryPageState();
+}
+
+class _HistoryPageState extends State<HistoryPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final provider = Provider.of<HistoryProvider>(context, listen: false);
+      if (provider.historyList.isEmpty || provider.errorMessage != null) {
+        provider.fetchHistory();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

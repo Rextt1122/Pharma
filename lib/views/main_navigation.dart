@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../providers/sensor_provider.dart';
+import '../providers/history_provider.dart';
 import '../services/update_service.dart';
 import '../theme/app_theme.dart';
 import 'climate_dashboard_page.dart';
@@ -443,6 +444,12 @@ class _MainNavigationState extends State<MainNavigation>
           if (_selectedIndex != index) {
             setState(() => _selectedIndex = index);
             _tabTransitionController.forward(from: 0.0);
+            if (index == 2) {
+              final hp = Provider.of<HistoryProvider>(context, listen: false);
+              if (hp.historyList.isEmpty || hp.errorMessage != null) {
+                hp.fetchHistory();
+              }
+            }
           }
         },
         borderRadius: BorderRadius.circular(AppSpacing.radiusSm),

@@ -146,6 +146,21 @@ class SensorProvider extends ChangeNotifier {
     return true;
   }
 
+  // Device 1 Actuator 4: Smart Auto Climate Control
+  bool _isAutoClimate = true;
+  bool get isAutoClimate => _isAutoClimate;
+
+  bool toggleAutoClimate() {
+    if (!_isOperator) return false;
+    _isAutoClimate = !_isAutoClimate;
+    _mqttService.publish(
+      'pharma/control/device_1',
+      '{"actuator":"auto_climate","state":${_isAutoClimate ? 1 : 0}}',
+    );
+    notifyListeners();
+    return true;
+  }
+
   // Device 2 Actuator 1: Lampu UV Sterilisasi (Dengan Human Interlock Protection)
   bool toggleUv() {
     if (!_isOperator) return false;

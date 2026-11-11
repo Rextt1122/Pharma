@@ -1,0 +1,64 @@
+<mxfile host="app.diagrams.net" agent="Hermes">
+  <diagram id="pharma-iot-simple" name="Alur System Design">
+    <mxGraphModel dx="1406" dy="796" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="900" pageHeight="760" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontStyle=1;fontColor=#0F172A;" value="ALUR SYSTEM DESIGN GUDANG FARMASI &amp;amp; STERILISASI SINAR UV-C" vertex="1">
+          <mxGeometry height="30" width="740" x="80" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="n1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=default;strokeWidth=2;dashed=1;fontSize=12;fontColor=#1E293B;align=left;spacingLeft=14;" value="&lt;b&gt;NODE 1: RAK PENYIMPANAN (ESP32)&lt;/b&gt;&lt;br&gt;• Sensor Suhu &amp;amp; Lembap (DHT22), Gas (MQ-2)&lt;br&gt;• Relay Kipas &amp;amp; Buzzer Alarm" vertex="1">
+          <mxGeometry height="95" width="340" x="31" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="n2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=default;strokeWidth=2;dashed=1;fontSize=12;fontColor=#1E293B;align=left;spacingLeft=14;" value="&lt;b&gt;NODE 2: KEAMANAN &amp;amp; SINAR UV-C (ESP32)&lt;/b&gt;&lt;br&gt;• Sensor Pintu (Reed Switch) &amp;amp; Gerak (PIR)&lt;br&gt;• Relay Sinar UV-C (Auto mati jika ada orang yang masuk)" vertex="1">
+          <mxGeometry height="95" width="340" x="520" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="docker_env" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0F9FF;strokeColor=default;strokeWidth=2;dashed=1;fontSize=13;fontColor=#0369A1;verticalAlign=top;align=left;spacingLeft=18;spacingTop=10;arcSize=8;" value="&lt;b&gt;CONTAINER DOCKER&lt;/b&gt;" vertex="1">
+          <mxGeometry height="340" width="870" x="15" y="240" as="geometry" />
+        </mxCell>
+        <mxCell id="mqtt" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=default;strokeColor=default;strokeWidth=2;dashed=1;fontSize=13;fontColor=#1E293B;" value="&lt;b&gt;BROKER MQTT (MOSQUITTO)&lt;/b&gt;&amp;nbsp;&lt;br&gt;Jembatan Publish / Subscribe untuk pengiriman data sensor &amp;amp; perintah tombol aktuator" vertex="1">
+          <mxGeometry height="75" width="540" x="170" y="343" as="geometry" />
+        </mxCell>
+        <mxCell id="api" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#16A34A;strokeWidth=2;fontSize=12;fontColor=#1E293B;" value="&lt;b&gt;BACKEND REST API (FastAPI)&lt;/b&gt;" vertex="1">
+          <mxGeometry height="80" width="240" x="320" y="480" as="geometry" />
+        </mxCell>
+        <mxCell id="db" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#E0E7FF;strokeColor=#4F46E5;strokeWidth=2;fontSize=12;fontColor=#1E293B;" value="&lt;b&gt;DATABASE (MySQL)&lt;/b&gt;" vertex="1">
+          <mxGeometry height="90" width="180" x="690" y="475" as="geometry" />
+        </mxCell>
+        <mxCell id="app" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DBEAFE;strokeColor=#2563EB;strokeWidth=2;fontSize=13;fontColor=#1E293B;" value="&lt;b&gt;APLIKASI MOBILE ANDROID (FLUTTER)&lt;/b&gt;&amp;nbsp;" vertex="1">
+          <mxGeometry height="80" width="540" x="170" y="650" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="n1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=default;strokeWidth=2;dashed=1;startArrow=none;endArrow=block;endFill=1;fontSize=11;fontColor=#92400E;labelBackgroundColor=#FFFFFF;exitX=0.5;exitY=1;entryX=0.25;entryY=0;" target="mqtt" value="1a. Kirim kondisi suhu &amp;amp; gas (Rencana)">
+          <mxGeometry relative="1" x="0.3969" y="54" as="geometry">
+            <mxPoint x="-49" y="-54" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="n2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=default;strokeWidth=2;dashed=1;startArrow=none;endArrow=block;endFill=1;fontSize=11;fontColor=#92400E;labelBackgroundColor=#FFFFFF;exitX=0.5;exitY=1;entryX=0.75;entryY=0;" target="mqtt" value="1b. Kirim status pintu &amp;amp; PIR (Rencana)">
+          <mxGeometry relative="1" x="0.3846" y="-54" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="mqtt" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=default;strokeWidth=2;dashed=1;startArrow=none;endArrow=block;endFill=1;fontSize=11;fontColor=#92400E;labelBackgroundColor=#FFFFFF;" target="api" value="2. Kirim data sensor ke Backend (Rencana)">
+          <mxGeometry relative="1" x="0.0476" y="130" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="mqtt" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=default;strokeWidth=2;dashed=1;startArrow=none;endArrow=block;endFill=1;fontSize=11;fontColor=#92400E;labelBackgroundColor=#FFFFFF;exitX=0.15;exitY=1;entryX=0.15;entryY=0;" target="app" value="3. Ambil hasil realtime di Broker&amp;nbsp;&lt;div&gt;(Rencana)&lt;/div&gt;">
+          <mxGeometry relative="1" x="-0.0345" y="-101" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="api" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#16A34A;strokeWidth=2;startArrow=none;endArrow=block;endFill=1;fontSize=11;fontColor=#166534;labelBackgroundColor=#FFFFFF;" target="db" value="4. Simpan di Database">
+          <mxGeometry relative="1" x="0.1111" y="15" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="api" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#2563EB;strokeWidth=2;startArrow=none;endArrow=block;endFill=1;fontSize=11;fontColor=#1E40AF;labelBackgroundColor=#FFFFFF;" target="app" value="5. Tampilkan grafik, riwayat &amp;amp; CSV (Aktif)">
+          <mxGeometry relative="1" x="0.2727" y="110" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

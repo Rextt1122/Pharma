@@ -24,20 +24,11 @@ class HistoryProvider extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
 
-    // Anti-stuck safety timer: force dismiss skeleton after 8s if network hangs
-    Future.delayed(const Duration(seconds: 8), () {
-      if (_isLoading) {
-        _isLoading = false;
-        if (_historyList.isEmpty && _errorMessage == null) {
-          _errorMessage = 'Waktu permintaan habis. Periksa koneksi ke server.';
-        }
-        notifyListeners();
-      }
-    });
-
     final stopwatch = Stopwatch()..start();
     try {
-      _historyList = await _apiService.fetchSensorHistory();
+      final result = await _apiService.fetchSensorHistory();
+      _historyList = result;
+      _errorMessage = null;
     } catch (e) {
       if (e is FormatException) {
         _errorMessage = 'Data riwayat tidak dapat dibaca. Coba muat ulang.';
@@ -50,8 +41,8 @@ class HistoryProvider extends ChangeNotifier {
       }
     } finally {
       final elapsed = stopwatch.elapsedMilliseconds;
-      if (elapsed < 600) {
-        await Future.delayed(Duration(milliseconds: 600 - elapsed));
+      if (elapsed < 400) {
+        await Future.delayed(Duration(milliseconds: 400 - elapsed));
       }
       _isLoading = false;
       notifyListeners();

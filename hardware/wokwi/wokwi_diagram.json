@@ -1,0 +1,132 @@
+{
+  "version": 1,
+  "author": "Qeesya Daffa Maulana",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-s3-devkitc-1", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    {
+      "type": "wokwi-pir-motion-sensor",
+      "id": "pir1",
+      "top": 184.68,
+      "left": -187.5,
+      "rotate": 270,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-hc-sr04",
+      "id": "ultrasonic1",
+      "top": 25.7,
+      "left": -343.7,
+      "rotate": 270,
+      "attrs": { "distance": "2" }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn1",
+      "top": 179,
+      "left": 192,
+      "attrs": { "color": "green", "xray": "1", "bounce": "1" }
+    },
+    { "type": "wokwi-relay-module", "id": "relay1", "top": 96.2, "left": 192, "attrs": {} },
+    {
+      "type": "wokwi-rgb-led",
+      "id": "rgb1",
+      "top": -14.4,
+      "left": 226.5,
+      "rotate": 90,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-buzzer",
+      "id": "bz1",
+      "top": 297.6,
+      "left": 96,
+      "rotate": 180,
+      "attrs": { "volume": "0.1" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r1",
+      "top": 61.85,
+      "left": -107,
+      "rotate": 180,
+      "attrs": { "value": "2000" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r2",
+      "top": 61.85,
+      "left": -193.4,
+      "rotate": 180,
+      "attrs": { "value": "1000" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led1",
+      "top": -118.8,
+      "left": 90.2,
+      "attrs": { "color": "purple" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r3",
+      "top": 3.95,
+      "left": 163.2,
+      "attrs": { "value": "330" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r4",
+      "top": 23.15,
+      "left": 163.2,
+      "attrs": { "value": "330" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r5",
+      "top": 42.35,
+      "left": 163.2,
+      "attrs": { "value": "330" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r6",
+      "top": -33.6,
+      "left": 85.85,
+      "rotate": 90,
+      "attrs": { "value": "330" }
+    }
+  ],
+  "connections": [
+    [ "esp:TX", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX", "$serialMonitor:TX", "", [] ],
+    [ "pir1:VCC", "esp:5V", "red", [ "h67.2", "v-19.02" ] ],
+    [ "esp:37", "pir1:OUT", "green", [ "h23.77", "v153.42", "h-182.4", "v-76.8" ] ],
+    [ "pir1:GND", "esp:GND.1", "black", [ "h38.4", "v38.66" ] ],
+    [ "ultrasonic1:ECHO", "r2:2", "green", [ "h0" ] ],
+    [ "r1:2", "r2:1", "green", [ "v0" ] ],
+    [ "esp:GND.1", "r1:1", "black", [ "h0" ] ],
+    [ "esp:18", "r2:1", "green", [ "h0" ] ],
+    [ "ultrasonic1:VCC", "esp:5V", "red", [ "h134.4", "v124.8", "h67.2" ] ],
+    [ "esp:5", "ultrasonic1:TRIG", "green", [ "h-24.28", "v9.42", "h-67.2" ] ],
+    [ "ultrasonic1:GND", "esp:GND.1", "black", [ "h172.8", "v1.2" ] ],
+    [ "esp:13", "btn1:1.l", "green", [ "v-9.78", "h186.92" ] ],
+    [ "relay1:VCC", "esp:5V", "red", [ "h-28.8", "v153.6", "h-172.8", "v-47.82" ] ],
+    [ "relay1:GND", "esp:GND.3", "black", [ "h-48", "v95.6" ] ],
+    [ "esp:GND.4", "btn1:2.r", "black", [ "h0" ] ],
+    [ "esp:17", "relay1:IN", "green", [ "h-24.28", "v172.62", "h201.6", "v-153.6" ] ],
+    [ "bz1:2", "esp:20", "green", [ "v-96", "h-9.2" ] ],
+    [ "esp:GND.3", "bz1:1", "black", [ "h0" ] ],
+    [ "rgb1:R", "r3:2", "green", [ "v0" ] ],
+    [ "rgb1:G", "r4:2", "green", [ "v0" ] ],
+    [ "rgb1:B", "r5:2", "green", [ "h0", "v11.2" ] ],
+    [ "esp:42", "r3:1", "green", [ "h42.97", "v-67.38" ] ],
+    [ "r4:1", "esp:41", "green", [ "v0", "h-19.2", "v57.6" ] ],
+    [ "r5:1", "esp:40", "green", [ "v38.4" ] ],
+    [ "led1:A", "r6:1", "green", [ "v0" ] ],
+    [ "r6:2", "esp:39", "green", [ "h0", "v104.4" ] ],
+    [ "esp:GND.2", "led1:C", "black", [ "v0" ] ],
+    [ "esp:GND.2", "rgb1:COM", "black", [ "v-9.78", "h4.57" ] ]
+  ],
+  "dependencies": {}
+}b:["$","$L52",null,{"project":{"name":"device 2","id":"479181485918392321","files":[{"name":"sketch.ino","content":"$53"},{"name":"diagram.json","content":"$54"}],"serverFiles":[],"owner":"420334600856967169","locked":false,"unlisted":false,"updated":1793246911553,"hearts":0,"userLiked":false}}]

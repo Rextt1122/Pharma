@@ -13,6 +13,11 @@ import 'subnet_ips_io.dart'
 class ApiService {
   final StorageService _storageService = StorageService();
   static Future<String?>? _ongoingDiscovery;
+  static String? _cachedActiveHost;
+
+  static void invalidateHostCache() {
+    _cachedActiveHost = null;
+  }
 
   Uri buildUrl(String ip, String path) {
     final cleanIp = ip.trim();
@@ -27,7 +32,19 @@ class ApiService {
   }
 
   Future<String> resolveReachableIp() async {
+    if (_cachedActiveHost != null) return _cachedActiveHost!;
+
     final savedIp = await _storageService.getServerIp();
+
+    // Fast check: if savedIp is valid and responds within 800ms, use immediately
+    if (savedIp.isNotEmpty && savedIp != '192.168.1.100' && savedIp != '192.168.33.10') {
+      final probeResult = await _probeIp(savedIp, const Duration(milliseconds: 800));
+      if (probeResult != null) {
+        _cachedActiveHost = probeResult;
+        return probeResult;
+      }
+    }
+
     if (_ongoingDiscovery != null) {
       final found = await _ongoingDiscovery;
       if (found != null) return found;
@@ -37,8 +54,11 @@ class ApiService {
     try {
       final found = await _discoverIp(savedIp);
       completer.complete(found);
-      if (found != null && found != savedIp) {
-        await _storageService.saveServerIp(found);
+      if (found != null) {
+        _cachedActiveHost = found;
+        if (found != savedIp) {
+          await _storageService.saveServerIp(found);
+        }
       }
       return found ?? savedIp;
     } catch (_) {
@@ -153,6 +173,7 @@ class ApiService {
         );
       }
     } catch (e) {
+      invalidateHostCache();
       if (e is FormatException) rethrow;
       if (e.toString().contains('Sesi berakhir')) rethrow;
       throw Exception('Gagal terhubung ke server: $e');
