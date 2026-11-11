@@ -137,8 +137,20 @@
       gap: 10px;
     }
 
+    .sim-fields-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    @media (max-width: 900px) {
+      .sim-fields-4 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
     @media (max-width: 600px) {
-      .sim-fields-3 {
+      .sim-fields-3, .sim-fields-4 {
         grid-template-columns: 1fr;
       }
     }
@@ -1743,14 +1755,14 @@
                   <span>Device 1 &bull; Rak Vaksin</span>
                 </span>
                 <div style="display:flex; gap:5px;">
-                  <button type="button" class="btn btn-sm" onclick="presetSim1(4.2, 46.0, 9.0)">Aman (4.2°)</button>
-                  <button type="button" class="btn btn-sm btn-warn" onclick="presetSim1(9.8, 62.0, 14.0)">Bocor (9.8°)</button>
-                  <button type="button" class="btn btn-sm btn-danger" onclick="presetSim1(5.5, 49.0, 68.0)">Gas Bahaya</button>
+                  <button type="button" class="btn btn-sm" onclick="presetSim1(4.2, 46.0, 9.0, 180)">Aman (4.2°)</button>
+                  <button type="button" class="btn btn-sm btn-warn" onclick="presetSim1(9.8, 62.0, 14.0, 240)">Bocor (9.8°)</button>
+                  <button type="button" class="btn btn-sm btn-danger" onclick="presetSim1(5.5, 49.0, 68.0, 130)">Gas Bahaya</button>
                 </div>
               </div>
 
               <form id="formSim1" onsubmit="event.preventDefault(); submitFormSim1();" style="display:flex; flex-direction:column; gap:12px;">
-                <div class="sim-fields-3">
+                <div class="sim-fields-4">
                   <div class="sim-item">
                     <label>Suhu (°C)</label>
                     <input type="number" id="sim1_suhu" step="0.1" value="4.5" required />
@@ -1762,6 +1774,10 @@
                   <div class="sim-item">
                     <label>Kadar Gas (PPM)</label>
                     <input type="number" id="sim1_gas" step="0.5" value="12.0" required />
+                  </div>
+                  <div class="sim-item">
+                    <label>Cahaya (Lux)</label>
+                    <input type="number" id="sim1_cahaya" step="5" value="160" required />
                   </div>
                 </div>
 
@@ -3050,15 +3066,17 @@
       document.getElementById('btnUv1').classList.toggle('active', v === 1);
     }
 
-    function presetSim1(suhu, kelembapan, gas, fan = 0, buzzer = 0, pompa = 0) {
+    function presetSim1(suhu, kelembapan, gas, lux = 160, fan = 0, buzzer = 0, pompa = 0) {
       document.getElementById('sim1_suhu').value = suhu;
       document.getElementById('sim1_kelembapan').value = kelembapan;
       document.getElementById('sim1_gas').value = gas;
+      const luxEl = document.getElementById('sim1_cahaya');
+      if (luxEl) luxEl.value = lux;
       document.getElementById('sim1_kipas').checked = fan === 1;
       document.getElementById('sim1_buzzer').checked = buzzer === 1;
       const pompaEl = document.getElementById('sim1_pompa');
       if (pompaEl) pompaEl.checked = pompa === 1;
-      showToast(`Preset: ${suhu}°C, ${kelembapan}%, ${gas} PPM`);
+      showToast(`Preset: ${suhu}°C, ${kelembapan}%, ${gas} PPM, ${lux} Lux`);
     }
 
     function presetSim2(pintu, pir, uv) {
@@ -3069,7 +3087,6 @@
     }
 
     async function submitFormSim1() {
-      if (!bearerToken) { openLoginModal(); return; }
       const btn = document.getElementById('btnSubmitSim1');
       btn.disabled = true;
       btn.textContent = 'Mengirim...';
@@ -3079,7 +3096,7 @@
         suhu: parseFloat(document.getElementById('sim1_suhu').value) || 4.5,
         kelembapan: parseFloat(document.getElementById('sim1_kelembapan').value) || 48.0,
         kadar_gas: parseFloat(document.getElementById('sim1_gas').value) || 12.0,
-        cahaya: 160.0,
+        cahaya: parseFloat(document.getElementById('sim1_cahaya').value) || 160.0,
         status_kipas: document.getElementById('sim1_kipas').checked ? 1 : 0,
         status_buzzer: document.getElementById('sim1_buzzer').checked ? 1 : 0,
         status_pompa: document.getElementById('sim1_pompa').checked ? 1 : 0,
@@ -3088,19 +3105,19 @@
       };
 
       try {
+        const headers = { 'Content-Type': 'application/json' };
+        if (bearerToken) headers['Authorization'] = 'Bearer ' + bearerToken;
         const res = await fetch('/kirim-data', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + bearerToken
-          },
+          headers: headers,
           body: JSON.stringify(payload)
         });
         if (res.ok) {
-          showToast(`Device 1 terkirim: ${payload.suhu}°C | ${payload.kelembapan}% | ${payload.kadar_gas} PPM`);
+          showToast(`Device 1 terkirim: ${payload.suhu}°C | ${payload.kelembapan}% | ${payload.kadar_gas} PPM | ${payload.cahaya} Lux`);
           await refreshDashboardData();
         } else {
-          showToast('Gagal mengirim data', false);
+          const errData = await res.json().catch(() => ({}));
+          showToast(errData.detail || 'Gagal mengirim data', false);
         }
       } catch (e) {
         showToast('Koneksi gagal: ' + e.message, false);
@@ -3111,7 +3128,6 @@
     }
 
     async function submitFormSim2() {
-      if (!bearerToken) { openLoginModal(); return; }
       const btn = document.getElementById('btnSubmitSim2');
       btn.disabled = true;
       btn.textContent = 'Mengirim...';
@@ -3133,19 +3149,19 @@
       };
 
       try {
+        const headers = { 'Content-Type': 'application/json' };
+        if (bearerToken) headers['Authorization'] = 'Bearer ' + bearerToken;
         const res = await fetch('/kirim-data', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + bearerToken
-          },
+          headers: headers,
           body: JSON.stringify(payload)
         });
         if (res.ok) {
           showToast(`Device 2 terkirim: Pintu=${pVal ? 'Terbuka' : 'Terkunci'} | UV=${uvVal ? 'ON' : 'OFF'}`);
           await refreshDashboardData();
         } else {
-          showToast('Gagal mengirim data', false);
+          const errData = await res.json().catch(() => ({}));
+          showToast(errData.detail || 'Gagal mengirim data', false);
         }
       } catch (e) {
         showToast('Koneksi gagal: ' + e.message, false);

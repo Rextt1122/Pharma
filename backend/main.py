@@ -155,6 +155,15 @@ def decode_token(token: str) -> dict:
 _bearer = HTTPBearer(auto_error=False)
 
 
+def optional_user(cred: Optional[HTTPAuthorizationCredentials] = Depends(_bearer)) -> Optional[dict]:
+    if cred and cred.scheme.lower() == "bearer":
+        try:
+            return decode_token(cred.credentials)
+        except Exception:
+            pass
+    return None
+
+
 def require_user(cred: HTTPAuthorizationCredentials = Depends(_bearer)) -> dict:
     if cred is None or cred.scheme.lower() != "bearer":
         raise HTTPException(status_code=401, detail="Autentikasi diperlukan")
@@ -823,7 +832,7 @@ def get_sensor_summary(_user: dict = Depends(require_user)):
         raise HTTPException(status_code=500, detail="Server error")
 
 @app.post("/kirim-data", tags=["Telemetri"], summary="Kirim Data Sensor")
-def kirim_data(data_baru: dict, _user: dict = Depends(require_user)):
+def kirim_data(data_baru: dict, _user: Optional[dict] = Depends(optional_user)):
     process_and_save_sensor_data(data_baru)
     try:
         publish_mqtt("pharma/sensor", json.dumps(data_baru))
