@@ -1,9 +1,17 @@
 <!DOCTYPE html>
-<html lang="id" data-theme="dark">
+<html lang="id" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pharma Dashboard</title>
+  <script>
+    (function() {
+      try {
+        var savedTheme = localStorage.getItem("pharma_console_theme") || "light";
+        document.documentElement.setAttribute("data-theme", savedTheme);
+      } catch (e) {}
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -2153,7 +2161,7 @@
       const cur = document.documentElement.getAttribute("data-theme");
       applyTheme(cur === "dark" ? "light" : "dark");
     }
-    applyTheme(localStorage.getItem("pharma_console_theme") || "dark");
+    applyTheme(localStorage.getItem("pharma_console_theme") || "light");
 
     function updateAuthUi() {
       const nameEl = document.getElementById("userNameText");
