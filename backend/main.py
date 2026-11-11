@@ -349,9 +349,9 @@ def process_and_save_sensor_data(data: dict):
     status_pintu = int(data.get("status_pintu", 0))
     status_uv = int(data.get("status_uv", 0))
 
-    if kadar_gas > 50 or status_pintu == 1:
+    if kadar_gas > 50 or status_pintu == 1 or cahaya > 600:
         status = "Bahaya"
-    elif suhu < 2.0 or suhu > 8.0:
+    elif suhu < 2.0 or suhu > 8.0 or cahaya > 300:
         status = "Peringatan"
     else:
         status = "Aman"
