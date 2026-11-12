@@ -206,4 +206,54 @@ curl -Iv https://api.pharma.web.id/sensor
 # Cek konsumsi RAM & CPU:
 docker stats --no-stream
 free -h
+
+
+--------------------------------------------------------------------------------
+10. ALASAN TEKNIS PEMILIHAN TEKNOLOGI (JAWABAN PENGUJI / DOSEN)
+--------------------------------------------------------------------------------
+
+A. Kenapa Memilih FastAPI (Python) dibanding Laravel (PHP) / Express (Node.js)?
+   1. Performa Asynchronous Native (ASGI Uvicorn):
+      Mampu menangani ribuan paket telemetri sensor per detik secara non-blocking
+      dengan latensi respons jaringan < 10 ms.
+   2. Ekosistem IoT Python Terintegrasi:
+      Pustaka MQTT client (paho-mqtt) dan listener berjalan langsung di dalam satu
+      proses aplikasi Python tanpa memerlukan queue worker terpisah (seperti Redis/Supervisor di Laravel).
+   3. Sangat Hemat RAM (Resource Efficient):
+      Hanya memakai ~40 MB RAM per kontainer. Bandingkan dengan stack Laravel
+      (PHP-FPM + Nginx) yang membutuhkan minimal 150 - 250 MB RAM.
+   4. Dokumentasi Otomatis Standar OpenAPI:
+      Menyediakan interactive Swagger UI otomatis di '/docs' tanpa konfigurasi manual.
+
+B. Kenapa Memilih Database Relasional MySQL dibanding NoSQL (MongoDB / Firebase)?
+   1. Kepatuhan ACID & Integritas Data Medis:
+      Standar penyimpanan vaksin farmasi menuntut keandalan data (Data Integrity)
+      yang ketat. Transaksi MySQL menjamin tidak ada log suhu yang hilang atau corrupt.
+   2. Relasi Terstruktur & Efisiensi Penyimpanan:
+      Struktur tabel relasional antara 'users' (akun staf, role, hash PBKDF2) dan
+      'sensor_data' terdefinisi rapi dengan tipe data efisien (FLOAT, TINYINT).
+   3. Kemudahan Agregasi Laporan Farmasi:
+      Perhitungan statistik (rata-rata suhu harian, tren batas aman, filter rentang tanggal,
+      dan ekspor laporan CSV) dilakukan sangat cepat menggunakan query SQL native.
+   4. Portabilitas Disaster Recovery Cepat:
+      Format dump 'mysqldump' standar memungkinkan proses snapshot cadangan otomatis
+      dan pemulihan instan (RTO 4 detik) oleh kontainer Watcher di Node 4.
+
+C. Kenapa Langsung ke Cloud VPS Sendiri (Self-Hosted Azure) Bukan ke Firebase / Blynk / Ngrok?
+   1. Kedaulatan & Keamanan Data (Data Sovereignty):
+      Data pemantauan vaksin dan kredensial staf farmasi bersifat sensitif.
+      Disimpan di server privat milik sendiri, bukan di cloud publik pihak ketiga (BaaS).
+   2. Kontrol Penuh Arsitektur DevOps (Kriteria Evaluasi PBL):
+      VPS memungkinkan implementasi arsitektur multi-node Docker (DinD), isolasi
+      failure domain, konfigurasi reverse proxy SSL Caddy, dan custom disaster recovery.
+      Firebase adalah "Black Box" tertutup tanpa kontrol kernel, port, OS, atau kontainer.
+   3. Protokol Standar Industri Murni (MQTT TCP & WebSocket):
+      ESP32 mengirim data menggunakan paket biner TCP port 1883 standar MQTT yang ringan.
+      Bebas dari beban memori library SDK proprietary Firebase yang berat di mikrokontroler.
+   4. Bebas Tunnel Sementara (Tanpa Ngrok / Cloudflare Tunnel):
+      VPS memiliki IP publik tetap (172.197.249.136) dan domain sendiri (pharma.web.id).
+      Tidak ada risiko tunnel mati mendadak, sesi gratis terputus, atau URL acak berubah-ubah.
+   5. Biaya Terukur & Bebas Kuota:
+      Memanfaatkan alokasi Azure for Students tanpa batasan kuota baca/tulis dokumen
+      per detik yang sering menyebabkan tagihan tak terkontrol pada Firebase Firestore.
 ================================================================================
