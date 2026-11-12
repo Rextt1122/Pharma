@@ -455,6 +455,33 @@ class _HistoryPageState extends State<HistoryPage> {
                   ],
                 ),
               ),
+              // Cahaya
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Cahaya',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${item.cahaya.toStringAsFixed(0)} Lx',
+                      style: TextStyle(
+                        fontSize: 15.5,
+                        fontWeight: FontWeight.w800,
+                        color: item.cahaya > 600
+                            ? AppColors.alertRed
+                            : (item.cahaya > 300 ? AppColors.warningAmber : AppColors.textDark),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ],

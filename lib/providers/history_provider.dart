@@ -56,7 +56,7 @@ class HistoryProvider extends ChangeNotifier {
 
     try {
       List<List<dynamic>> csvData = [
-        ['No', 'Suhu (°C)', 'Kelembapan (%)', 'Kadar Gas (PPM)', 'Status Pintu', 'Status UV', 'Status', 'Waktu'],
+        ['No', 'Suhu (°C)', 'Kelembapan (%)', 'Kadar Gas (PPM)', 'Cahaya (Lux)', 'Status Pintu', 'Status UV', 'Status', 'Waktu'],
         ..._historyList.asMap().entries.map((entry) {
           final index = entry.key + 1;
           final item = entry.value;
@@ -65,6 +65,7 @@ class HistoryProvider extends ChangeNotifier {
             item.suhu,
             item.kelembapan,
             item.kadarGas,
+            item.cahaya.round(),
             item.teksPintu,
             item.teksUv,
             item.status,
