@@ -1,0 +1,209 @@
+================================================================================
+          PANDUAN LANGKAH MIGRASI SISTEM: VIRTUALBOX VM KE AZURE CLOUD VPS
+                 SMART PHARMA MEDIC — IOT & COLD-CHAIN STORAGE
+================================================================================
+
+Target Migrasi:
+- VM Sumber : VirtualBox Debian 'Prototype PBL' (IP Lokal: 192.168.33.10)
+- VPS Tujuan: Azure Cloud VPS 'pharma-server' (IP Publik: 172.197.249.136)
+- Domain    : pharma.web.id (api.pharma.web.id, mqtt.pharma.web.id, portainer.pharma.web.id)
+- User VPS  : azureuser
+
+
+--------------------------------------------------------------------------------
+1. RINGKASAN ARSITEKTUR SETELAH MIGRASI (4-NODE DOCKER DIND)
+--------------------------------------------------------------------------------
+Untuk memenuhi kriteria isolasi Failure Domain evaluasi DevOps:
+- Node 1 (Host Azure): Portainer CE (9000), Caddy SSL Gateway (80/443), FastAPI Backend (8001:8000)
+- Node 2 (DinD: 2376): MySQL Database 8.0 (3306)
+- Node 3 (DinD: 2377): Mosquitto MQTT Broker (1883 TCP & 9001 WSS)
+- Node 4 (DinD: 2378): Disaster Recovery Watcher (Auto-Restore Database 4 Detik)
+
+
+--------------------------------------------------------------------------------
+2. TAHAP 1: BACKUP & KOMPRES DATA DARI VM LOKAL
+--------------------------------------------------------------------------------
+Jalankan di dalam terminal VM Debian lokal (atau via SSH localhost:2222):
+
+1. Masuk ke direktori project:
+   cd /home/fabian/pbl-project
+
+2. Ekspor (Dump) seluruh database MySQL pbl_db:
+   docker exec pbl_database mysqldump -u root -pfabian100607 pbl_db > backups/latest_backup.sql
+
+3. Bungkus seluruh kode backend, konfigurasi broker, dan backup jadi 1 arsip tar.gz:
+   tar -czvf /tmp/pbl-deploy.tar.gz backend backups mosquitto
+
+
+--------------------------------------------------------------------------------
+3. TAHAP 2: TRANSFER ARSIP KE AZURE CLOUD VPS
+--------------------------------------------------------------------------------
+Jalankan dari terminal laptop (PowerShell):
+
+1. Tarik file dari VM lokal ke laptop:
+   scp -P 2222 root@127.0.0.1:/tmp/pbl-deploy.tar.gz "C:\Users\Fabian\Downloads\"
+
+2. Kirim arsip dari laptop ke Azure VPS menggunakan kunci SSH:
+   scp -i ~/.ssh/id_ed25519 "C:\Users\Fabian\Downloads\pbl-deploy.tar.gz" azureuser@api.pharma.web.id:/home/azureuser/
+
+3. Masuk ke terminal Azure VPS:
+   ssh -i ~/.ssh/id_ed25519 azureuser@api.pharma.web.id
+
+4. Ekstrak arsip di VPS:
+   cd /home/azureuser
+   tar -xzvf pbl-deploy.tar.gz
+
+
+--------------------------------------------------------------------------------
+4. TAHAP 3: PERSIAPAN ENVIRONMENT AZURE VPS
+--------------------------------------------------------------------------------
+Jalankan di terminal Azure VPS (/home/azureuser):
+
+1. Update package repository & install Docker CE:
+   sudo apt-get update
+   sudo apt-get install -y docker.io docker-compose-v2 mosquitto-clients neofetch
+   sudo usermod -aG docker azureuser
+
+2. Buat Swap RAM 2 GB (Mencegah Crash Out-of-Memory pada Microservices):
+   sudo fallocate -l 2G /swapfile
+   sudo chmod 600 /swapfile
+   sudo mkswap /swapfile
+   sudo swapon /swapfile
+   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+
+3. Buat direktori penyimpanan volume persisten MySQL:
+   mkdir -p /home/azureuser/node2_mysql_data
+
+
+--------------------------------------------------------------------------------
+5. TAHAP 4: MENJALANKAN ARSITEKTUR 4-NODE DOCKER (DIND)
+--------------------------------------------------------------------------------
+Jalankan di terminal Azure VPS:
+
+1. Buat dan jalankan 3 daemon Docker-in-Docker terisolasi:
+   # Node 2 (Database Engine di port 2376)
+   docker run --privileged -d --name docker-node2 --restart=always \
+     -p 2376:2375 -p 3306:3306 \
+     -e DOCKER_TLS_CERTDIR="" \
+     -v /home/azureuser/node2_mysql_data:/var/lib/docker \
+     docker:dind --tls=false
+
+   # Node 3 (MQTT Broker Engine di port 2377)
+   docker run --privileged -d --name docker-node3 --restart=always \
+     -p 2377:2375 -p 1883:1883 -p 9001:9001 \
+     -e DOCKER_TLS_CERTDIR="" \
+     docker:dind --tls=false
+
+   # Node 4 (Auto-Backup Engine di port 2378)
+   docker run --privileged -d --name docker-node4 --restart=always \
+     -p 2378:2375 \
+     -e DOCKER_TLS_CERTDIR="" \
+     docker:dind --tls=false
+
+2. Deploy Database MySQL 8.0 di Node 2:
+   docker -H tcp://127.0.0.1:2376 run -d --name pbl_database --restart=always \
+     -p 3306:3306 \
+     -e MYSQL_ROOT_PASSWORD=fabian100607 \
+     -e MYSQL_DATABASE=pbl_db \
+     mysql:8.0
+
+3. Tunggu 10 detik hingga MySQL siap, lalu Restore data backup:
+   sleep 10
+   docker -H tcp://127.0.0.1:2376 exec -i pbl_database mysql -u root -pfabian100607 pbl_db < /home/azureuser/backups/latest_backup.sql
+
+4. Deploy Mosquitto MQTT Broker di Node 3:
+   docker -H tcp://127.0.0.1:2377 run -d --name pbl_mqtt --restart=always \
+     -p 1883:1883 -p 9001:9001 \
+     eclipse-mosquitto:latest
+
+5. Deploy Auto-Disaster Recovery Watcher di Node 4:
+   docker -H tcp://127.0.0.1:2378 run -d --name pbl_backup --restart=always \
+     -e DB_HOST=172.17.0.1 \
+     -e DB_PASS=fabian100607 \
+     pbl-backup-ready:latest /bin/sh /backups/watcher.sh
+
+6. Deploy Caddy SSL, Portainer CE, dan Backend FastAPI di Node 1 (Host):
+   docker compose up -d --build
+
+
+--------------------------------------------------------------------------------
+6. TAHAP 5: KONFIGURASI REVERSE PROXY SSL CADDY (HTTPS OTOMATIS)
+--------------------------------------------------------------------------------
+File: /home/azureuser/Caddyfile
+Caddy secara otomatis meminta dan memperbarui sertifikat SSL Let's Encrypt:
+
+api.pharma.web.id {
+    reverse_proxy 127.0.0.1:8001
+}
+
+mqtt.pharma.web.id {
+    reverse_proxy 127.0.0.1:9001
+}
+
+portainer.pharma.web.id {
+    reverse_proxy 127.0.0.1:9000
+}
+
+
+--------------------------------------------------------------------------------
+7. TAHAP 6: OTOMASI BOOT SERVER (SYSTEMD SERVICE)
+--------------------------------------------------------------------------------
+Agar seluruh kontainer otomatis menyala saat VPS Azure di-restart:
+
+1. Buat skrip startup orchestrator di /home/azureuser/start-nodes.sh:
+   chmod +x /home/azureuser/start-nodes.sh
+
+2. Daftarkan service systemd di /etc/systemd/system/pbl-cloud.service:
+   [Unit]
+   Description=Start PBL Multi-Node Cloud Containers
+   After=docker.service
+   Requires=docker.service
+
+   [Service]
+   Type=oneshot
+   User=azureuser
+   WorkingDirectory=/home/azureuser
+   ExecStart=/bin/bash /home/azureuser/start-nodes.sh
+   RemainAfterExit=yes
+
+   [Install]
+   WantedBy=multi-user.target
+
+3. Aktifkan service:
+   sudo systemctl daemon-reload
+   sudo systemctl enable pbl-cloud.service
+
+
+--------------------------------------------------------------------------------
+8. TAHAP 7: PENYESUAIAN APLIKASI FLUTTER MOBILE
+--------------------------------------------------------------------------------
+Perubahan pada aplikasi mobile (lib/services/api_service.dart):
+- URL Base diubah dari IP lokal http://192.168.33.10:8001 menjadi domain publik HTTPS:
+  https://api.pharma.web.id
+- Port langsung menggunakan standar HTTPS (Port 443), aman dari pemblokiran firewall operator seluler.
+- Timeout request dinaikkan menjadi 12 detik.
+- Rilis APK terbaru v1.0.9+10 dipublikasikan ke GitHub Releases.
+
+
+--------------------------------------------------------------------------------
+9. CHEATSHEET PERINTAH PEMERIKSAAN PASCA MIGRASI
+--------------------------------------------------------------------------------
+# Cek semua kontainer aktif:
+docker ps
+docker -H tcp://127.0.0.1:2376 ps
+docker -H tcp://127.0.0.1:2377 ps
+docker -H tcp://127.0.0.1:2378 ps
+
+# Cek log backend FastAPI:
+docker logs --tail 20 pbl_backend
+
+# Cek log watcher auto-backup:
+docker -H tcp://127.0.0.1:2378 logs --tail 15 pbl_backup
+
+# Uji koneksi API HTTPS:
+curl -Iv https://api.pharma.web.id/sensor
+
+# Cek konsumsi RAM & CPU:
+docker stats --no-stream
+free -h
+================================================================================
