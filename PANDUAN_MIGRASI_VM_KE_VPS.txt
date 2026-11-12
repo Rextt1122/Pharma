@@ -256,4 +256,87 @@ C. Kenapa Langsung ke Cloud VPS Sendiri (Self-Hosted Azure) Bukan ke Firebase / 
    5. Biaya Terukur & Bebas Kuota:
       Memanfaatkan alokasi Azure for Students tanpa batasan kuota baca/tulis dokumen
       per detik yang sering menyebabkan tagihan tak terkontrol pada Firebase Firestore.
+
+
+--------------------------------------------------------------------------------
+11. KODE FLUTTER: PEMANGGILAN REST API & BROKER MQTT (CLIENT SIDE)
+--------------------------------------------------------------------------------
+
+A. Penentuan Alamat Server (HTTPS Port 443 Otomatis)
+   File: lib/services/api_service.dart (Baris 22 - 32)
+   ```dart
+   Uri buildUrl(String ip, String path) {
+     final cleanIp = ip.trim();
+     if (cleanIp.contains('pharma.web.id')) {
+       return Uri.parse('https://$cleanIp$path'); // Default HTTPS Port 443
+     }
+     return Uri.parse('http://$cleanIp:8001$path');
+   }
+   ```
+
+B. Autentikasi Login Pengguna (HTTP POST)
+   File: lib/services/api_service.dart (Baris 183 - 204)
+   ```dart
+   Future<Map<String, dynamic>> login(String username, String password) async {
+     final ip = await resolveReachableIp();
+     final url = buildUrl(ip, '/login');
+
+     final response = await http.post(
+       url,
+       headers: {'Content-Type': 'application/json'},
+       body: jsonEncode({
+         'username': username.trim(),
+         'password': password,
+       }),
+     ).timeout(const Duration(seconds: 12));
+
+     final data = jsonDecode(response.body);
+     if (response.statusCode == 200) {
+       final token = data['token']; // Simpan token JWT sesi
+       await _storageService.saveAuthToken(token);
+       return data;
+     }
+   }
+   ```
+
+C. Mengambil Riwayat Log Sensor (HTTP GET dengan Bearer Token)
+   File: lib/services/api_service.dart (Baris 137 - 165)
+   ```dart
+   Future<List<SensorModel>> fetchSensorHistory() async {
+     final ip = await resolveReachableIp();
+     final url = buildUrl(ip, '/sensor');
+     final token = await _storageService.getAuthToken();
+
+     final response = await http.get(
+       url,
+       headers: {'Authorization': 'Bearer $token'}, // Wajib Token Sesi
+     ).timeout(const Duration(seconds: 12));
+
+     if (response.statusCode == 200) {
+       final dynamic decoded = jsonDecode(response.body);
+       return (decoded as List).map((i) => SensorModel.fromJson(i)).toList();
+     }
+   }
+   ```
+
+D. Koneksi & Berlangganan Realtime MQTT (Subscribe)
+   File: lib/services/mqtt_service.dart (Baris 37 - 60)
+   ```dart
+   // Terhubung ke Broker Mosquitto (mqtt.pharma.web.id / api.pharma.web.id)
+   _client = createMqttClient('api.pharma.web.id', clientId);
+   await _client!.connect();
+
+   // Berlangganan data telemetri secara instan
+   _client!.subscribe('pharma/sensor', MqttQos.atMostOnce);
+   ```
+
+E. Mengirim Perintah Tombol Saklar Hardware (Publish MQTT)
+   File: lib/providers/sensor_provider.dart (Baris 120 - 185)
+   ```dart
+   // Mengirim perintah nyala/mati Lampu UV-C:
+   _mqttService.publish('pharma/control/uv', '{"device_id":"device_2","state":1}');
+
+   // Mengirim perintah nyala/mati Sirine Alarm:
+   _mqttService.publish('pharma/control/buzzer', '{"device_id":"device_1","state":1}');
+   ```
 ================================================================================
