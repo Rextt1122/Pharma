@@ -180,11 +180,20 @@ class ApiService {
     }
   }
 
+  // ============================================================================
+  // FUNGSI AUTENTIKASI: LOGIN USER / OPERATOR
+  // ============================================================================
+  // Mengirim username & password ke endpoint POST /login di server FastAPI.
+  // Jika valid, server mengembalikan JWT Token & data profil user (Role: operator/user).
+  // Token dan Role akan otomatis disimpan ke StorageService (keamanan SharedPreferences).
   Future<Map<String, dynamic>> login(String username, String password) async {
+    // 1. Dapatkan host server aktif (apakah via Cloud Azure atau Hotspot/LAN)
     final ip = await resolveReachableIp();
+    // 2. Susun endpoint lengkap: https://api.pharma.web.id/login
     final url = buildUrl(ip, '/login');
 
     try {
+      // 3. Eksekusi HTTP POST request membawa payload JSON kredensial
       final response = await http
           .post(
             url,
@@ -196,14 +205,20 @@ class ApiService {
           )
           .timeout(const Duration(seconds: 12));
 
+      // 4. Decode respons JSON dari server
       final data = jsonDecode(response.body) as Map<String, dynamic>;
 
+      // 5. Cek status kode HTTP
       if (response.statusCode == 200) {
+        // Ambil token sesi JWT
         final token = data['token'] as String?;
         if (token == null || token.isEmpty) {
           throw Exception('Server tidak mengirim token sesi');
         }
+        // Simpan token otorisasi ke storage lokal
         await _storageService.saveAuthToken(token);
+
+        // Ambil data user & simpan hak akses (role: operator / user)
         final user = (data['user'] as Map<String, dynamic>?) ?? {};
         final role = user['role']?.toString();
         if (role != null) {
@@ -211,6 +226,7 @@ class ApiService {
         }
         return data;
       } else {
+        // Jika username/password salah atau akun terkunci
         final errorMsg = data['detail'] ?? 'Autentikasi gagal';
         throw Exception(errorMsg);
       }

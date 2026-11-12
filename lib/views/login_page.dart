@@ -247,6 +247,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     );
   }
 
+  // ============================================================================
+  // HANDLER SUBMIT FORM (LOGIN & REGISTER)
+  // ============================================================================
   Future<void> _handleSubmit() async {
     if (_isSubmitting) return;
     if (_formKey.currentState!.validate()) {
@@ -256,6 +259,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
       try {
         if (_isSignUp) {
+          // --- MODE 1: REGISTER AKUN BARU ---
           final email = _emailController.text.trim();
           final fullName = username;
 
@@ -279,12 +283,17 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             Navigator.pushReplacementNamed(context, '/main');
           }
         } else {
+          // --- MODE 2: LOGIN MASUK KE SISTEM ---
+          // 1. Panggil HTTP API ke FastAPI Backend: POST /login
           final res = await ApiService().login(username, password);
+
+          // 2. Ambil data profil & peran (operator / user) dari respons backend
           final user = (res['user'] as Map<String, dynamic>?) ?? {};
           final userName = user['name']?.toString() ?? user['full_name']?.toString() ?? username;
           final userEmail = user['email']?.toString() ?? (username.contains('@') ? username : '$username@smartpharma.id');
           final role = user['role']?.toString() ?? 'operator';
 
+          // 3. Simpan data profil ke SharedPreferences lokal perangkat
           await StorageService().saveUserProfile(
             name: userName,
             email: userEmail,
@@ -292,11 +301,13 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             role: role,
           );
 
+          // 4. Sukses -> Pindah halaman ke Dashboard Utama (/main)
           if (mounted) {
             Navigator.pushReplacementNamed(context, '/main');
           }
         }
       } catch (e) {
+        // Tangkap pesan error dari server (misal: "Username atau password salah")
         if (mounted) {
           final cleanMsg = e.toString().replaceAll('Exception: ', '');
           AppToast.error(context, cleanMsg);
