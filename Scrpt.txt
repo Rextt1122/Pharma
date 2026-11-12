@@ -284,17 +284,24 @@ J. Menjalankan Simulasi Sensor & Hardware di Cloud VPS Azure:
       #  (Tekan Ctrl + C untuk keluar dari simulator)
 
    2. Kirim Payload Sensor Manual Sekali Tembak (Via Mosquitto CLI di VPS):
-      # Kirim Suhu Vaksin Normal 4.4°C:
-      mosquitto_pub -h 127.0.0.1 -t 'pharma/sensor' -m '{"device_id":"device_1","suhu":4.4,"kelembapan":46.0,"kadar_gas":8.5,"status_pintu":0,"status_uv":0}'
+      # Kirim Suhu Vaksin Normal 4.4°C & Cahaya 160 Lux:
+      mosquitto_pub -h 127.0.0.1 -t 'pharma/sensor' -m '{"device_id":"device_1","suhu":4.4,"kelembapan":46.0,"kadar_gas":8.5,"cahaya":160.0,"status_pintu":0,"status_uv":0}'
 
       # Kirim Simulasi Suhu Hangat Peringatan 9.6°C:
-      mosquitto_pub -h 127.0.0.1 -t 'pharma/sensor' -m '{"device_id":"device_1","suhu":9.6,"kelembapan":58.0,"kadar_gas":14.0,"status_pintu":0,"status_uv":0}'
+      mosquitto_pub -h 127.0.0.1 -t 'pharma/sensor' -m '{"device_id":"device_1","suhu":9.6,"kelembapan":58.0,"kadar_gas":14.0,"cahaya":220.0,"status_pintu":0,"status_uv":0}'
 
       # Kirim Simulasi Bahaya Gas & Pintu Terbuka:
-      mosquitto_pub -h 127.0.0.1 -t 'pharma/sensor' -m '{"device_id":"device_1","suhu":5.1,"kelembapan":49.0,"kadar_gas":65.0,"status_pintu":1,"status_uv":0}'
+      mosquitto_pub -h 127.0.0.1 -t 'pharma/sensor' -m '{"device_id":"device_1","suhu":5.1,"kelembapan":49.0,"kadar_gas":65.0,"cahaya":750.0,"status_pintu":1,"status_uv":0}'
 
    3. Memantau Pesan Sensor yang Masuk Realtime (Subscriber di Terminal VPS):
+      # Cara 1: Langsung di terminal host VPS (Mode listening, tekan Ctrl + C untuk keluar):
       mosquitto_sub -h 127.0.0.1 -t 'pharma/#' -v
+
+      # Cara 2: Dari dalam container Mosquitto Node 3:
+      docker -H tcp://127.0.0.1:2377 exec pbl_mqtt mosquitto_sub -t 'pharma/#' -v
+
+      # CATATAN PENTING: Perintah mosquitto_sub akan diam (listening) menunggu kiriman data.
+      # Begitu tombol di dashboard diklik atau simulator jalan, teks payload JSON akan langsung muncul.
 
 
 [11] PENJELASAN TEKNIS FRONTEND WEB DASHBOARD (JAWABAN DOSEN / PENGUJI)
