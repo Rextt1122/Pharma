@@ -1,352 +1,153 @@
-
-[1] KONEKSI SSH KE VM
---------------------------------------------------------------------------------
-
-ssh root@192.168.33.10
+PANDUAN OPERASIONAL & CHEATSHEET AZURE CLOUD VPS
+Smart Pharma Medic — pharma.web.id
 
 
-[2] MENJALANKAN FASTAPI
---------------------------------------------------------------------------------
+1. AKSES & TAUTAN RESMI
+Akses SSH VPS dari Laptop:
+ssh -i ~/.ssh/id_ed25519 azureuser@api.pharma.web.id
+(atau: ssh azureuser@172.197.249.136)
 
-A. Otomatis via Docker 
-
-   docker restart pbl_backend
-
-   # Cek log:
-   docker logs -f pbl_backend
-
-B. Manual via Terminal VM
-
-   # 1. Hentikan container Docker dulu agar port 8001 tidak bentrok:
-   docker stop pbl_backend
-
-   # 2. Masuk folder backend & jalankan uvicorn:
-   cd /home/fabian/pbl-project/backend
-   uvicorn main:app --host 0.0.0.0 --port 8001 --reload
-
-   # Catatan: Tekan Ctrl + C untuk keluar dari uvicorn, lalu nyalakan docker lagi:
-   docker start pbl_backend
+Alamat Layanan Publik:
+- Web Dashboard Admin : https://api.pharma.web.id/dashboard
+- REST API & Swagger  : https://api.pharma.web.id/docs
+- Portainer Cloud     : https://portainer.pharma.web.id
+- Broker MQTT (TCP)   : mqtt.pharma.web.id:1883 (Untuk ESP32 Hardware)
+- Broker MQTT (WSS)   : wss://mqtt.pharma.web.id (Untuk Flutter & Browser)
 
 
-[3] MENYALAKAN DOCKER-COMPOSE
---------------------------------------------------------------------------------
+2. PERINTAH DOCKER 4-NODE DI VPS
+Masuk ke direktori utama:
+cd /home/azureuser
 
-cd /home/fabian/pbl-project
-docker compose up -d
+Cek Status Kontainer Tiap Node:
+- Node 1 (Caddy SSL, Backend FastAPI, Portainer):
+  docker ps
 
-# Cek semua container aktif:
-docker ps
+- Node 2 (Database MySQL 8.0):
+  docker -H tcp://127.0.0.1:2376 ps
 
-# Restart semua container aplikasi:
-docker compose restart
+- Node 3 (Mosquitto MQTT Broker):
+  docker -H tcp://127.0.0.1:2377 ps
 
-# Atau jalankan ulang 4 node:
-bash /home/fabian/pbl-project/start-nodes.sh
+- Node 4 (Disaster Recovery Watcher):
+  docker -H tcp://127.0.0.1:2378 ps
 
-# Hentikan semua container:
-docker compose down
+Restart Layanan:
+- Restart backend FastAPI:
+  docker restart pbl_backend
 
+- Restart / sinkronkan ulang seluruh 4 node:
+  bash start-nodes.sh
 
-[4] MENYALAKAN 3 DOCKER ENGINE TAMBAHAN
---------------------------------------------------------------------------------
-
-# Jalankan ketiga engine Docker-in-Docker:
-docker run --privileged -d --name docker-node2 --restart=always -p 2376:2375 -e DOCKER_TLS_CERTDIR="" docker:dind --tls=false
-docker run --privileged -d --name docker-node3 --restart=always -p 2377:2375 -e DOCKER_TLS_CERTDIR="" docker:dind --tls=false
-docker run --privileged -d --name docker-node4 --restart=always -p 2378:2375 -e DOCKER_TLS_CERTDIR="" docker:dind --tls=false
-
-# Refresh / Restart Portainer agar mendeteksi status UP:
-docker restart portainer
+- Cek log proses backend:
+  docker logs --tail 30 -f pbl_backend
 
 
-[5] PERINTAH DATABASE MYSQL
---------------------------------------------------------------------------------
+3. DATABASE MYSQL CLOUD
+Masuk Langsung ke MySQL Database:
+docker -H tcp://127.0.0.1:2376 exec -it pbl_database mysql -u root -pfabian100607 pbl_db
 
-A. Cara Masuk Mysql
-
-   # 1. Di terminal VM, ketik perintah:
-   mysql -h 127.0.0.1 -u root -p pbl_db
-
-   # 2. Password
-   fabian100607
-
-  B. Cara Masuk ke Dalam Shell Container Terlebih Dahulu:
-   docker -H tcp://127.0.0.1:2376 exec -it pbl_database bash
-
-   # Setelah masuk ke root container, ketik:
-   mysql -u root -p pbl_db
-
-   # Masukkan password: fabian100607
-
-C. Cara Cepat:
-   docker -H tcp://127.0.0.1:2376 exec -it pbl_database mysql -u root -pfabian100607 pbl_db
-
-# Query penting di dalam MySQL:
-
+Query Penting di MySQL:
 SHOW TABLES;
 SELECT id, username, email, role FROM users;
-SELECT * FROM sensor_data ORDER BY id DESC LIMIT 5;
-
-# Mengurutkan ulang ID tabel users:
-SET @count = 0;
-UPDATE users SET id = (@count := @count + 1) ORDER BY id;
-ALTER TABLE users AUTO_INCREMENT = 1;
-
-# Simulasi Bencana (Hapus Database untuk Uji Auto-Restore):
-DROP DATABASE pbl_db;
-
-# Cek Index & Event Auto-Purge:
-SHOW INDEX FROM sensor_data;
-SHOW EVENTS FROM pbl_db;
-
-# Keluar dari MySQL:
+SELECT id, suhu, kelembapan, kadar_gas, cahaya, status, created_at FROM sensor_data ORDER BY id DESC LIMIT 5;
 exit;
 
+Simulasi Disaster Recovery (Uji Coba Auto-Restore 4 Detik):
+- Hapus database pbl_db:
+  docker -H tcp://127.0.0.1:2376 exec pbl_database mysql -u root -pfabian100607 -e "DROP DATABASE pbl_db;"
 
-[6] PENGUJIAN TELEMETRI SENSOR & SIMULATOR HARDWARE ESP32-S3
---------------------------------------------------------------------------------
-
-A. Menjalankan Simulator Otomatis & Interaktif (ESP32-S3 Node 1 & Node 2):
-
-   # Jalankan di terminal VM:
-   cd /home/fabian/pbl-project
-   python3 scripts/simulator.py
-
-   # Atau jalankan di terminal Laptop (Windows):
-   uv run --with paho-mqtt python scripts/simulator.py
-
-   # Tombol Cepat Keyboard saat simulator berjalan:
-   #  p + Enter : Buka / Tutup Pintu (Simulasi Reed Switch)
-   #  g + Enter : Simulasi Gerakan Manusia (Sensor PIR)
-   #  u + Enter : Nyalakan / Matikan Sinar UV-C
-   #  b + Enter : Nyalakan / Matikan Sirine Buzzer Alarm
-   #  (Atau pencet tombol langsung di aplikasi Flutter di HP!)
-
-B. Kirim Payload Sensor Manual Sekali Tembak:
-
-   # Node 1 (Rak Penyimpanan):
-   docker -H tcp://127.0.0.1:2377 exec pbl_mqtt mosquitto_pub -h 127.0.0.1 -t 'pharma/sensor' -m '{"device_id":"device_1","suhu":4.2,"kelembapan":45.5,"kadar_gas":8.0,"status_pintu":0,"status_uv":0}'
-
-   # Node 2 (Keamanan & Sterilisasi):
-   docker -H tcp://127.0.0.1:2377 exec pbl_mqtt mosquitto_pub -h 127.0.0.1 -t 'pharma/sensor' -m '{"device_id":"device_2","status_pintu":0,"deteksi_gerak":0,"jarak_stok":20.5,"status_uv":0}'
+- Pantau watcher memulihkan database secara otomatis:
+  docker -H tcp://127.0.0.1:2378 logs --tail 15 pbl_backup
 
 
-[7] CEK LOG RECOVERY
---------------------------------------------------------------------------------
+4. SIMULATOR & PENGUJIAN TELEMETRI SENSOR
+Menjalankan Simulator Python Interaktif:
+cd /home/azureuser
+python3 scripts/simulator.py
 
-docker -H tcp://127.0.0.1:2378 logs -f pbl_backup
+Tombol Kontrol Simulator:
+- p + Enter : Buka / Tutup Pintu (Reed Switch)
+- g + Enter : Gerakan Orang Terdeteksi (Sensor PIR)
+- u + Enter : Saklar Lampu UV-C Sterilisasi
+- b + Enter : Saklar Sirine Alarm Bahaya
+(Tekan Ctrl + C untuk keluar dari simulator)
 
+Kirim Payload Sensor Sekali Tembak (Mosquitto CLI):
+- Simulasi Kondisi Normal (Suhu 4.4 C, Cahaya 160 Lux):
+  mosquitto_pub -h 127.0.0.1 -t 'pharma/sensor' -m '{"device_id":"device_1","suhu":4.4,"kelembapan":46.0,"kadar_gas":8.5,"cahaya":160.0,"status_pintu":0,"status_uv":0}'
 
-[8] TAUTAN URL
---------------------------------------------------------------------------------
-- Swagger Docs API : http://192.168.33.10:8001/docs
-- Portainer UI     : https://192.168.33.10:9443
-- REST API Root    : http://192.168.33.10:8001/
-- IP Hotspot Laptop: 192.168.253.238 (Untuk input Server IP di aplikasi HP)
+- Simulasi Peringatan Suhu Hangat (Suhu 9.6 C, Cahaya 220 Lux):
+  mosquitto_pub -h 127.0.0.1 -t 'pharma/sensor' -m '{"device_id":"device_1","suhu":9.6,"kelembapan":58.0,"kadar_gas":14.0,"cahaya":220.0,"status_pintu":0,"status_uv":0}'
 
+- Simulasi Bahaya Gas & Pintu Terbuka (Gas 65 PPM, Cahaya 750 Lux):
+  mosquitto_pub -h 127.0.0.1 -t 'pharma/sensor' -m '{"device_id":"device_1","suhu":5.1,"kelembapan":49.0,"kadar_gas":65.0,"cahaya":750.0,"status_pintu":1,"status_uv":0}'
 
-[9] SYSTEM DESIGN & ARSITEKTUR ALUR DATA
---------------------------------------------------------------------------------
-
-A. File Diagram & Gambar:
-   - File Draw.io : docs/System Design & Flowchart/System Design.drawio
-   - Gambar PNG   : docs/System Design & Flowchart/System Design.png
-   - Kode PlantUML: docs/system-design/system-design-gudang-farmasi.puml
-   - File Web HTML: docs/system-design/system-design-gudang-farmasi.html
-
-B. Alur Data 5 Langkah (Atas ke Bawah):
-   1. [Panah 1a & 1b] Hardware ESP32 (Node 1 & 2) membaca kondisi fisik
-      (suhu, gas, pintu, PIR) lalu mengirim data ke Broker Mosquitto MQTT. [Status: Rencana]
-   2. [Panah 2] Broker MQTT meneruskan data telemetri ke Backend FastAPI. [Status: Rencana]
-   3. [Panah 3] Aplikasi Android Flutter memantau dan mengambil data secara realtime
-      langsung dari Broker MQTT, serta mengirim perintah tombol kontrol. [Status: Rencana]
-   4. [Panah 4] Backend FastAPI memproses dan menyimpan data riwayat sensor
-      serta akun ke Database MySQL. [Status: Sudah Aktif]
-   5. [Panah 5] Aplikasi Flutter mengambil riwayat dari Backend via REST API HTTP
-      untuk menampilkan grafik tren, tabel log, dan ekspor CSV. [Status: Sudah Aktif]
-
-C. Penjelasan Status Pengerjaan untuk Presentasi:
-   - Garis Putus-putus Oranye : Rencana (Hardware ESP32 & Integrasi MQTT).
-   - Garis Utuh Biru / Hijau  : Sudah Aktif (Backend FastAPI, Database MySQL, App Flutter).
+Memantau Aliran Pesan MQTT Live (Listening Mode):
+mosquitto_sub -h 127.0.0.1 -t 'pharma/#' -v
+(Perintah diam menunggu pesan masuk. Tekan Ctrl + C untuk keluar)
 
 
-[10] CLOUD VPS AZURE & DOMAIN PRODUKSI
---------------------------------------------------------------------------------
+5. INSPEKSI FILE SOURCE CODE & KONFIGURASI (DEMO KE DOSEN)
+Folder Utama Konfigurasi Server:
+cd /home/azureuser
+ls -la
+cat docker-compose.yml
+cat Caddyfile
 
-A. Akses SSH Cloud (Dari PowerShell Laptop):
-   ssh -i ~/.ssh/id_ed25519 azureuser@api.pharma.web.id
-   (atau: ssh azureuser@172.197.249.136)
+Folder Kodingan Backend & Web Dashboard:
+cd /home/azureuser/backend
+ls -la
+cat Dockerfile
+cat main.py
+cat dashboard.html
 
-B. Alamat Layanan Publik:
-   - REST API (HTTPS)  : https://api.pharma.web.id/
-   - Swagger Docs      : https://api.pharma.web.id/docs
-   - Web Dashboard     : https://api.pharma.web.id/dashboard
-   - Portainer Cloud   : https://portainer.pharma.web.id
-   - MQTT Broker (TCP) : mqtt.pharma.web.id:1883 (Untuk ESP32 Hardware)
-   - MQTT WebSocket    : wss://mqtt.pharma.web.id (Untuk Flutter Web / Browser)
+Folder Konfigurasi MQTT Broker:
+cd /home/azureuser/mosquitto
+cat mosquitto.conf
 
-C. Navigasi Folder & Melihat File Kodingan di VPS:
-
-   1. Folder Utama Konfigurasi Server:
-      cd /home/azureuser
-      ls -la                        # Lihat daftar file & folder
-      cat docker-compose.yml        # Lihat konfigurasi semua service
-      cat Caddyfile                 # Lihat konfigurasi SSL domain & reverse proxy
-      bash start-nodes.sh           # Jalankan / sinkronisasi ulang 4 node
-
-   2. Folder Kodingan Backend FastAPI (Untuk Presentasi / Ditanya Dosen):
-      cd /home/azureuser/backend
-      ls -la                        # Lihat file backend
-      cat Dockerfile                # Lihat instruksi build container backend
-      cat main.py                   # Lihat logika REST API & MQTT listener
-      cat dashboard.html            # Lihat source code web dashboard
-
-   3. Folder Konfigurasi MQTT Broker:
-      cd /home/azureuser/mosquitto
-      ls -la
-      cat mosquitto.conf            # Lihat listener port 1883 & 9001
-
-   4. Folder Database & Auto-Disaster Recovery:
-      cd /home/azureuser/backups
-      ls -lh                        # Cek ukuran file latest_backup.sql
-      cat watcher.sh                # Lihat skrip auto-restore database
-
-D. Perintah Docker 4-Node di VPS Azure:
-   cd /home/azureuser
-   docker ps                                  # Cek kontainer Node 1 (Caddy, Backend, Portainer)
-   docker -H tcp://127.0.0.1:2376 ps          # Cek kontainer Node 2 (MySQL Database)
-   docker -H tcp://127.0.0.1:2377 ps          # Cek kontainer Node 3 (Mosquitto MQTT)
-   docker -H tcp://127.0.0.1:2378 ps          # Cek kontainer Node 4 (Backup Watcher)
-
-E. Masuk ke Database MySQL di Cloud VPS:
-   cd /home/azureuser
-   docker -H tcp://127.0.0.1:2376 exec -it pbl_database mysql -u root -pfabian100607 pbl_db
-
-   # Query penting di MySQL Cloud:
-   SHOW TABLES;
-   SELECT id, username, email, role FROM users;
-   SELECT * FROM sensor_data ORDER BY id DESC LIMIT 5;
-   exit;
-
-F. Tips Navigasi Folder Linux di VPS:
-   # 1. Pindah ke sub-folder (tanpa tanda '/' di depan):
-   cd backend          # Benar (jika sedang di /home/azureuser)
-   # atau pakai path lengkap:
-   cd /home/azureuser/backend
-
-   # 2. Kembali ke folder sebelumnya (naik 1 tingkat):
-   cd ..
-
-   # 3. Kembali langsung ke folder home user:
-   cd ~
-
-   # 4. Cek posisi folder saat ini:
-   pwd
-
-G. Perintah Cek Spesifikasi & Kesehatan VPS (Untuk Demo ke Dosen):
-   neofetch                                      # Info lengkap OS, CPU, RAM & Logo Ubuntu
-   lscpu | grep -E 'Model name|CPU\(s\):'        # Cek detail CPU AMD EPYC (2 Core)
-   free -h                                       # Cek pemakaian RAM (Total 4 GB, Terpakai ~1.2 GB)
-   df -h /                                       # Cek sisa storage SSD (Total 30 GB, sisa ~20 GB)
-   curl -s ipinfo.io                             # Cek IP publik & Lokasi Data Center Azure
-   docker stats --no-stream                      # Bukti efisiensi kontainer (FastAPI cuma ~41 MB)
-   docker -H tcp://127.0.0.1:2378 logs --tail 8 pbl_backup # Bukti Auto-Disaster Recovery aktif
-
-H. 4 Kartu Telemetri Sensor & Simulasi di Web Dashboard:
-   1. Baris 4 Kartu Telemetri (Dengan Gauge Melengkung Seragam):
-      - SUHU               : Rentang vaksin cold-chain (2 - 8 °C). Indikator: Optimal / Peringatan.
-      - KELEMBAPAN         : Kelembapan relatif ruangan (35 - 60 % RH).
-      - GAS & PINTU        : Kualitas udara MQ-2 (< 50 PPM) dan status pintu gudang.
-      - CAHAYA (LUX)       : Sensor LDR intensitas cahaya ruang obat (Standar: < 300 Lux).
-
-   2. Panel Khusus Simulasi Perangkat (Di Bawah Baris Telemetri):
-      - Preset Cepat       : 'Aman (4.2°)', 'Bocor (9.8°)', 'Gas Bahaya', 'Steril ON', 'Pintu Buka', 'Ada Orang'.
-      - Kontrol Aktuator   : Switch tombol saklar Lampu UV-C, Sirine Alarm, Kipas, dan Pompa.
-      - Form Input Lengkap : Uji coba fleksibel nilai suhu, kelembapan, gas, dan cahaya secara manual.
-
-I. Lokasi File Dashboard di Server & Laptop:
-   - Di Cloud VPS Server  : /home/azureuser/backend/dashboard.html
-   - Di Script FastAPI    : /home/azureuser/backend/main.py (Endpoint @app.get("/dashboard"))
-   - Di Project Laptop    : backend/dashboard.html & backend/main.py
-   - Akses via Browser    : https://api.pharma.web.id/dashboard
-
-J. Menjalankan Simulasi Sensor & Hardware di Cloud VPS Azure:
-
-   1. Menjalankan Simulator Python Interaktif (ESP32-S3 Node 1 & Node 2):
-      cd /home/azureuser
-      python3 scripts/simulator.py
-
-      # Tombol Cepat Keyboard saat simulator berjalan di VPS:
-      #  p + Enter : Buka / Tutup Pintu (Reed Switch)
-      #  g + Enter : Simulasi Gerakan Manusia (Sensor PIR)
-      #  u + Enter : Nyalakan / Matikan Sinar UV-C
-      #  b + Enter : Nyalakan / Matikan Sirine Buzzer Alarm
-      #  (Tekan Ctrl + C untuk keluar dari simulator)
-
-   2. Kirim Payload Sensor Manual Sekali Tembak (Via Mosquitto CLI di VPS):
-      # Kirim Suhu Vaksin Normal 4.4°C & Cahaya 160 Lux:
-      mosquitto_pub -h 127.0.0.1 -t 'pharma/sensor' -m '{"device_id":"device_1","suhu":4.4,"kelembapan":46.0,"kadar_gas":8.5,"cahaya":160.0,"status_pintu":0,"status_uv":0}'
-
-      # Kirim Simulasi Suhu Hangat Peringatan 9.6°C:
-      mosquitto_pub -h 127.0.0.1 -t 'pharma/sensor' -m '{"device_id":"device_1","suhu":9.6,"kelembapan":58.0,"kadar_gas":14.0,"cahaya":220.0,"status_pintu":0,"status_uv":0}'
-
-      # Kirim Simulasi Bahaya Gas & Pintu Terbuka:
-      mosquitto_pub -h 127.0.0.1 -t 'pharma/sensor' -m '{"device_id":"device_1","suhu":5.1,"kelembapan":49.0,"kadar_gas":65.0,"cahaya":750.0,"status_pintu":1,"status_uv":0}'
-
-   3. Memantau Pesan Sensor yang Masuk Realtime (Subscriber di Terminal VPS):
-      # Cara 1: Langsung di terminal host VPS (Mode listening, tekan Ctrl + C untuk keluar):
-      mosquitto_sub -h 127.0.0.1 -t 'pharma/#' -v
-
-      # Cara 2: Dari dalam container Mosquitto Node 3:
-      docker -H tcp://127.0.0.1:2377 exec pbl_mqtt mosquitto_sub -t 'pharma/#' -v
-
-      # CATATAN PENTING: Perintah mosquitto_sub akan diam (listening) menunggu kiriman data.
-      # Begitu tombol di dashboard diklik atau simulator jalan, teks payload JSON akan langsung muncul.
+Folder Database Backup & Watcher:
+cd /home/azureuser/backups
+ls -lh
+cat watcher.sh
 
 
-[11] PENJELASAN TEKNIS FRONTEND WEB DASHBOARD (JAWABAN DOSEN / PENGUJI)
---------------------------------------------------------------------------------
+6. CEK SPESIFIKASI & KESEHATAN SERVER VPS
+Perintah Diagnostik Server:
+- Tampilkan info sistem & logo Ubuntu:
+  neofetch
 
-A. Jika Dosen Bertanya: "Frontend web dashboard ini dibuat pakai framework apa?
-   Kan backend-nya pakai FastAPI (Python)?"
+- Tampilkan spesifikasi CPU AMD EPYC (2 Core):
+  lscpu | grep -E 'Model name|CPU\(s\):'
 
-   JAWABAN TEPAT & BERBOBOT:
-   "Frontend Web Dashboard ini dibangun menggunakan arsitektur:
-    Lightweight Embedded Single Page Application (SPA) berbasis HTML5,
-    Modern Native CSS, dan Vanilla JavaScript (ES6+).
+- Tampilkan penggunaan RAM (Total 4 GB, Terpakai ~1.3 GB):
+  free -h
 
-    Kami sengaja tidak menggunakan framework berat seperti React atau Next.js
-    karena beberapa pertimbangan teknis arsitektur:
+- Tampilkan sisa penyimpanan SSD (Total 30 GB, Sisa ~20 GB):
+  df -h /
 
-    1. Zero-Build Pipeline & Hemat Resource Server:
-       File dashboard.html dilayani langsung oleh FastAPI lewat HTMLResponse.
-       Tidak membutuhkan Node.js runtime terpisah di VPS, sehingga konsumsi
-       RAM container backend tetap sangat ringan (~41 MB saja).
+- Tampilkan IP publik & lokasi datacenter Azure:
+  curl -s ipinfo.io
 
-    2. Kecepatan Akses (Instant Load):
-       Karena tidak ada bundle JavaScript berukuran megabyte yang harus di-compile,
-       First Contentful Paint (FCP) dan LCP halaman dashboard tercapai di bawah
-       0.5 detik, bahkan dengan koneksi jaringan seluler standar.
+- Tampilkan bukti efisiensi RAM tiap kontainer (FastAPI ~41 MB):
+  docker stats --no-stream
 
-    3. Komunikasi Data Asynchronous (REST API & MQTT):
-       - Frontend mengambil data secara asinkron menggunakan Fetch API bawaan browser.
-       - Autentikasi menggunakan JWT Bearer Token dengan pembagian role 'operator' dan 'user'.
-       - Terintegrasi dengan endpoint /kirim-data dan /control/{device} yang otomatis
-         mem-broadcast payload ke Broker MQTT Mosquitto port 1883/9001.
+- Tampilkan bukti port MySQL (3306) terlindungi di localhost internal:
+  ss -tulpn | grep 3306
 
-    4. Desain Modern & Responsif:
-       - Menggunakan CSS Grid dan Flexbox modern dengan variabel CSS untuk Dark Mode
-         dan Light Mode.
-       - Tipografi rapi menggunakan font 'Plus Jakarta Sans'.
-       - Indikator gauge busur lingkaran dinamis menggunakan elemen kurva SVG (Scalable Vector Graphics)."
 
-B. Jika Dosen Bertanya: "Lalu apa bedanya Web Dashboard ini dengan Aplikasi Flutter di HP?"
+7. PENJELASAN TEKNIS (JAWABAN PENGUJI / DOSEN)
+Arsitektur Web Dashboard:
+Dibangun sebagai Lightweight Embedded SPA (HTML5, Modern CSS, Vanilla JS ES6+) yang dilayani langsung oleh FastAPI. Tidak membutuhkan Node.js runtime terpisah di server sehingga RAM kontainer sangat hemat (~41 MB), waktu pemuatan instan (LCP < 0.5 detik), dan terintegrasi langsung dengan WebSocket MQTT serta REST API.
 
-   JAWABAN:
-   - "Aplikasi Flutter Android adalah Client Mobile Operasional bagi staf/teknisi lapangan
-      untuk memantau kondisi suhu cold-chain secara realtime lewat protokol MQTT,
-      menerima notifikasi darurat lokal, serta kendali saklar saat berada di gudang."
-   - "Sedangkan Web Dashboard adalah Central Admin Console berbasis browser yang ditujukan
-      untuk manajemen akun pengguna (tambah/edit/hapus staf), simulasi pengujian data IoT,
-      inspeksi endpoint REST API (Workbench & Swagger), serta ekspor laporan riwayat ke CSV."
-================================================================================
+Perbedaan Web Dashboard dengan Aplikasi Flutter:
+Aplikasi Flutter Android adalah client mobile operasional bagi teknisi dan staf lapangan untuk monitoring telemetri real-time, menerima peringatan darurat, dan mengendalikan saklar saat di gudang. Web Dashboard adalah konsol admin pusat di browser untuk manajemen akun user (tambah/edit/hapus staf), simulasi pengujian data IoT, inspeksi REST API, serta unduh rekap CSV.
+
+Alasan Memilih FastAPI dibanding Laravel:
+FastAPI berbasis asynchronous native (ASGI Uvicorn) dengan latensi respons < 10 ms, konsumsi RAM hanya ~41 MB (Laravel butuh 150-250 MB), serta integrasi MQTT (paho-mqtt) berjalan langsung dalam satu proses tanpa butuh queue worker atau Supervisor terpisah.
+
+Alasan Memilih Database MySQL dibanding Firebase / NoSQL:
+Kepatuhan ACID menjamin data pemantauan vaksin tidak korup, struktur relasi tabel akun dan telemetri terorganisasi rapi, penghitungan agregasi statistik dan ekspor CSV cepat lewat query SQL native, serta proses restore otomatis bencana selesai dalam 4 detik.
+
+Alasan Memilih Self-Hosted VPS Azure dibanding Firebase / Ngrok:
+Kedaulatan dan privasi data farmasi tersimpan di server privat sendiri, kontrol penuh implementasi 4-node Docker DinD untuk evaluasi DevOps, penggunaan protokol standar MQTT TCP port 1883 tanpa beban SDK berat, serta alamat domain dan IP publik permanen tanpa risiko sesi tunnel terputus.
