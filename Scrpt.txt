@@ -99,8 +99,14 @@ Folder Kodingan Backend & Web Dashboard:
 cd /home/azureuser/backend
 ls -la
 cat Dockerfile
-cat main.py
 cat dashboard.html
+
+# Melihat script fungsi 'Kirim Node' & 'Simpan Sensor' di main.py:
+sed -n '841,849p' main.py               # Lihat endpoint @app.post("/kirim-data")
+sed -n '342,372p' main.py               # Lihat logika batas aman & INSERT MySQL
+
+# Tes manual endpoint kirim-data via curl di terminal:
+curl -X POST https://api.pharma.web.id/kirim-data -H "Content-Type: application/json" -d '{"device_id":"device_1","suhu":4.2,"kelembapan":45.0,"kadar_gas":10.0,"cahaya":150.0,"status_pintu":0,"status_uv":0}'
 
 Folder Konfigurasi MQTT Broker:
 cd /home/azureuser/mosquitto
