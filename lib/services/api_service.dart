@@ -135,36 +135,27 @@ class ApiService {
     return null;
   }
 
-  // ============================================================================
-  // 1. FUNGSI AMBIL RIWAYAT SENSOR (HTTP GET)
-  // ============================================================================
-  // Meminta log telemetri sensor ke endpoint /sensor dengan menyertakan JWT Bearer Token.
   Future<List<SensorModel>> fetchSensorHistory() async {
-    // Langkah 1: Resolusi IP/Domain (https://api.pharma.web.id)
     final ip = await resolveReachableIp();
     final url = buildUrl(ip, '/sensor');
 
     try {
-      // Langkah 2: Ambil JWT Token sesi dari storage lokal
       final token = await _storageService.getAuthToken();
       if (token == null) {
         redirectToLogin();
         throw Exception('Sesi berakhir, silakan login ulang');
       }
 
-      // Langkah 3: Eksekusi HTTP GET dengan Header Authorization Bearer
       final response = await http
           .get(url, headers: {'Authorization': 'Bearer $token'})
           .timeout(const Duration(seconds: 12));
 
-      // Langkah 4: Cek status 401 jika token sudah kedaluwarsa
       if (response.statusCode == 401) {
         await _storageService.invalidateSession();
         redirectToLogin();
         throw Exception('Sesi berakhir, silakan login ulang');
       }
 
-      // Langkah 5: Decode respon JSON menjadi list SensorModel
       if (response.statusCode == 200) {
         final dynamic decodedData = jsonDecode(response.body);
 
@@ -190,18 +181,16 @@ class ApiService {
     }
   }
 
-  // ============================================================================
-  // 2. FUNGSI AUTENTIKASI LOGIN (HTTP POST)
-  // ============================================================================
-  // Mengirim username & password ke endpoint /login di FastAPI Backend.
-  // Menerima respons token JWT & data profil staf untuk otorisasi sesi.
+  // FUNGSI AUTENTIKASI: LOGIN USER / OPERATOR
+
+  // Mengirim username & password ke endpoint POST /login di server FastAPI.
+
   Future<Map<String, dynamic>> login(String username, String password) async {
-    // Langkah 1: Dapatkan URL target (https://api.pharma.web.id/login)
     final ip = await resolveReachableIp();
     final url = buildUrl(ip, '/login');
 
     try {
-      // Langkah 2: Kirim HTTP POST membawa body JSON kredensial
+      // Eksekusi HTTP POST request
       final response = await http
           .post(
             url,
@@ -213,20 +202,20 @@ class ApiService {
           )
           .timeout(const Duration(seconds: 12));
 
-      // Langkah 3: Decode respons JSON dari server FastAPI
+      // Decode respons JSON dari server
       final data = jsonDecode(response.body) as Map<String, dynamic>;
 
-      // Langkah 4: Cek status kode HTTP 200 (Login Berhasil)
+      // Cek status kode HTTP
       if (response.statusCode == 200) {
-        // Ambil token sesi JWT yang diterbitkan server
+        // Ambil token sesi JWT
         final token = data['token'] as String?;
         if (token == null || token.isEmpty) {
           throw Exception('Server tidak mengirim token sesi');
         }
-        // Simpan token otorisasi ke storage lokal aman (SharedPreferences)
+        // Simpan token otorisasi ke storage lokal
         await _storageService.saveAuthToken(token);
 
-        // Ambil data user & simpan hak akses (role: operator / user)
+        // Ambil data user & simpan hak akses
         final user = (data['user'] as Map<String, dynamic>?) ?? {};
         final role = user['role']?.toString();
         if (role != null) {
@@ -234,7 +223,7 @@ class ApiService {
         }
         return data;
       } else {
-        // Langkah 5: Tangani jika password salah / akun tidak ditemukan
+        // Jika username/password salah atau akun terkunci
         final errorMsg = data['detail'] ?? 'Autentikasi gagal';
         throw Exception(errorMsg);
       }

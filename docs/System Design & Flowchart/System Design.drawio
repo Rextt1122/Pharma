@@ -1,11 +1,11 @@
 <mxfile host="app.diagrams.net" agent="Hermes">
   <diagram id="pharma-iot-simple" name="Alur System Design">
-    <mxGraphModel dx="1541" dy="753" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1180" pageHeight="920" math="0" shadow="0">
+    <mxGraphModel dx="1849" dy="903" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1180" pageHeight="920" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
         <mxCell id="title" parent="1" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=17;fontStyle=1;fontColor=#000000;" value="SYSTEM DESIGN PHARMA MEDIC" vertex="1">
-          <mxGeometry height="30" width="860" x="130" y="10" as="geometry" />
+          <mxGeometry height="30" width="860" x="135" y="10" as="geometry" />
         </mxCell>
         <mxCell id="n1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.8;fontSize=11;fontColor=#000000;align=center;spacingLeft=14;" value="&lt;div style=&quot;&quot;&gt;&lt;b&gt;Device 1&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;&quot;&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(237, 237, 237));&quot;&gt;&lt;b&gt;ESP32 RAK PENYIMPANAN OBAT&lt;/b&gt;&lt;/span&gt;&lt;/div&gt;• Sensor: Suhu &amp;amp; Lembap (DHT22), Gas (MQ-2), Cahaya (LDR)&lt;br&gt;• Aktuator: Kipas Pendingin &amp;amp; Sirine Alarm" vertex="1">
           <mxGeometry height="90" width="410" x="70" y="65" as="geometry" />
