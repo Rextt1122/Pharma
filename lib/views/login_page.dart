@@ -1,6 +1,8 @@
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import '../services/api_service.dart';
 import '../services/biometric_service.dart';
 import '../services/storage_service.dart';
@@ -53,15 +55,13 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       parent: _entranceController,
       curve: const Interval(0.0, 0.55, curve: Curves.easeOutCubic),
     );
-    _sheetSlide = Tween<Offset>(
-      begin: const Offset(0, 0.16),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _entranceController,
-        curve: const Interval(0.05, 0.70, curve: Curves.easeOutCubic),
-      ),
-    );
+    _sheetSlide = Tween<Offset>(begin: const Offset(0, 0.16), end: Offset.zero)
+        .animate(
+          CurvedAnimation(
+            parent: _entranceController,
+            curve: const Interval(0.05, 0.70, curve: Curves.easeOutCubic),
+          ),
+        );
     _plantScale = CurvedAnimation(
       parent: _entranceController,
       curve: const Interval(0.15, 0.95, curve: Curves.easeOutBack),
@@ -75,11 +75,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       animation: _entranceController,
       child: child,
       builder: (context, ch) {
-        final double raw =
-            ((_entranceController.value - start) / (end - start)).clamp(
-              0.0,
-              1.0,
-            );
+        final double raw = ((_entranceController.value - start) / (end - start))
+            .clamp(0.0, 1.0);
         final double curved = Curves.easeOutCubic.transform(raw);
         final double scale = 0.94 + (0.06 * curved);
         return Opacity(
@@ -169,7 +166,10 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.close_rounded, color: AppColors.textMuted),
+                        icon: const Icon(
+                          Icons.close_rounded,
+                          color: AppColors.textMuted,
+                        ),
                         onPressed: () => Navigator.pop(sheetCtx),
                       ),
                     ],
@@ -186,7 +186,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                       labelText: 'IP Server / Host',
                       hintText: '192.168.253.238',
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusSm,
+                        ),
                       ),
                       filled: true,
                       fillColor: AppColors.inputBg,
@@ -205,7 +207,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusSm,
+                          ),
                         ),
                       ),
                       onPressed: isSaving
@@ -213,14 +217,20 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                           : () async {
                               final newIp = ipCtrl.text.trim();
                               if (newIp.isEmpty) {
-                                AppToast.error(context, 'IP Server tidak boleh kosong');
+                                AppToast.error(
+                                  context,
+                                  'IP Server tidak boleh kosong',
+                                );
                                 return;
                               }
                               setModalState(() => isSaving = true);
                               await StorageService().saveServerIp(newIp);
                               if (sheetCtx.mounted) Navigator.pop(sheetCtx);
                               if (mounted) {
-                                AppToast.success(context, 'Server disetel ke: $newIp');
+                                AppToast.success(
+                                  context,
+                                  'Server disetel ke: $newIp',
+                                );
                               }
                             },
                       child: isSaving
@@ -247,9 +257,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     );
   }
 
-  // ============================================================================
-  // HANDLER SUBMIT FORM (LOGIN & REGISTER)
-  // ============================================================================
+  // HANDLER LOGIN & REGISTER
+
   Future<void> _handleSubmit() async {
     if (_isSubmitting) return;
     if (_formKey.currentState!.validate()) {
@@ -259,7 +268,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
       try {
         if (_isSignUp) {
-          // --- MODE 1: REGISTER AKUN BARU ---
+          // REGISTER AKUN ---
           final email = _emailController.text.trim();
           final fullName = username;
 
@@ -283,14 +292,19 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             Navigator.pushReplacementNamed(context, '/main');
           }
         } else {
-          // --- MODE 2: LOGIN MASUK KE SISTEM ---
+          // LOGIN MASUK KE SISTEM ---
           // 1. Panggil HTTP API ke FastAPI Backend: POST /login
           final res = await ApiService().login(username, password);
 
-          // 2. Ambil data profil & peran (operator / user) dari respons backend
+          // 2. Ambil data profil & peran dari respons backend
           final user = (res['user'] as Map<String, dynamic>?) ?? {};
-          final userName = user['name']?.toString() ?? user['full_name']?.toString() ?? username;
-          final userEmail = user['email']?.toString() ?? (username.contains('@') ? username : '$username@smartpharma.id');
+          final userName =
+              user['name']?.toString() ??
+              user['full_name']?.toString() ??
+              username;
+          final userEmail =
+              user['email']?.toString() ??
+              (username.contains('@') ? username : '$username@smartpharma.id');
           final role = user['role']?.toString() ?? 'operator';
 
           // 3. Simpan data profil ke SharedPreferences lokal perangkat
@@ -301,13 +315,13 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             role: role,
           );
 
-          // 4. Sukses -> Pindah halaman ke Dashboard Utama (/main)
+          // 4. Sukses -> Pindah ke Dashboard
           if (mounted) {
             Navigator.pushReplacementNamed(context, '/main');
           }
         }
       } catch (e) {
-        // Tangkap pesan error dari server (misal: "Username atau password salah")
+        // pesan error dari server (misal: "Username atau password salah")
         if (mounted) {
           final cleanMsg = e.toString().replaceAll('Exception: ', '');
           AppToast.error(context, cleanMsg);
@@ -367,511 +381,17 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                       children: [
                         // Animated top decorative organic leaves / waves & floating orbs
                         Positioned(
-                        top: -10,
-                        left: -10,
-                        right: 0,
-                        height: 260,
-                        child: IgnorePointer(
-                          child: RepaintBoundary(
-                            child: AnimatedBuilder(
-                              animation: _ambientController,
-                              builder: (context, _) {
-                                return CustomPaint(
-                                  painter: _TopLeftDecorPainter(
-                                    progress: _ambientController.value,
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      // Server IP Config button in top right
-                      Positioned(
-                        top: 14,
-                        right: 18,
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: _showServerConfigSheet,
-                            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(
-                                  AppSpacing.radiusSm,
-                                ),
-                                border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.2),
-                                ),
-                              ),
-                              child: const Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.dns_rounded, size: 14, color: Colors.white),
-                                  SizedBox(width: 5),
-                                  Text(
-                                    'Server IP',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 11.5,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      // Main vertical structure
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          // Top Header Area
-                          AnimatedContainer(
-                            duration: const Duration(milliseconds: 280),
-                            curve: Curves.easeOutCubic,
-                            height: headerHeight,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.lg + 4,
-                            ),
-                            child: FadeTransition(
-                              opacity: _headerFade,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  if (_isSignUp) ...[
-                                    const SizedBox(height: AppSpacing.sm),
-                                    InkWell(
-                                      onTap: () => _toggleAuthMode(false),
-                                      borderRadius: BorderRadius.circular(
-                                        AppSpacing.radiusSm,
-                                      ),
-                                      child: const Padding(
-                                        padding: EdgeInsets.symmetric(
-                                          vertical: 6,
-                                          horizontal: 4,
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(
-                                              Icons.arrow_back_ios_new_rounded,
-                                              size: 16,
-                                              color: Colors.white,
-                                            ),
-                                            SizedBox(width: 6),
-                                            Text(
-                                              'Back to login',
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 15,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ] else ...[
-                                    const SizedBox(height: AppSpacing.md),
-                                    const Text(
-                                      'Smart Pharma',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 32,
-                                        fontWeight: FontWeight.w800,
-                                        letterSpacing: -0.6,
-                                        height: 1.1,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'Monitoring & Akses Gudang',
-                                      style: TextStyle(
-                                        color: Colors.white.withAlpha(200),
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ),
-                          ),
-
-                          // Bottom Rounded Form Sheet
-                          Expanded(
-                            child: SlideTransition(
-                              position: _sheetSlide,
-                              child: Container(
-                                padding: const EdgeInsets.fromLTRB(
-                                  AppSpacing.lg + 4,
-                                  AppSpacing.xl + 4,
-                                  AppSpacing.lg + 4,
-                                  AppSpacing.lg,
-                                ),
-                              decoration: const BoxDecoration(
-                                color: AppColors.background,
-                                borderRadius: BorderRadius.vertical(
-                                  top: Radius.circular(36),
-                                ),
-                              ),
-                              child: Form(
-                                key: _formKey,
-                                child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    _buildStaggered(
-                                      0,
-                                      Text(
-                                        _isSignUp ? 'Sign Up' : 'Login',
-                                        style: const TextStyle(
-                                          fontSize: 28,
-                                          fontWeight: FontWeight.w800,
-                                          color: AppColors.pharmaNavy,
-                                          letterSpacing: -0.5,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: AppSpacing.lg),
-
-                                    // Username input (Login: Username/Email, SignUp: Username)
-                                    _buildStaggered(
-                                      1,
-                                      _buildCleanInputField(
-                                        controller: _usernameController,
-                                        hintText: _isSignUp ? 'Username' : 'Username or Email',
-                                        icon: Icons.person_outline_rounded,
-                                        validator: (value) {
-                                          if (value == null ||
-                                              value.trim().isEmpty) {
-                                            return 'Username tidak boleh kosong';
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                    ),
-                                    if (_isSignUp) ...[
-                                      const SizedBox(height: AppSpacing.md),
-                                      _buildStaggered(
-                                        2,
-                                        _buildCleanInputField(
-                                          controller: _emailController,
-                                          hintText: 'Email (contoh: nama@domain.com)',
-                                          icon: Icons.mail_outline_rounded,
-                                          keyboardType: TextInputType.emailAddress,
-                                          validator: (value) {
-                                            if (value == null ||
-                                                value.trim().isEmpty) {
-                                              return 'Email wajib diisi';
-                                            }
-                                            if (!value.contains('@') ||
-                                                !value.contains('.')) {
-                                              return 'Format email tidak valid';
-                                            }
-                                            return null;
-                                          },
-                                        ),
-                                      ),
-                                    ],
-                                    const SizedBox(height: AppSpacing.md),
-
-                                    // Password input
-                                    _buildStaggered(
-                                      _isSignUp ? 3 : 2,
-                                      _buildCleanInputField(
-                                        controller: _passwordController,
-                                        hintText: 'Password',
-                                        icon: Icons.lock_outline_rounded,
-                                        obscureText: _obscurePassword,
-                                        suffixIcon: IconButton(
-                                          icon: Icon(
-                                            _obscurePassword
-                                                ? Icons.visibility_off_outlined
-                                                : Icons.visibility_outlined,
-                                            size: 18,
-                                            color: AppColors.textMuted,
-                                          ),
-                                          onPressed: () {
-                                            setState(() {
-                                              _obscurePassword =
-                                                  !_obscurePassword;
-                                            });
-                                          },
-                                        ),
-                                        validator: (value) {
-                                          if (value == null ||
-                                              value.trim().isEmpty) {
-                                            return 'Password tidak boleh kosong';
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                    ),
-
-                                    if (_isSignUp) ...[
-                                      const SizedBox(height: AppSpacing.md),
-                                      _buildStaggered(
-                                        4,
-                                        _buildCleanInputField(
-                                          controller:
-                                              _confirmPasswordController,
-                                          hintText: 'Confirm password',
-                                          icon: Icons.lock_reset_rounded,
-                                          obscureText: _obscurePassword,
-                                          validator: (value) {
-                                            if (value == null ||
-                                                value.trim().isEmpty) {
-                                              return 'Konfirmasi password wajib diisi';
-                                            }
-                                            if (value !=
-                                                _passwordController.text) {
-                                              return 'Password tidak sama';
-                                            }
-                                            return null;
-                                          },
-                                        ),
-                                      ),
-                                      const SizedBox(height: AppSpacing.lg + 4),
-                                    ] else ...[
-                                      _buildStaggered(
-                                        3,
-                                        Align(
-                                          alignment: Alignment.centerRight,
-                                          child: TextButton(
-                                            onPressed: () {
-                                              AppToast.info(
-                                                context,
-                                                'Hubungi admin gudang untuk reset kredensial.',
-                                              );
-                                            },
-                                            style: TextButton.styleFrom(
-                                              foregroundColor:
-                                                  AppColors.pharmaNavy,
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 4,
-                                                    vertical: 8,
-                                                  ),
-                                              minimumSize: Size.zero,
-                                              tapTargetSize:
-                                                  MaterialTapTargetSize
-                                                      .shrinkWrap,
-                                            ),
-                                            child: const Text(
-                                              'Forgot Password',
-                                              style: TextStyle(
-                                                fontSize: 12.5,
-                                                fontWeight: FontWeight.w700,
-                                                color: AppColors.pharmaNavy,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(height: AppSpacing.md),
-                                    ],
-
-                                    // Primary Submit Button
-                                    _buildStaggered(
-                                      _isSignUp ? 5 : 4,
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: SizedBox(
-                                              height: 52,
-                                              child: ElevatedButton(
-                                                style: ElevatedButton.styleFrom(
-                                                  backgroundColor:
-                                                      AppColors.pharmaNavy,
-                                                  foregroundColor: Colors.white,
-                                                  elevation: 2,
-                                                  shadowColor: AppColors.pharmaNavy
-                                                      .withAlpha(60),
-                                                  shape: RoundedRectangleBorder(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          AppSpacing.radiusMd,
-                                                        ),
-                                                  ),
-                                                ),
-                                                onPressed: _isSubmitting
-                                                    ? null
-                                                    : _handleSubmit,
-                                                child: _isSubmitting
-                                                    ? const SizedBox(
-                                                        width: 22,
-                                                        height: 22,
-                                                        child:
-                                                            CircularProgressIndicator(
-                                                              strokeWidth: 2.4,
-                                                              color: Colors.white,
-                                                            ),
-                                                      )
-                                                    : Text(
-                                                        _isSignUp
-                                                            ? 'Sign Up'
-                                                            : 'Login',
-                                                        style: const TextStyle(
-                                                          fontSize: 16,
-                                                          fontWeight: FontWeight.w800,
-                                                          letterSpacing: 0.3,
-                                                        ),
-                                                      ),
-                                              ),
-                                            ),
-                                          ),
-                                          if (!_isSignUp && _canUseBiometrics) ...[
-                                            const SizedBox(width: AppSpacing.sm + 2),
-                                            SizedBox(
-                                              height: 52,
-                                              width: 52,
-                                              child: OutlinedButton(
-                                                style: OutlinedButton.styleFrom(
-                                                  padding: EdgeInsets.zero,
-                                                  side: const BorderSide(
-                                                    color: AppColors.pharmaNavy,
-                                                    width: 1.5,
-                                                  ),
-                                                  shape: RoundedRectangleBorder(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          AppSpacing.radiusMd,
-                                                        ),
-                                                  ),
-                                                  backgroundColor: AppColors.cardWhite,
-                                                ),
-                                                onPressed: _isAuthenticatingBiometric
-                                                    ? null
-                                                    : _handleBiometricLogin,
-                                                child: _isAuthenticatingBiometric
-                                                    ? const SizedBox(
-                                                        width: 20,
-                                                        height: 20,
-                                                        child: CircularProgressIndicator(
-                                                          strokeWidth: 2,
-                                                          color: AppColors.pharmaNavy,
-                                                        ),
-                                                      )
-                                                    : const Icon(
-                                                        Icons.fingerprint_rounded,
-                                                        color: AppColors.pharmaNavy,
-                                                        size: 28,
-                                                      ),
-                                              ),
-                                            ),
-                                          ],
-                                        ],
-                                      ),
-                                    ),
-
-                                    if (!_isSignUp) ...[
-                                      const Spacer(),
-                                      const SizedBox(height: AppSpacing.lg),
-                                      _buildStaggered(
-                                        6,
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Text(
-                                              "Don't have account? ",
-                                              style: AppTypography.caption
-                                                  .copyWith(
-                                                    fontSize: 13,
-                                                    color: AppColors.textMuted,
-                                                  ),
-                                            ),
-                                            GestureDetector(
-                                              onTap: () =>
-                                                  _toggleAuthMode(true),
-                                              child: const Text(
-                                                'Sign Up',
-                                                style: TextStyle(
-                                                  fontSize: 13,
-                                                  fontWeight: FontWeight.w800,
-                                                  color: AppColors.pharmaNavy,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ] else ...[
-                                      const Spacer(),
-                                      const SizedBox(height: AppSpacing.md),
-                                      _buildStaggered(
-                                        6,
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Text(
-                                              'Already have an account? ',
-                                              style: AppTypography.caption
-                                                  .copyWith(
-                                                    fontSize: 13,
-                                                    color: AppColors.textMuted,
-                                                  ),
-                                            ),
-                                            GestureDetector(
-                                              onTap: () =>
-                                                  _toggleAuthMode(false),
-                                              child: const Text(
-                                                'Login',
-                                                style: TextStyle(
-                                                  fontSize: 13,
-                                                  fontWeight: FontWeight.w800,
-                                                  color: AppColors.pharmaNavy,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                    const SizedBox(height: AppSpacing.sm),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    // Overlapping botanical/pharma illustration on the right boundary (both Login & Sign Up)
-                    AnimatedPositioned(
-                      duration: const Duration(milliseconds: 360),
-                      curve: Curves.easeOutBack,
-                      top: headerHeight - (_isSignUp ? 72 : 88),
-                      right: _isSignUp ? 18 : 22,
-                      child: IgnorePointer(
-                        child: AnimatedScale(
-                          duration: const Duration(milliseconds: 360),
-                          curve: Curves.easeOutBack,
-                          scale: _isSignUp ? 0.85 : 1.0,
-                          alignment: Alignment.bottomCenter,
-                          child: ScaleTransition(
-                            scale: _plantScale,
-                            alignment: Alignment.bottomCenter,
+                          top: -10,
+                          left: -10,
+                          right: 0,
+                          height: 260,
+                          child: IgnorePointer(
                             child: RepaintBoundary(
                               child: AnimatedBuilder(
                                 animation: _ambientController,
                                 builder: (context, _) {
                                   return CustomPaint(
-                                    size: const Size(88, 108),
-                                    painter: _PharmaPlantPainter(
+                                    painter: _TopLeftDecorPainter(
                                       progress: _ambientController.value,
                                     ),
                                   );
@@ -880,19 +400,552 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                             ),
                           ),
                         ),
-                      ),
+
+                        // Server IP Config button in top right
+                        Positioned(
+                          top: 14,
+                          right: 18,
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: _showServerConfigSheet,
+                              borderRadius: BorderRadius.circular(
+                                AppSpacing.radiusSm,
+                              ),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(
+                                    AppSpacing.radiusSm,
+                                  ),
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.2),
+                                  ),
+                                ),
+                                child: const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.dns_rounded,
+                                      size: 14,
+                                      color: Colors.white,
+                                    ),
+                                    SizedBox(width: 5),
+                                    Text(
+                                      'Server IP',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 11.5,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        // Main vertical structure
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // Top Header Area
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 280),
+                              curve: Curves.easeOutCubic,
+                              height: headerHeight,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.lg + 4,
+                              ),
+                              child: FadeTransition(
+                                opacity: _headerFade,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    if (_isSignUp) ...[
+                                      const SizedBox(height: AppSpacing.sm),
+                                      InkWell(
+                                        onTap: () => _toggleAuthMode(false),
+                                        borderRadius: BorderRadius.circular(
+                                          AppSpacing.radiusSm,
+                                        ),
+                                        child: const Padding(
+                                          padding: EdgeInsets.symmetric(
+                                            vertical: 6,
+                                            horizontal: 4,
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(
+                                                Icons
+                                                    .arrow_back_ios_new_rounded,
+                                                size: 16,
+                                                color: Colors.white,
+                                              ),
+                                              SizedBox(width: 6),
+                                              Text(
+                                                'Back to login',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 15,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ] else ...[
+                                      const SizedBox(height: AppSpacing.md),
+                                      const Text(
+                                        'Smart Pharma',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 32,
+                                          fontWeight: FontWeight.w800,
+                                          letterSpacing: -0.6,
+                                          height: 1.1,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'Monitoring & Akses Gudang',
+                                        style: TextStyle(
+                                          color: Colors.white.withAlpha(200),
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            ),
+
+                            // Bottom Rounded Form Sheet
+                            Expanded(
+                              child: SlideTransition(
+                                position: _sheetSlide,
+                                child: Container(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    AppSpacing.lg + 4,
+                                    AppSpacing.xl + 4,
+                                    AppSpacing.lg + 4,
+                                    AppSpacing.lg,
+                                  ),
+                                  decoration: const BoxDecoration(
+                                    color: AppColors.background,
+                                    borderRadius: BorderRadius.vertical(
+                                      top: Radius.circular(36),
+                                    ),
+                                  ),
+                                  child: Form(
+                                    key: _formKey,
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
+                                      children: [
+                                        _buildStaggered(
+                                          0,
+                                          Text(
+                                            _isSignUp ? 'Sign Up' : 'Login',
+                                            style: const TextStyle(
+                                              fontSize: 28,
+                                              fontWeight: FontWeight.w800,
+                                              color: AppColors.pharmaNavy,
+                                              letterSpacing: -0.5,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(height: AppSpacing.lg),
+
+                                        // Username input (Login: Username/Email, SignUp: Username)
+                                        _buildStaggered(
+                                          1,
+                                          _buildCleanInputField(
+                                            controller: _usernameController,
+                                            hintText: _isSignUp
+                                                ? 'Username'
+                                                : 'Username or Email',
+                                            icon: Icons.person_outline_rounded,
+                                            validator: (value) {
+                                              if (value == null ||
+                                                  value.trim().isEmpty) {
+                                                return 'Username tidak boleh kosong';
+                                              }
+                                              return null;
+                                            },
+                                          ),
+                                        ),
+                                        if (_isSignUp) ...[
+                                          const SizedBox(height: AppSpacing.md),
+                                          _buildStaggered(
+                                            2,
+                                            _buildCleanInputField(
+                                              controller: _emailController,
+                                              hintText: 'Email (contoh: nama@domain.com)',
+                                              icon: Icons.mail_outline_rounded,
+                                              keyboardType:
+                                                  TextInputType.emailAddress,
+                                              validator: (value) {
+                                                if (value == null ||
+                                                    value.trim().isEmpty) {
+                                                  return 'Email wajib diisi';
+                                                }
+                                                if (!value.contains('@') ||
+                                                    !value.contains('.')) {
+                                                  return 'Format email tidak valid';
+                                                }
+                                                return null;
+                                              },
+                                            ),
+                                          ),
+                                        ],
+                                        const SizedBox(height: AppSpacing.md),
+
+                                        // Password input
+                                        _buildStaggered(
+                                          _isSignUp ? 3 : 2,
+                                          _buildCleanInputField(
+                                            controller: _passwordController,
+                                            hintText: 'Password',
+                                            icon: Icons.lock_outline_rounded,
+                                            obscureText: _obscurePassword,
+                                            suffixIcon: IconButton(
+                                              icon: Icon(
+                                                _obscurePassword
+                                                    ? Icons
+                                                          .visibility_off_outlined
+                                                    : Icons.visibility_outlined,
+                                                size: 18,
+                                                color: AppColors.textMuted,
+                                              ),
+                                              onPressed: () {
+                                                setState(() {
+                                                  _obscurePassword =
+                                                      !_obscurePassword;
+                                                });
+                                              },
+                                            ),
+                                            validator: (value) {
+                                              if (value == null ||
+                                                  value.trim().isEmpty) {
+                                                return 'Password tidak boleh kosong';
+                                              }
+                                              return null;
+                                            },
+                                          ),
+                                        ),
+
+                                        if (_isSignUp) ...[
+                                          const SizedBox(height: AppSpacing.md),
+                                          _buildStaggered(
+                                            4,
+                                            _buildCleanInputField(
+                                              controller:
+                                                  _confirmPasswordController,
+                                              hintText: 'Confirm password',
+                                              icon: Icons.lock_reset_rounded,
+                                              obscureText: _obscurePassword,
+                                              validator: (value) {
+                                                if (value == null ||
+                                                    value.trim().isEmpty) {
+                                                  return 'Konfirmasi password wajib diisi';
+                                                }
+                                                if (value !=
+                                                    _passwordController.text) {
+                                                  return 'Password tidak sama';
+                                                }
+                                                return null;
+                                              },
+                                            ),
+                                          ),
+                                          const SizedBox(
+                                            height: AppSpacing.lg + 4,
+                                          ),
+                                        ] else ...[
+                                          _buildStaggered(
+                                            3,
+                                            Align(
+                                              alignment: Alignment.centerRight,
+                                              child: TextButton(
+                                                onPressed: () {
+                                                  AppToast.info(
+                                                    context,
+                                                    'Hubungi admin gudang untuk reset kredensial.',
+                                                  );
+                                                },
+                                                style: TextButton.styleFrom(
+                                                  foregroundColor:
+                                                      AppColors.pharmaNavy,
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 4,
+                                                        vertical: 8,
+                                                      ),
+                                                  minimumSize: Size.zero,
+                                                  tapTargetSize:
+                                                      MaterialTapTargetSize
+                                                          .shrinkWrap,
+                                                ),
+                                                child: const Text(
+                                                  'Forgot Password',
+                                                  style: TextStyle(
+                                                    fontSize: 12.5,
+                                                    fontWeight: FontWeight.w700,
+                                                    color: AppColors.pharmaNavy,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(height: AppSpacing.md),
+                                        ],
+
+                                        // Primary Submit Button
+                                        _buildStaggered(
+                                          _isSignUp ? 5 : 4,
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: SizedBox(
+                                                  height: 52,
+                                                  child: ElevatedButton(
+                                                    style: ElevatedButton.styleFrom(
+                                                      backgroundColor:
+                                                          AppColors.pharmaNavy,
+                                                      foregroundColor:
+                                                          Colors.white,
+                                                      elevation: 2,
+                                                      shadowColor: AppColors
+                                                          .pharmaNavy
+                                                          .withAlpha(60),
+                                                      shape: RoundedRectangleBorder(
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              AppSpacing
+                                                                  .radiusMd,
+                                                            ),
+                                                      ),
+                                                    ),
+                                                    onPressed: _isSubmitting
+                                                        ? null
+                                                        : _handleSubmit,
+                                                    child: _isSubmitting
+                                                        ? const SizedBox(
+                                                            width: 22,
+                                                            height: 22,
+                                                            child:
+                                                                CircularProgressIndicator(
+                                                                  strokeWidth:
+                                                                      2.4,
+                                                                  color: Colors
+                                                                      .white,
+                                                                ),
+                                                          )
+                                                        : Text(
+                                                            _isSignUp
+                                                                ? 'Sign Up'
+                                                                : 'Login',
+                                                            style:
+                                                                const TextStyle(
+                                                                  fontSize: 16,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w800,
+                                                                  letterSpacing:
+                                                                      0.3,
+                                                                ),
+                                                          ),
+                                                  ),
+                                                ),
+                                              ),
+                                              if (!_isSignUp &&
+                                                  _canUseBiometrics) ...[
+                                                const SizedBox(
+                                                  width: AppSpacing.sm + 2,
+                                                ),
+                                                SizedBox(
+                                                  height: 52,
+                                                  width: 52,
+                                                  child: OutlinedButton(
+                                                    style: OutlinedButton.styleFrom(
+                                                      padding: EdgeInsets.zero,
+                                                      side: const BorderSide(
+                                                        color: AppColors
+                                                            .pharmaNavy,
+                                                        width: 1.5,
+                                                      ),
+                                                      shape: RoundedRectangleBorder(
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              AppSpacing
+                                                                  .radiusMd,
+                                                            ),
+                                                      ),
+                                                      backgroundColor:
+                                                          AppColors.cardWhite,
+                                                    ),
+                                                    onPressed:
+                                                        _isAuthenticatingBiometric
+                                                        ? null
+                                                        : _handleBiometricLogin,
+                                                    child:
+                                                        _isAuthenticatingBiometric
+                                                        ? const SizedBox(
+                                                            width: 20,
+                                                            height: 20,
+                                                            child: CircularProgressIndicator(
+                                                              strokeWidth: 2,
+                                                              color: AppColors
+                                                                  .pharmaNavy,
+                                                            ),
+                                                          )
+                                                        : const Icon(
+                                                            Icons
+                                                                .fingerprint_rounded,
+                                                            color: AppColors
+                                                                .pharmaNavy,
+                                                            size: 28,
+                                                          ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ],
+                                          ),
+                                        ),
+
+                                        if (!_isSignUp) ...[
+                                          const Spacer(),
+                                          const SizedBox(height: AppSpacing.lg),
+                                          _buildStaggered(
+                                            6,
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                Text(
+                                                  "Don't have account? ",
+                                                  style: AppTypography.caption
+                                                      .copyWith(
+                                                        fontSize: 13,
+                                                        color:
+                                                            AppColors.textMuted,
+                                                      ),
+                                                ),
+                                                GestureDetector(
+                                                  onTap: () =>
+                                                      _toggleAuthMode(true),
+                                                  child: const Text(
+                                                    'Sign Up',
+                                                    style: TextStyle(
+                                                      fontSize: 13,
+                                                      fontWeight:
+                                                          FontWeight.w800,
+                                                      color:
+                                                          AppColors.pharmaNavy,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ] else ...[
+                                          const Spacer(),
+                                          const SizedBox(height: AppSpacing.md),
+                                          _buildStaggered(
+                                            6,
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                Text(
+                                                  'Already have an account? ',
+                                                  style: AppTypography.caption
+                                                      .copyWith(
+                                                        fontSize: 13,
+                                                        color:
+                                                            AppColors.textMuted,
+                                                      ),
+                                                ),
+                                                GestureDetector(
+                                                  onTap: () =>
+                                                      _toggleAuthMode(false),
+                                                  child: const Text(
+                                                    'Login',
+                                                    style: TextStyle(
+                                                      fontSize: 13,
+                                                      fontWeight:
+                                                          FontWeight.w800,
+                                                      color:
+                                                          AppColors.pharmaNavy,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                        const SizedBox(height: AppSpacing.sm),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        // Overlapping botanical/pharma illustration on the right boundary (both Login & Sign Up)
+                        AnimatedPositioned(
+                          duration: const Duration(milliseconds: 360),
+                          curve: Curves.easeOutBack,
+                          top: headerHeight - (_isSignUp ? 72 : 88),
+                          right: _isSignUp ? 18 : 22,
+                          child: IgnorePointer(
+                            child: AnimatedScale(
+                              duration: const Duration(milliseconds: 360),
+                              curve: Curves.easeOutBack,
+                              scale: _isSignUp ? 0.85 : 1.0,
+                              alignment: Alignment.bottomCenter,
+                              child: ScaleTransition(
+                                scale: _plantScale,
+                                alignment: Alignment.bottomCenter,
+                                child: RepaintBoundary(
+                                  child: AnimatedBuilder(
+                                    animation: _ambientController,
+                                    builder: (context, _) {
+                                      return CustomPaint(
+                                        size: const Size(88, 108),
+                                        painter: _PharmaPlantPainter(
+                                          progress: _ambientController.value,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    ],
                   ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildCleanInputField({
     required TextEditingController controller,
@@ -968,7 +1021,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       ),
     );
   }
-
 }
 
 class _TopLeftDecorPainter extends CustomPainter {
@@ -1003,12 +1055,7 @@ class _TopLeftDecorPainter extends CustomPainter {
         94 + wave2 * 10,
         64 + wave1 * 8,
       )
-      ..quadraticBezierTo(
-        68 + wave1 * 8,
-        104 + wave2 * 10,
-        0,
-        84 + wave1 * 6,
-      )
+      ..quadraticBezierTo(68 + wave1 * 8, 104 + wave2 * 10, 0, 84 + wave1 * 6)
       ..close();
     canvas.drawPath(path1, fill2);
 
@@ -1021,12 +1068,7 @@ class _TopLeftDecorPainter extends CustomPainter {
         58 + wave1 * 9,
         118 + wave2 * 8,
       )
-      ..quadraticBezierTo(
-        34 + wave2 * 6,
-        144 + wave1 * 6,
-        0,
-        134 + wave2 * 6,
-      )
+      ..quadraticBezierTo(34 + wave2 * 6, 144 + wave1 * 6, 0, 134 + wave2 * 6)
       ..close();
     canvas.drawPath(path2, fill1);
 
@@ -1091,12 +1133,7 @@ class _PharmaPlantPainter extends CustomPainter {
         w * 0.20 + sway * 7.5,
         h * 0.16 + swaySecondary * 3.0,
       )
-      ..quadraticBezierTo(
-        w * 0.44 + sway * 4.0,
-        h * 0.24,
-        w * 0.50,
-        h * 0.55,
-      )
+      ..quadraticBezierTo(w * 0.44 + sway * 4.0, h * 0.24, w * 0.50, h * 0.55)
       ..close();
     canvas.drawPath(leftLeaf, backLeafPaint);
 
@@ -1112,12 +1149,7 @@ class _PharmaPlantPainter extends CustomPainter {
         w * 0.55 + sway * 6.5,
         h * 0.04 + swaySecondary * 2.0,
       )
-      ..quadraticBezierTo(
-        w * 0.74 + sway * 4.5,
-        h * 0.28,
-        w * 0.58,
-        h * 0.58,
-      )
+      ..quadraticBezierTo(w * 0.74 + sway * 4.5, h * 0.28, w * 0.58, h * 0.58)
       ..close();
     canvas.drawPath(centerLeaf, centerLeafPaint);
 

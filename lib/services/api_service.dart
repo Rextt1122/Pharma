@@ -37,8 +37,13 @@ class ApiService {
     final savedIp = await _storageService.getServerIp();
 
     // Fast check: if savedIp is valid and responds within 800ms, use immediately
-    if (savedIp.isNotEmpty && savedIp != '192.168.1.100' && savedIp != '192.168.33.10') {
-      final probeResult = await _probeIp(savedIp, const Duration(milliseconds: 800));
+    if (savedIp.isNotEmpty &&
+        savedIp != '192.168.1.100' &&
+        savedIp != '192.168.33.10') {
+      final probeResult = await _probeIp(
+        savedIp,
+        const Duration(milliseconds: 800),
+      );
       if (probeResult != null) {
         _cachedActiveHost = probeResult;
         return probeResult;
@@ -71,9 +76,7 @@ class ApiService {
 
   Future<String?> _probeIp(String ip, Duration timeout) async {
     try {
-      final response = await http
-          .get(buildUrl(ip, '/'))
-          .timeout(timeout);
+      final response = await http.get(buildUrl(ip, '/')).timeout(timeout);
       if (response.statusCode == 200) {
         return ip;
       }
@@ -124,9 +127,7 @@ class ApiService {
     for (final prefix in prefixes) {
       for (int start = 1; start <= 254; start += 64) {
         final end = (start + 63 > 254) ? 254 : start + 63;
-        final batch = <String>[
-          for (int i = start; i <= end; i++) '$prefix.$i',
-        ];
+        final batch = <String>[for (int i = start; i <= end; i++) '$prefix.$i'];
         final hit = await _raceIps(batch, const Duration(milliseconds: 650));
         if (hit != null) return hit;
       }
@@ -180,20 +181,16 @@ class ApiService {
     }
   }
 
-  // ============================================================================
   // FUNGSI AUTENTIKASI: LOGIN USER / OPERATOR
-  // ============================================================================
+
   // Mengirim username & password ke endpoint POST /login di server FastAPI.
-  // Jika valid, server mengembalikan JWT Token & data profil user (Role: operator/user).
-  // Token dan Role akan otomatis disimpan ke StorageService (keamanan SharedPreferences).
+
   Future<Map<String, dynamic>> login(String username, String password) async {
-    // 1. Dapatkan host server aktif (apakah via Cloud Azure atau Hotspot/LAN)
     final ip = await resolveReachableIp();
-    // 2. Susun endpoint lengkap: https://api.pharma.web.id/login
     final url = buildUrl(ip, '/login');
 
     try {
-      // 3. Eksekusi HTTP POST request membawa payload JSON kredensial
+      // Eksekusi HTTP POST request
       final response = await http
           .post(
             url,
@@ -205,10 +202,10 @@ class ApiService {
           )
           .timeout(const Duration(seconds: 12));
 
-      // 4. Decode respons JSON dari server
+      // Decode respons JSON dari server
       final data = jsonDecode(response.body) as Map<String, dynamic>;
 
-      // 5. Cek status kode HTTP
+      // Cek status kode HTTP
       if (response.statusCode == 200) {
         // Ambil token sesi JWT
         final token = data['token'] as String?;
@@ -218,7 +215,7 @@ class ApiService {
         // Simpan token otorisasi ke storage lokal
         await _storageService.saveAuthToken(token);
 
-        // Ambil data user & simpan hak akses (role: operator / user)
+        // Ambil data user & simpan hak akses
         final user = (data['user'] as Map<String, dynamic>?) ?? {};
         final role = user['role']?.toString();
         if (role != null) {
@@ -361,13 +358,15 @@ class ApiService {
     final token = await _storageService.getAuthToken();
 
     try {
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          if (token != null) 'Authorization': 'Bearer $token',
-        },
-      ).timeout(const Duration(seconds: 12));
+      final response = await http
+          .get(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              if (token != null) 'Authorization': 'Bearer $token',
+            },
+          )
+          .timeout(const Duration(seconds: 12));
 
       if (response.statusCode == 200) {
         final List<dynamic> list = jsonDecode(response.body);
@@ -435,13 +434,15 @@ class ApiService {
     final token = await _storageService.getAuthToken();
 
     try {
-      final response = await http.delete(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          if (token != null) 'Authorization': 'Bearer $token',
-        },
-      ).timeout(const Duration(seconds: 12));
+      final response = await http
+          .delete(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              if (token != null) 'Authorization': 'Bearer $token',
+            },
+          )
+          .timeout(const Duration(seconds: 12));
 
       final data = jsonDecode(response.body) as Map<String, dynamic>;
       if (response.statusCode == 200) {
@@ -467,13 +468,15 @@ class ApiService {
     final token = await _storageService.getAuthToken();
 
     try {
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          if (token != null) 'Authorization': 'Bearer $token',
-        },
-      ).timeout(const Duration(seconds: 12));
+      final response = await http
+          .get(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              if (token != null) 'Authorization': 'Bearer $token',
+            },
+          )
+          .timeout(const Duration(seconds: 12));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
