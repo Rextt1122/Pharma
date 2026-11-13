@@ -838,13 +838,31 @@ def get_sensor_summary(_user: dict = Depends(require_user)):
     except Exception:
         raise HTTPException(status_code=500, detail="Server error")
 
+# ============================================================================
+# ENDPOINT KIRIM DATA TELEMETRI MANUAL (DARI WEB DASHBOARD KE FLUTTER)
+# ============================================================================
+# ALASAN KENAPA DATA DARI WEB DASHBOARD BISA LANGSUNG MUNCUL DI FLUTTER:
+# 1. Saat tombol 'Kirim Node 1' / 'Kirim Node 2' ditekan di Web Dashboard, browser
+#    mengirimkan HTTP POST ke endpoint '/kirim-data' ini membawa data sensor.
+# 2. Fungsi 'process_and_save_sensor_data()' memvalidasi batas aman dan menyimpan
+#    rekam jejak log ke Database MySQL (Node 2).
+# 3. KUNCI REALTIME KE FLUTTER: Baris 'publish_mqtt("pharma/sensor", ...)' langsung
+#    mem-broadcast data tersebut ke Broker Mosquitto MQTT (Node 3).
+# 4. Aplikasi Flutter di HP dalam keadaan 'Subscribe' (berlangganan) topik 'pharma/sensor'.
+# 5. Begitu Broker MQTT menerima data ini, Broker langsung menembakkannya secara
+#    instan (< 10 ms) ke HP Flutter via WebSocket, sehingga layar HP langsung update realtime.
+# ============================================================================
 @app.post("/kirim-data", tags=["Telemetri"], summary="Kirim Data Sensor")
 def kirim_data(data_baru: dict, _user: Optional[dict] = Depends(optional_user)):
+    # Langkah 1: Olah status aman/bahaya & simpan ke MySQL Database Node 2
     process_and_save_sensor_data(data_baru)
+
+    # Langkah 2: Teruskan paket data ke Broker MQTT agar diterima realtime oleh Flutter HP
     try:
         publish_mqtt("pharma/sensor", json.dumps(data_baru))
     except Exception:
         pass
+
     return {"pesan": "Data berhasil diolah dan disimpan ke Database Node 2", "data": data_baru}
 
 @app.post("/control/{device}", tags=["Telemetri"], summary="Kontrol Aktuator IoT")
