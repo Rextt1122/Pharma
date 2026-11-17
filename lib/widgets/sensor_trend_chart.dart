@@ -189,34 +189,32 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
       if (rawVals[i] > maxVal) maxVal = rawVals[i];
     }
 
-    // Selalu bingkai garis batas bawah & atas dengan ruang bernapas proporsional
-    // agar tampilan Suhu, Kelembapan, dan Kadar Gas seragam di tengah area grafik.
+    // Selalu bingkai garis batas bawah & atas dengan ruang bernapas rapat proporsional
+    // agar grafik memenuhi area secara optimal (tidak terlalu kecil/hampa di sisi atas/bawah).
     double effectiveMin = minVal < _lowerReferenceLine ? minVal : _lowerReferenceLine;
     double effectiveMax = _upperThreshold != null && _upperThreshold! > maxVal
         ? _upperThreshold!
         : maxVal;
 
     final range = (effectiveMax - effectiveMin).abs();
-    final yMargin = range < 1.0 ? 2.0 : range * 0.18;
-    double chartMinY = (effectiveMin - yMargin).floorToDouble();
-    double chartMaxY = (effectiveMax + yMargin).ceilToDouble();
+    final yMargin = range < 1.0 ? 1.0 : range * 0.08;
+    double chartMinY = effectiveMin - yMargin;
+    double chartMaxY = effectiveMax + yMargin;
     if (minVal >= 0 && chartMinY < 0) {
       chartMinY = 0;
     }
 
     final double span = (chartMaxY - chartMinY).abs();
     double yInterval = 5.0;
-    if (span <= 12) {
+    if (span <= 8) {
+      yInterval = 1.0;
+    } else if (span <= 18) {
       yInterval = 2.0;
-    } else if (span <= 25) {
+    } else if (span <= 40) {
       yInterval = 5.0;
-    } else if (span <= 65) {
-      yInterval = 10.0;
     } else {
-      yInterval = 20.0;
+      yInterval = 10.0;
     }
-    chartMinY = (chartMinY / yInterval).floor() * yInterval;
-    chartMaxY = (chartMaxY / yInterval).ceil() * yInterval;
     if (minVal >= 0 && chartMinY < 0) {
       chartMinY = 0;
     }
