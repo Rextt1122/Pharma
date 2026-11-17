@@ -444,8 +444,8 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
                   topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                 ),
                 borderData: FlBorderData(show: false),
-                minX: 0,
-                maxX: (items.length - 1).toDouble().clamp(0.0, 1000.0),
+                minX: -0.25,
+                maxX: ((items.length - 1).toDouble() + 0.25).clamp(0.0, 1000.0),
                 minY: chartMinY,
                 maxY: chartMaxY,
                 lineTouchData: LineTouchData(
