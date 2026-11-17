@@ -1,3 +1,7 @@
+// ============================================================================
+// DOKUMENTASI KODE: sensor_trend_chart.dart — Grafik tren sensor dengan sampling dan skala dinamis
+// Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
+// ============================================================================
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import '../models/sensor_model.dart';
@@ -5,6 +9,7 @@ import '../theme/app_theme.dart';
 
 enum ChartMetric { suhu, kelembapan, gas }
 
+// Grafik histori sensor. Data dipadatkan agar kurva halus dan ringan.
 class SensorTrendChart extends StatefulWidget {
   final List<SensorModel> historyData;
   final double tempMin;

@@ -1,3 +1,7 @@
+# ============================================================================
+# DOKUMENTASI KODE: simulator.py — Simulator telemetri Device 1 dan Device 2
+# Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
+# ============================================================================
 """
 SIMULATOR PERANGKAT IOT ESP32-S3 (PHARMA MEDIC)
 ================================================
@@ -153,6 +157,7 @@ def input_listener():
         except (EOFError, KeyboardInterrupt):
             break
 
+# Menjalankan publish periodik serta input keyboard untuk uji pintu, PIR, UV, dan buzzer.
 def main():
     global mqtt_client
     print("=" * 70)

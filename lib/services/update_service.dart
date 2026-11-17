@@ -1,3 +1,7 @@
+// ============================================================================
+// DOKUMENTASI KODE: update_service.dart — Pemeriksaan rilis dan instalasi APK pembaruan
+// Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
+// ============================================================================
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -27,6 +31,7 @@ class AppUpdateInfo {
   });
 }
 
+// Memeriksa GitHub Release lalu meneruskan APK ke installer Android.
 class UpdateService {
   static const String _repo = 'Rextt1122/Pharma';
   static const String _latestReleaseApi =

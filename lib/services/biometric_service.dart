@@ -1,6 +1,11 @@
+// ============================================================================
+// DOKUMENTASI KODE: biometric_service.dart — Verifikasi biometrik untuk membuka sesi tersimpan
+// Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
+// ============================================================================
 import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
 
+// Memverifikasi biometrik hanya untuk membuka sesi bertoken yang sudah ada.
 class BiometricService {
   final LocalAuthentication _auth = LocalAuthentication();
 

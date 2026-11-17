@@ -1,3 +1,7 @@
+// ============================================================================
+// DOKUMENTASI KODE: app_toast.dart — Notifikasi umpan balik pengguna yang konsisten
+// Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
+// ============================================================================
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 

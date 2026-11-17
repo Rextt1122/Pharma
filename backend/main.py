@@ -1,3 +1,7 @@
+# ============================================================================
+# DOKUMENTASI KODE: main.py — Backend FastAPI untuk autentikasi, telemetri, dan MQTT
+# Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
+# ============================================================================
 import json
 import threading
 import datetime
@@ -24,6 +28,7 @@ TAGS_METADATA = [
     {"name": "Staf", "description": "Manajemen hak akses role operator & staf"},
 ]
 
+# Aplikasi FastAPI menjadi jembatan mobile/dashboard, MySQL, dan broker MQTT.
 app = FastAPI(
     title="Smart Pharma Cloud API",
     description="Backend REST API & Admin Panel Smart Pharmaceutical & Vaccine Cold Storage.<br><br>👉 <a href=\"/dashboard\" style=\"font-weight:bold;color:#0d9488;\">Buka Admin Panel & Live Dashboard &raquo;</a>",
@@ -436,6 +441,7 @@ def root():
         "architecture": "4-Node Microservices (Backend, DB, MQTT, Auto-Backup)"
     }
 
+# Autentikasi MySQL lalu menerbitkan token sesi untuk request berikutnya.
 @app.post("/login", tags=["Autentikasi"], response_model=AuthResponse, summary="Login Akun")
 def login_user(req: LoginRequest, request: Request):
     """Autentikasi User Farmasi via Database MySQL Node 2"""
@@ -843,6 +849,7 @@ def get_sensor_summary(_user: dict = Depends(require_user)):
 # 1. Simpan ke database MySQL (Node 2).
 # 2. Broadcast ke broker MQTT topik 'pharma/sensor' (Node 3).
 # 3. Flutter yang subscribe topik ini langsung menerima data secara realtime.
+# Endpoint simulasi tanpa login untuk Wokwi, Python, dan dashboard web.
 @app.post("/kirim-data", tags=["Telemetri"], summary="Kirim Data Sensor")
 def kirim_data(data_baru: dict, _user: Optional[dict] = Depends(optional_user)):
     process_and_save_sensor_data(data_baru)

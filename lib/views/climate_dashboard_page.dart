@@ -1,3 +1,7 @@
+// ============================================================================
+// DOKUMENTASI KODE: climate_dashboard_page.dart — Dashboard monitoring dan kontrol Node 1/Node 2
+// Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
+// ============================================================================
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';

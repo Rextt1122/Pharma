@@ -1,3 +1,7 @@
+// ============================================================================
+// DOKUMENTASI KODE: model_3d_page.dart — Digital twin 3D dan denah sensor gudang
+// Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
+// ============================================================================
 import 'package:flutter/material.dart';
 import 'package:model_viewer_plus/model_viewer_plus.dart';
 import 'package:provider/provider.dart';

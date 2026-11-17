@@ -1,3 +1,7 @@
+// ============================================================================
+// DOKUMENTASI KODE: navigation_service.dart — Navigator global untuk redirect sesi
+// Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
+// ============================================================================
 import 'package:flutter/material.dart';
 import '../widgets/app_toast.dart';
 

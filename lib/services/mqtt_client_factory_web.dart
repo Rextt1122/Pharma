@@ -1,3 +1,7 @@
+// ============================================================================
+// DOKUMENTASI KODE: mqtt_client_factory_web.dart — Komponen pendukung aplikasi Pharma Medic
+// Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
+// ============================================================================
 import 'package:mqtt_client/mqtt_browser_client.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 

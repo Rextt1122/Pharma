@@ -1,3 +1,7 @@
+// ============================================================================
+// DOKUMENTASI KODE: login_page.dart — Halaman autentikasi pengguna
+// Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
+// ============================================================================
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -9,6 +13,7 @@ import '../services/storage_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_toast.dart';
 
+// Halaman autentikasi awal. Mengirim kredensial ke ApiService dan menyimpan profil respons server.
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 

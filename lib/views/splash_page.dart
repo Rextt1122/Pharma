@@ -1,3 +1,7 @@
+// ============================================================================
+// DOKUMENTASI KODE: splash_page.dart — Inisialisasi sesi sebelum masuk aplikasi
+// Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
+// ============================================================================
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

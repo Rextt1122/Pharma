@@ -1,3 +1,7 @@
+// ============================================================================
+// DOKUMENTASI KODE: history_page.dart — Halaman riwayat serta tren telemetri
+// Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
+// ============================================================================
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/sensor_model.dart';
@@ -9,6 +13,7 @@ import '../widgets/botanic_vector_decor.dart';
 import '../widgets/sensor_trend_chart.dart';
 import '../widgets/shimmer_loading.dart';
 
+// Menampilkan audit log sensor dan grafik dari HistoryProvider.
 class HistoryPage extends StatefulWidget {
   const HistoryPage({super.key});
 

@@ -1,3 +1,7 @@
+// ============================================================================
+// DOKUMENTASI KODE: device2_sketch.ino — Firmware ESP32 Device 2 sterilisasi UV dan interlock
+// Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
+// ============================================================================
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
@@ -196,6 +200,7 @@ void setup() {
   Serial.println("[SISTEM] Device 2 Siap & Berjalan!\n");
 }
 
+// Memproses sensor, interlock, indikator, dan telemetri Device 2 tanpa blocking panjang.
 void loop() {
   if (!mqtt.connected()) {
     koneksiMQTT();

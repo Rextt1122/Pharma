@@ -1,3 +1,7 @@
+// ============================================================================
+// DOKUMENTASI KODE: botanic_vector_decor.dart — Komponen pendukung aplikasi Pharma Medic
+// Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
+// ============================================================================
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 

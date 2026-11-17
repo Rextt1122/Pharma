@@ -1,3 +1,7 @@
+// ============================================================================
+// DOKUMENTASI KODE: mqtt_service.dart — Koneksi MQTT, subscribe telemetri, dan publish kontrol
+// Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
+// ============================================================================
 import 'dart:convert';
 import 'package:mqtt_client/mqtt_client.dart';
 import '../models/sensor_model.dart';
@@ -7,6 +11,7 @@ import 'mqtt_client_factory_io.dart'
     if (dart.library.html) 'mqtt_client_factory_web.dart';
 import 'storage_service.dart';
 
+// Mengelola koneksi broker, aliran telemetri, dan publish perintah aktuator.
 class MqttService {
   MqttClient? _client;
   Function(SensorModel)? onDataReceived;

@@ -1,3 +1,7 @@
+// ============================================================================
+// DOKUMENTASI KODE: settings_page.dart — Pengaturan akun, jaringan, dan aplikasi
+// Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
+// ============================================================================
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -14,6 +18,7 @@ import '../widgets/app_toast.dart';
 import '../widgets/botanic_vector_decor.dart';
 import '../widgets/shimmer_loading.dart';
 
+// Pusat konfigurasi akun, server, keamanan, dan pembaruan aplikasi.
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
 

@@ -1,8 +1,13 @@
+// ============================================================================
+// DOKUMENTASI KODE: storage_service.dart — Penyimpanan konfigurasi, sesi, dan profil lokal
+// Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
+// ============================================================================
 import 'dart:convert';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+// Penyimpanan konfigurasi, profil, dan status sesi lokal.
 class StorageService {
   static const String _keyServerIp = 'server_ip';
   static const String _keyAuthToken = 'auth_token';

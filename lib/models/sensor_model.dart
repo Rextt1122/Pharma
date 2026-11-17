@@ -1,3 +1,8 @@
+// ============================================================================
+// DOKUMENTASI KODE: sensor_model.dart — Model data telemetri dan normalisasi payload sensor
+// Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
+// ============================================================================
+// Representasi telemetri lintas firmware ESP32, simulator Python, MQTT, dan REST API.
 class SensorModel {
   final String deviceId;
 
@@ -38,7 +43,8 @@ class SensorModel {
     this.waktu,
   });
 
-  factory SensorModel.fromJson(
+// Normalisasi field payload agar variasi firmware lama tidak menghilangkan nilai sensor.
+factory SensorModel.fromJson(
     Map<String, dynamic> json, {
     String defaultDeviceId = 'device_1',
   }) {

@@ -1,3 +1,7 @@
+// ============================================================================
+// DOKUMENTASI KODE: subnet_ips_io.dart — Komponen pendukung aplikasi Pharma Medic
+// Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
+// ============================================================================
 import 'dart:io';
 
 Future<List<String>> getLocalSubnetPrefixes() async {

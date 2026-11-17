@@ -1,3 +1,7 @@
+// ============================================================================
+// DOKUMENTASI KODE: main.dart — Bootstrap aplikasi Flutter dan konfigurasi provider global
+// Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
+// ============================================================================
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -10,6 +14,7 @@ import 'views/login_page.dart';
 import 'views/main_navigation.dart';
 import 'views/splash_page.dart';
 
+// Entry point aplikasi. Menyiapkan binding Flutter dan dependency global sebelum UI dirender.
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setSystemUIOverlayStyle(

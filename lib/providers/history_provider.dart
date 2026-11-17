@@ -1,3 +1,7 @@
+// ============================================================================
+// DOKUMENTASI KODE: history_provider.dart — State riwayat telemetri dari API backend
+// Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
+// ============================================================================
 import 'dart:io';
 import 'package:csv/csv.dart';
 import 'package:flutter/foundation.dart';
@@ -5,6 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import '../models/sensor_model.dart';
 import '../services/api_service.dart';
 
+// Menyimpan state riwayat telemetri agar halaman tidak request langsung dari widget.
 class HistoryProvider extends ChangeNotifier {
   final ApiService _apiService = ApiService();
   List<SensorModel> _historyList = [];
@@ -19,7 +24,8 @@ class HistoryProvider extends ChangeNotifier {
     fetchHistory();
   }
 
-  Future<void> fetchHistory() async {
+// Mengambil log dari backend dan mengubah state loading/error.
+Future<void> fetchHistory() async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();

@@ -1,3 +1,7 @@
+// ============================================================================
+// DOKUMENTASI KODE: realtime_page.dart — Tampilan data telemetri realtime
+// Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
+// ============================================================================
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';

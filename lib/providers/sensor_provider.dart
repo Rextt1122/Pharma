@@ -1,3 +1,10 @@
+// ============================================================================
+// SENSOR_PROVIDER.DART — State hub telemetri & kontrol aktuator
+// ============================================================================
+// Menerima data MQTT lewat MqttService lalu menyimpan state device_1/device_2
+// dan memanggil notifyListeners() agar UI diperbarui; mengatur notifikasi,
+// threshold, koneksi, dan hak akses Operator untuk perintah aktuator.
+// ============================================================================
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -23,6 +30,7 @@ class AppNotification {
   });
 }
 
+// Sumber state tunggal dashboard. Memisahkan telemetri Device 1 dan Device 2 agar pesan MQTT tidak saling menimpa.
 class SensorProvider extends ChangeNotifier {
   final MqttService _mqttService = MqttService();
   final StorageService _storageService = StorageService();

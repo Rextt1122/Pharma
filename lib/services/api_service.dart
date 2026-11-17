@@ -1,3 +1,7 @@
+// ============================================================================
+// DOKUMENTASI KODE: api_service.dart — Klien REST API FastAPI dan autentikasi aplikasi
+// Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
+// ============================================================================
 import 'dart:async';
 import 'dart:convert';
 
@@ -10,6 +14,7 @@ import 'subnet_ips_io.dart'
     if (dart.library.js_interop) 'subnet_ips_web.dart'
     if (dart.library.html) 'subnet_ips_web.dart';
 
+// Gerbang REST ke FastAPI. Menentukan host aktif dan menangani autentikasi request.
 class ApiService {
   final StorageService _storageService = StorageService();
   static Future<String?>? _ongoingDiscovery;

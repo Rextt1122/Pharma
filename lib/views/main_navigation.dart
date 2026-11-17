@@ -1,3 +1,7 @@
+// ============================================================================
+// DOKUMENTASI KODE: main_navigation.dart — Navigasi utama antar halaman aplikasi
+// Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
+// ============================================================================
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
