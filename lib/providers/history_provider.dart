@@ -33,7 +33,12 @@ Future<void> fetchHistory() async {
     final stopwatch = Stopwatch()..start();
     try {
       final result = await _apiService.fetchSensorHistory();
-      _historyList = result;
+      // Batasi maksimal 50 log terbaru agar aplikasi mobile tetap ringan & tidak kebanyakan
+      if (result.length > 50) {
+        _historyList = result.take(50).toList();
+      } else {
+        _historyList = result;
+      }
       _errorMessage = null;
     } catch (e) {
       if (e is FormatException) {
