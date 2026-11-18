@@ -1,9 +1,11 @@
 // ============================================================================
-// SENSOR_PROVIDER.DART — State hub telemetri & kontrol aktuator
-// ============================================================================
-// Menerima data MQTT lewat MqttService lalu menyimpan state device_1/device_2
-// dan memanggil notifyListeners() agar UI diperbarui; mengatur notifikasi,
-// threshold, koneksi, dan hak akses Operator untuk perintah aktuator.
+// DOKUMENTASI: sensor_provider.dart — State pusat dashboard dua node
+//
+// Menggabungkan REST (data awal), MQTT (realtime), ambang batas, notifikasi, dan kontrol aktuator.
+// Topik kontrol: pharma/control/device_1 | pharma/control/device_2 (+ alias legacy).
+// Berkas terkait: services/mqtt_service.dart, services/storage_service.dart, views/climate_dashboard_page.dart
+//
+// Dibaca sebagai referensi implementasi; komentar menjelaskan alasan, bukan mengulang nama simbol.
 // ============================================================================
 import 'dart:async';
 import 'package:flutter/foundation.dart';
@@ -14,6 +16,10 @@ import '../services/api_service.dart';
 import '../services/mqtt_service.dart';
 import '../services/storage_service.dart';
 
+// Entri notifikasi dalam aplikasi (bukan push notification).
+//
+// id dipakai untuk mencegah duplikat dalam jendela cooldown; isCritical
+// menentukan gaya tampilan merah versus netral.
 class AppNotification {
   final String id;
   final String title;
@@ -31,6 +37,17 @@ class AppNotification {
 }
 
 // Sumber state tunggal dashboard. Memisahkan telemetri Device 1 dan Device 2 agar pesan MQTT tidak saling menimpa.
+// State pusat dashboard: telemetri dua node, status koneksi, peran pengguna,
+// ambang batas, dan notifikasi.
+//
+// Alur data masuk:
+//   1. REST  : _fetchInitialApiData() mengisi tampilan sebelum MQTT siap.
+//   2. MQTT  : onDataReceived menimpa data dengan pembacaan terbaru.
+// Perintah aktuator dikirim lewat MQTT dan state lokal diperbarui optimistis;
+// bila perangkat tidak merespons, UI tetap konsisten dengan niat pengguna.
+//
+// Nilai awal di bawah adalah data demo supaya dashboard tidak kosong saat
+// aplikasi dibuka tanpa perangkat.
 class SensorProvider extends ChangeNotifier {
   final MqttService _mqttService = MqttService();
   final StorageService _storageService = StorageService();
@@ -103,17 +120,23 @@ class SensorProvider extends ChangeNotifier {
   String get currentZoneName =>
       isVaccineRack ? 'Rak Vaksin (Cold Storage)' : 'Ruang Steril (Cleanroom)';
 
+  // Urutan inisialisasi: ambang batas dari penyimpanan, koneksi MQTT
+  // (termasuk fetch REST awal), lalu peran pengguna.
   SensorProvider() {
     _initThresholds();
     _initMqtt();
     refreshUserRole();
   }
 
+  // Membaca peran (operator/penonton) dari penyimpanan. Hanya operator yang
+  // boleh menekan tombol aktuator; penonton tetap melihat nilai sensor.
   Future<void> refreshUserRole() async {
     _isOperator = await _storageService.isOperator();
     notifyListeners();
   }
 
+  // Mengganti node yang ditampilkan dashboard. Data kedua node tetap
+  // diperbarui di background, jadi perpindahan tidak menunggu koneksi.
   void selectDevice(String id) {
     if (_selectedDeviceId != id) {
       _selectedDeviceId = id;
@@ -122,6 +145,9 @@ class SensorProvider extends ChangeNotifier {
   }
 
   // Device 1 Actuator 1: Fan / Kipas Darurat
+  // Kipas Device 1. Dua topik dipublikasikan sekaligus agar firmware versi lama
+  // (pharma/control/fan) dan versi baru (pharma/control/device_1) sama-sama
+  // mendengar perintah.
   bool toggleKipas() {
     if (!_isOperator) return false;
     final nextState = _device1Data.statusKipas == 1 ? 0 : 1;
@@ -133,6 +159,7 @@ class SensorProvider extends ChangeNotifier {
   }
 
   // Device 1 Actuator 2: Sirine Buzzer Alarm
+  // Sirine Device 1. State dikirim ke topik per-device dan topik legacy.
   bool toggleBuzzer() {
     if (!_isOperator) return false;
     final nextState = buzzerActive ? 0 : 1;
@@ -145,6 +172,7 @@ class SensorProvider extends ChangeNotifier {
   }
 
   // Device 1 Actuator 3: Mini Water Pump
+  // Pompa air Device 1 untuk menurunkan kelembapan/mendinginkan ruang.
   bool togglePompa() {
     if (!_isOperator) return false;
     final nextState = _device1Data.statusPompa == 1 ? 0 : 1;
@@ -159,6 +187,8 @@ class SensorProvider extends ChangeNotifier {
   bool _isAutoClimate = true;
   bool get isAutoClimate => _isAutoClimate;
 
+  // Mode otomatis Device 1: firmware mengatur kipas sendiri berdasarkan suhu.
+  // Saat mode ini aktif, tombol kipas manual sebaiknya tidak dipakai.
   bool toggleAutoClimate() {
     if (!_isOperator) return false;
     _isAutoClimate = !_isAutoClimate;
@@ -171,6 +201,12 @@ class SensorProvider extends ChangeNotifier {
   }
 
   // Device 2 Actuator 1: Lampu UV Sterilisasi (Dengan Human Interlock Protection)
+  // Lampu UV-C Device 2 dengan pengaman manusia.
+  //
+  // Interlock: bila PIR mendeteksi gerak dan UV sedang mati, perintah ditolak dan
+  // notifikasi kritis dibuat. UV tidak boleh menyala saat ada orang di ruang
+  // sterilisasi. Saat UV dinyalakan, status juga dicerminkan ke _device1Data
+  // karena dashboard lama membaca field itu.
   bool toggleUv() {
     if (!_isOperator) return false;
     if (_device2Data.isGerakTerdeteksi && _device2Data.statusUv == 0) {
@@ -192,6 +228,7 @@ class SensorProvider extends ChangeNotifier {
   }
 
   // Device 2 Actuator 2: LED Indikator Ruangan Aman/Bahaya
+  // LED indikator ruangan (hijau aman / merah bahaya) pada Device 2.
   bool toggleLed() {
     if (!_isOperator) return false;
     final nextState = _device2Data.statusLed == 1 ? 0 : 1;
@@ -202,6 +239,8 @@ class SensorProvider extends ChangeNotifier {
     return true;
   }
 
+  // Memuat ambang batas tersimpan; nilai default dari StorageService dipakai
+  // bila pengguna belum pernah mengubahnya.
   Future<void> _initThresholds() async {
     final thresholds = await _storageService.getThresholds();
     _tempMin = thresholds['tempMin'] ?? StorageService.defaultTempMin;
@@ -211,6 +250,8 @@ class SensorProvider extends ChangeNotifier {
     _gasMax = thresholds['gasMax'] ?? StorageService.defaultGasMax;
   }
 
+  // Mengisi data awal dari REST agar dashboard langsung berisi angka terakhir
+  // sebelum MQTT mengalir. Kegagalan diabaikan karena MQTT masih bisa menyusul.
   Future<void> _fetchInitialApiData() async {
     try {
       final history = await _apiService.fetchSensorHistory();
@@ -233,6 +274,9 @@ class SensorProvider extends ChangeNotifier {
     }
   }
 
+  // Menghubungkan callback MQTT ke state dan memasang batas waktu tampilan
+  // loading (3 detik) supaya layar tidak terus menampilkan skeleton saat broker
+  // tidak tersedia.
   void _initMqtt() {
     _fetchInitialApiData();
     
@@ -254,6 +298,8 @@ class SensorProvider extends ChangeNotifier {
       } else {
         _device1Data = data;
         _buzzerActive = data.isBuzzerAktif;
+        // Getaran singkat saat sirine berbunyi: pengguna sering tidak melihat layar
+        // ketika alarm terjadi.
         if (data.isBuzzerAktif) {
           try {
             HapticFeedback.vibrate();
@@ -289,6 +335,7 @@ class SensorProvider extends ChangeNotifier {
     _mqttService.connect();
   }
 
+  // Menerjemahkan nilai sensor menjadi notifikasi yang bisa dibaca pengguna.
   void _checkAndAddNotifications(SensorModel data) {
     final double minT = _tempMin;
     final double maxT = _tempMax;
@@ -353,6 +400,8 @@ class SensorProvider extends ChangeNotifier {
     }
   }
 
+  // Menambahkan notifikasi dengan cooldown 5 menit per id. Tanpa cooldown,
+  // sensor yang bertahan di luar ambang akan membanjiri daftar notifikasi.
   void _addNotificationOnce({
     required String id,
     required String title,
@@ -371,6 +420,8 @@ class SensorProvider extends ChangeNotifier {
     _addNotification(id: id, title: title, message: message, isCritical: isCritical);
   }
 
+  // Menyisipkan notifikasi terbaru di atas dan membatasi daftar 20 entri agar
+  // memori tetap kecil.
   void _addNotification({
     required String id,
     required String title,
@@ -392,6 +443,8 @@ class SensorProvider extends ChangeNotifier {
     }
   }
 
+  // Menyimpan ambang baru lalu langsung dipakai untuk evaluasi berikutnya.
+  // Tidak memerlukan restart aplikasi.
   Future<void> updateThresholds({
     required double tempMin,
     required double tempMax,
@@ -414,6 +467,7 @@ class SensorProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Mengosongkan daftar notifikasi pengguna.
   void clearNotifications() {
     _notifications.clear();
     notifyListeners();
@@ -422,6 +476,11 @@ class SensorProvider extends ChangeNotifier {
   bool _isReconnecting = false;
   bool get isReconnecting => _isReconnecting;
 
+  // Menghubungkan ulang secara manual.
+  //
+  // Fetch REST dan koneksi MQTT dijalankan paralel dengan batas 4 detik; timer
+  // cadangan memastikan indikator "menghubungkan" berhenti walau keduanya
+  // menggantung.
   Future<void> reconnect() async {
     if (_isReconnecting) return;
     _isReconnecting = true;
@@ -452,6 +511,7 @@ class SensorProvider extends ChangeNotifier {
   }
 
   @override
+  // Menutup koneksi MQTT saat provider dibuang agar tidak ada socket menggantung.
   void dispose() {
     _mqttService.disconnect();
     super.dispose();

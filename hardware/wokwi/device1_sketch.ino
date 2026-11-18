@@ -43,6 +43,8 @@ bool modeAuto = true;
 
 unsigned long waktuKirimTerakhir = 0;
 
+// Buzzer aktif = tone 2 kHz. Tidak memakai delay agar loop tetap berjalan
+// dan MQTT tetap dilayani.
 void aturBuzzer(int aktif) {
   statusBuzzer = aktif;
   if (aktif == 1) {
@@ -52,6 +54,7 @@ void aturBuzzer(int aktif) {
   }
 }
 
+// Relay kipas aktif HIGH. Status disimpan agar ikut terkirim di telemetri.
 void aturKipas(int aktif) {
   statusKipas = aktif;
   digitalWrite(RELAY_KIPAS_PIN, aktif ? HIGH : LOW);
@@ -59,6 +62,10 @@ void aturKipas(int aktif) {
 
 // Callback menerima perintah JSON dari Mobile / Web Dashboard
 // Menerima perintah dashboard: kipas, sirine, pompa, dan mode auto climate.
+// Perintah masuk: fan, buzzer, pump, auto_climate.
+//
+// Perintah fan manual otomatis mematikan modeAuto, supaya keputusan pengguna
+// tidak langsung ditimpa kontrol otomatis pada siklus berikutnya.
 void callbackMQTT(char* topic, byte* payload, unsigned int length) {
   StaticJsonDocument<256> doc;
   deserializeJson(doc, payload, length);
@@ -84,6 +91,8 @@ void callbackMQTT(char* topic, byte* payload, unsigned int length) {
   }
 }
 
+// Menunggu Wi-Fi dengan channel 6 (wajib di Wokwi) agar koneksi cepat dan
+// tidak memindai semua channel.
 void tungguWiFi() {
   Serial.println("[WIFI] Menghubungkan ke Wokwi-GUEST...");
   WiFi.mode(WIFI_STA);
@@ -106,6 +115,8 @@ void tungguWiFi() {
   }
 }
 
+// Menyambung ulang ke broker dengan jeda 2 detik. Topik kontrol dan topik
+// telemetri didaftarkan di sini.
 void koneksiMQTT() {
   if (mqtt.connected() || WiFi.status() != WL_CONNECTED) return;
   static unsigned long lastTry = 0;
@@ -126,6 +137,8 @@ void koneksiMQTT() {
   }
 }
 
+// Inisialisasi pin, sensor DHT22, Wi-Fi, dan MQTT. delay(1000) memberi waktu
+// Serial Monitor Wokwi siap sebelum pesan boot dicetak.
 void setup() {
   Serial.begin(115200);
   delay(1000); // Jeda wajib agar Serial Monitor Wokwi siap menangkap teks boot

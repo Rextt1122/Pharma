@@ -14,6 +14,11 @@ import '../widgets/sensor_trend_chart.dart';
 import '../widgets/shimmer_loading.dart';
 
 // Menampilkan audit log sensor dan grafik dari HistoryProvider.
+// Halaman riwayat: grafik tren di atas, daftar log di bawah, ekspor CSV
+// lewat tombol melayang.
+//
+// Data berasal dari HistoryProvider (maksimal 50 entri terbaru) dan ambang
+// batas dari SensorProvider, sehingga warna anomali konsisten dengan dashboard.
 class HistoryPage extends StatefulWidget {
   const HistoryPage({super.key});
 
@@ -23,6 +28,8 @@ class HistoryPage extends StatefulWidget {
 
 class _HistoryPageState extends State<HistoryPage> {
   @override
+  // Memuat log saat halaman pertama dibuka. Bila provider sudah punya data,
+  // request tidak diulang agar perpindahan tab terasa instan.
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -83,6 +90,8 @@ class _HistoryPageState extends State<HistoryPage> {
     );
   }
 
+  // Tiga keadaan: skeleton saat memuat, pesan error dengan tombol coba lagi,
+  // atau daftar log. Pull-to-refresh memanggil fetchHistory().
   Widget _buildBody(BuildContext context, HistoryProvider provider) {
     return Consumer<SensorProvider>(
       builder: (context, sensorProvider, child) {
@@ -295,6 +304,8 @@ class _HistoryPageState extends State<HistoryPage> {
     );
   }
 
+  // Satu kartu log. Nilai di luar ambang diberi warna peringatan; nomor log
+  // dihitung dari urutan tampil (terbaru = 1).
   Widget _buildLogCard(SensorModel item, int logNumber, SensorProvider sensorProvider) {
     final double minT = sensorProvider.currentTempMin;
     final double maxT = sensorProvider.currentTempMax;
@@ -494,6 +505,8 @@ class _HistoryPageState extends State<HistoryPage> {
     );
   }
 
+  // Ringkasan rata-rata suhu dan gas di atas daftar, membantu membaca tren
+  // tanpa membuka setiap entri.
   Widget _buildMetricPillCard({
     required IconData icon,
     required String title,
@@ -559,6 +572,7 @@ class _HistoryPageState extends State<HistoryPage> {
     );
   }
 
+  // Kerangka memuat dengan bentuk yang sama seperti kartu asli.
   Widget _buildLoadingSkeleton() {
     return ListView(
       physics: const BouncingScrollPhysics(),

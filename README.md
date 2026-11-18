@@ -42,6 +42,41 @@
 
 ---
 
+## Struktur Proyek
+
+Peta berkas utama. Setiap berkas diawali blok komentar yang menjelaskan tujuan,
+alur data, dan keterkaitannya dengan berkas lain.
+
+| Jalur | Isi |
+|---|---|
+| `lib/main.dart` | Titik masuk, provider global, tabel rute |
+| `lib/models/sensor_model.dart` | Model telemetri dua node + normalisasi payload |
+| `lib/providers/sensor_provider.dart` | State dashboard: MQTT, REST, ambang, notifikasi, kontrol |
+| `lib/providers/history_provider.dart` | Daftar log (maksimal 50) dan ekspor CSV |
+| `lib/services/api_service.dart` | REST FastAPI, penemuan host, autentikasi |
+| `lib/services/mqtt_service.dart` | Koneksi broker, subscribe telemetri, publish kontrol |
+| `lib/services/storage_service.dart` | Preferences (non-rahasia) + secure storage (token) |
+| `lib/services/update_service.dart` | Pembaruan APK lewat GitHub Releases |
+| `lib/views/` | Layar: splash, login, dashboard, realtime, riwayat, 3D, pengaturan |
+| `lib/widgets/` | Grafik tren, toast, shimmer, dekorasi vektor |
+| `lib/theme/app_theme.dart` | Token warna, jarak, radius, tipografi |
+| `backend/main.py` | FastAPI: auth, telemetri, kontrol, jembatan MQTT |
+| `backend/dashboard.html` | Konsol web + simulator (satu berkas, tanpa build) |
+| `scripts/simulator.py` | Simulator dua node lewat MQTT |
+| `hardware/wokwi/` | Firmware ESP32-S3: `device1_sketch.ino`, `device2_sketch.ino` |
+
+Alur data singkat:
+
+```
+ESP32 / simulator --MQTT--> backend/main.py --MySQL--> GET /sensor
+        |                        |                          |
+        +----MQTT telemetri----> app Flutter <---REST--------+
+                                 |
+                    perintah aktuator --> pharma/control/...
+```
+
+---
+
 ## Panduan Instalasi
 
 ### 1. Prasyarat

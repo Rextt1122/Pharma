@@ -1,6 +1,20 @@
 <!-- ============================================================================
-     DOKUMENTASI KODE: dashboard.html — Dashboard web administrasi dan simulator IoT
-     Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
+     DOKUMENTASI: dashboard.html — Konsol web Pharma Medic (satu berkas)
+
+     Isi: dashboard status cluster, telemetri dua node, simulator input sensor,
+     manajemen pengguna, workbench API, dan riwayat log.
+
+     Catatan arsitektur: HTML, CSS, dan JS sengaja digabung dalam satu berkas
+     agar dapat disajikan langsung oleh FastAPI (GET /dashboard) tanpa build step.
+     Semua data berasal dari endpoint REST yang sama dengan aplikasi Flutter.
+
+     Bagian berkas (cari penanda di bawah):
+       - <style>            : token warna dan tata letak
+       - <body>             : markup panel
+       - "const ENDPOINTS"  : katalog endpoint API
+       - fungsi render*     : daftar endpoint, telemetri, pengguna
+
+     Kredensial: jangan menaruh token atau sandi di berkas ini.
      ============================================================================ -->
 <!DOCTYPE html>
 <html lang="id" data-theme="light">
@@ -2173,6 +2187,8 @@
 
 
   <script>
+    // Katalog endpoint backend. Satu sumber kebenaran untuk daftar di sidebar,
+    // form parameter/body, dan tombol eksekusi. Menambah endpoint cukup di sini.
     const ENDPOINTS = [
       { id: "root", cat: "Sistem", method: "GET", path: "/", title: "Status", auth: false },
       { id: "sensor_list", cat: "Telemetri", method: "GET", path: "/sensor", title: "Log Sensor", auth: true, queryLabel: "Query", queryDefault: "limit=10" },
@@ -2215,6 +2231,8 @@
     let bearerToken = localStorage.getItem("pharma_console_token") || "";
     let activeUser = localStorage.getItem("pharma_console_user") || "";
 
+    // Jam header dalam format Indonesia. Dipanggil tiap detik; dashboard ini
+    // dipakai untuk pemantauan langsung sehingga detik ikut ditampilkan.
     function updateClock() {
       const now = new Date();
       const hari = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"][now.getDay()];
@@ -2228,6 +2246,8 @@
     setInterval(updateClock, 1000);
     updateClock();
 
+    // Tema terang/gelap disimpan di localStorage agar pilihan bertahan setelah
+    // halaman dimuat ulang.
     function applyTheme(mode) {
       document.documentElement.setAttribute("data-theme", mode);
       localStorage.setItem("pharma_console_theme", mode);
@@ -2245,6 +2265,8 @@
       }
     }
 
+    // Menyegarkan data tanpa memuat ulang halaman, dengan animasi ikon sebagai
+    // umpan balik bahwa permintaan sedang berjalan.
     async function triggerManualRefresh() {
       const refIcon = document.getElementById("refreshIcon");
       if (refIcon) {
@@ -2265,6 +2287,8 @@
     }
     applyTheme(localStorage.getItem("pharma_console_theme") || "light");
 
+    // Menyesuaikan header dengan status sesi: nama, peran, dan tombol
+    // login/logout. Token disimpan di localStorage oleh loginWithCredentials().
     function updateAuthUi() {
       const nameEl = document.getElementById("userNameText");
       const roleEl = document.getElementById("userRoleText");
@@ -2296,6 +2320,8 @@
       }
     }
 
+    // Login ke backend dan menyimpan token + profil di localStorage.
+    // Token dipakai sebagai Bearer pada setiap permintaan yang butuh auth.
     async function loginWithCredentials(username, password) {
       try {
         const res = await fetch("/login", {
@@ -2324,6 +2350,7 @@
       }
     }
 
+    // Menghapus kredensial lokal dan mengembalikan tampilan ke mode tamu.
     function logoutSession() {
       bearerToken = "";
       activeUser = "";
@@ -2344,11 +2371,14 @@
       if (await loginWithCredentials(u, p)) closeLoginModal();
     }
 
+    // Filter kategori endpoint (Sistem/Telemetri/Staf) pada daftar kiri.
     function filterCategory(cat) {
       activeCategory = cat;
       renderEndpoints();
     }
 
+    // Membangun ulang daftar endpoint dari ENDPOINTS sesuai kata kunci dan
+    // kategori aktif. Daftar dikelompokkan per kategori agar mudah dipindai.
     function renderEndpoints() {
       const q = document.getElementById("epSearch").value.trim().toLowerCase();
       const container = document.getElementById("endpointList");
@@ -2387,6 +2417,8 @@
       });
     }
 
+    // Memilih endpoint: mengisi metode, path, field query/body, dan
+    // menyesuaikan tombol eksekusi.
     function selectEndpoint(ep) {
       selectedEp = ep;
       renderEndpoints();
@@ -2412,6 +2444,9 @@
       }
     }
 
+    // Menjalankan permintaan ke backend dan menampilkan status, waktu respons,
+    // serta body JSON. Endpoint dengan auth memakai Bearer token aktif;
+    // respons 401 mengosongkan sesi lokal agar tidak mencoba token basi.
     async function executeSelectedEndpoint() {
       const ep = selectedEp;
       const statusBadge = document.getElementById("respStatus");

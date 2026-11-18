@@ -10,6 +10,11 @@ import '../theme/app_theme.dart';
 enum ChartMetric { suhu, kelembapan, gas }
 
 // Grafik histori sensor. Data dipadatkan agar kurva halus dan ringan.
+// Grafik tren tiga metrik (suhu, kelembapan, gas) untuk halaman riwayat.
+//
+// Data mentah diurutkan menurut waktu, dipotong, lalu dihaluskan supaya kurva
+// mudah dibaca. Garis putus-putus menandai ambang atas/bawah; area di luar
+// ambang diberi warna peringatan.
 class SensorTrendChart extends StatefulWidget {
   final List<SensorModel> historyData;
   final double tempMin;
@@ -94,6 +99,9 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
 
   /// Garis batas bawah visual agar ketiga tab (Suhu, Kelembapan, Kadar Gas)
   /// konsisten memiliki bingkai Maks & Min seperti grafik Kelembapan.
+  // Garis referensi bawah selalu ada agar ketiga tab punya bingkai Maks/Min
+  // yang sama. Untuk gas tidak ada ambang bawah medis, jadi dipakai 5 PPM
+  // sebagai acuan visual.
   double get _lowerReferenceLine {
     switch (_selectedMetric) {
       case ChartMetric.suhu:
@@ -107,6 +115,9 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
 
   static const int _maxPoints = 48;
 
+  // Menyaring log sesuai node aktif lalu mengurutkan menurut timestamp.
+  // Bila filter menyisakan kurang dari dua titik, data mentah dipakai agar grafik
+  // tidak kosong hanya karena device_id tidak lengkap.
   List<SensorModel> _prepareChronological(List<SensorModel> raw) {
     final filtered = widget.isVaccineRack
         ? raw.where((e) => e.deviceId != 'device_2').toList()
@@ -127,6 +138,8 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
   }
 
   /// Gabungkan data mentah ke maksimal [maxPoints] titik (rata-rata per bucket).
+  // Menggabungkan titik per bucket (rata-rata) sampai maksimal 48 titik.
+  // Tujuan: kurva tetap terbaca dan render tetap ringan walau log ratusan baris.
   List<SensorModel> _downsample(List<SensorModel> src, int maxPoints) {
     if (src.length <= maxPoints) return src;
     final out = <SensorModel>[];
@@ -147,6 +160,8 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
   }
 
   /// Haluskan gelombang kurva agar tidak patah/lancip tajam.
+  // Penghalusan 3-titik (0.22 / 0.56 / 0.22) untuk meredam lonjakan sensor
+  // tunggal. Titik ujung memakai bobot berbeda agar tidak turun ke nol.
   List<double> _smoothSeries(List<double> vals) {
     if (vals.length < 3) return vals;
     final out = List<double>.filled(vals.length, 0.0);
@@ -521,6 +536,7 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
     );
   }
 
+  // Tab metrik. Lebar dibagi rata dan teks dipusatkan agar ketiganya sejajar.
   Widget _buildSegmentItem(String label, ChartMetric metric) {
     final isSelected = _selectedMetric == metric;
     return Expanded(

@@ -23,6 +23,12 @@ class MainNavigation extends StatefulWidget {
   State<MainNavigation> createState() => _MainNavigationState();
 }
 
+// Kerangka navigasi: header dengan jam berjalan, empat tab
+// (Realtime, Digital Twin, Riwayat, Pengaturan), dan bottom sheet notifikasi.
+//
+// Hanya tab terpilih yang dibangun ulang (IndexedStack tidak dipakai) agar
+// halaman berat seperti 3D dan pengaturan tidak memakan memori saat tidak
+// dilihat; provider tetap menyimpan state.
 class _MainNavigationState extends State<MainNavigation>
     with TickerProviderStateMixin {
   int _selectedIndex = 0;
@@ -34,6 +40,9 @@ class _MainNavigationState extends State<MainNavigation>
   late final Animation<Offset> _tabSlide;
 
   @override
+  // Menyiapkan jam per detik, animasi ambient header, transisi tab, dan
+  // pemeriksaan pembaruan otomatis 2 detik setelah layar tampil (agar tidak
+  // bersaing dengan koneksi MQTT saat start).
   void initState() {
     super.initState();
     _timeNotifier = ValueNotifier<DateTime>(DateTime.now());
@@ -83,6 +92,8 @@ class _MainNavigationState extends State<MainNavigation>
     super.dispose();
   }
 
+  // Format Indonesia: "Senin, 9 Okt 2026 • 14:05:33". Detik ikut ditampilkan
+  // karena halaman ini adalah dashboard pemantauan langsung.
   String _formatDateTime(DateTime dt) {
     const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
     const months = [
@@ -106,6 +117,8 @@ class _MainNavigationState extends State<MainNavigation>
     'Pengaturan',
   ];
 
+  // Daftar notifikasi dari provider, terbaru di atas. Notifikasi kritis
+  // disorot merah dan tidak hilang sampai pengguna membersihkannya.
   void _showNotificationSheet(BuildContext context, SensorProvider provider) {
     showModalBottomSheet(
       context: context,
@@ -435,6 +448,8 @@ class _MainNavigationState extends State<MainNavigation>
   );
 }
 
+  // Item navigasi bawah. Ikon dan label berubah warna saat aktif; area
+  // sentuh diperluas agar mudah ditekan dengan satu tangan.
   Widget _buildModernNavItem(
     int index,
     IconData unselectedIcon,
@@ -495,6 +510,8 @@ class _MainNavigationState extends State<MainNavigation>
   }
 }
 
+// Lengkung organik di belakang header. Digambar manual supaya tidak perlu
+// aset gambar dan tetap tajam di semua kepadatan layar.
 class _HeaderOrganicPainter extends CustomPainter {
   final double progress;
 

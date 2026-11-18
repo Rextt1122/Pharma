@@ -12,6 +12,12 @@ import 'mqtt_client_factory_io.dart'
 import 'storage_service.dart';
 
 // Mengelola koneksi broker, aliran telemetri, dan publish perintah aktuator.
+// Satu koneksi MQTT untuk seluruh aplikasi.
+//
+// Tanggung jawab: memilih host broker yang hidup, berlangganan topik telemetri,
+// mengubah payload JSON menjadi SensorModel, dan mengirim perintah aktuator.
+// Callback onDataReceived/onConnectionChanged disediakan agar provider tidak
+// perlu mengetahui detail protokol.
 class MqttService {
   MqttClient? _client;
   Function(SensorModel)? onDataReceived;
@@ -22,6 +28,14 @@ class MqttService {
   Function(bool)? get onStatusChanged => onConnectionChanged;
   set onStatusChanged(Function(bool)? callback) => onConnectionChanged = callback;
 
+  // Mencoba kandidat broker satu per satu hingga berhasil.
+  //
+  // Urutan kandidat: cloud (api.pharma.web.id), host hasil resolve REST, host
+  // tersimpan, lalu beberapa IP lokal/Docker yang biasa dipakai saat demo.
+  //
+  // Timeout 2,5 detik per host: cukup untuk jaringan lokal, cukup singkat agar
+  // tidak membuat splash screen menggantung saat host mati. Host yang berhasil
+  // disimpan ke SharedPreferences sehingga percobaan berikutnya lebih cepat.
   Future<void> connect() async {
     final savedIp = await _storageService.getServerIp();
     final reachableIp = await _apiService.resolveReachableIp();
@@ -62,6 +76,10 @@ class MqttService {
       if (_client!.connectionStatus?.state == MqttConnectionState.connected) {
         await _storageService.saveServerIp(serverIp);
         onConnectionChanged?.call(true);
+        // Empat topik didukung untuk kompatibilitas: skema lama (pharma/sensor,
+        // greenhouse/sensor) dan skema per-device (pharma/device1|device2/sensor).
+        // QoS 0 dipilih karena telemetri dikirim periodik; paket hilang akan digantikan
+        // pembacaan berikutnya dan latensi lebih penting daripada jaminan kirim.
         _client!.subscribe('pharma/sensor', MqttQos.atMostOnce);
         _client!.subscribe('greenhouse/sensor', MqttQos.atMostOnce);
         _client!.subscribe('pharma/device1/sensor', MqttQos.atMostOnce);
@@ -73,10 +91,15 @@ class MqttService {
           final payload = MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
           try {
             final jsonMap = jsonDecode(payload) as Map<String, dynamic>;
+            // device_id ditentukan dari nama topik lebih dulu, lalu dari field payload.
+            // Payload lama tidak selalu menyertakan device_id, sehingga topik menjadi
+            // sumber kebenaran.
             String inferredDeviceId = 'device_1';
             if (topic.contains('device2') || jsonMap['device_id'] == 'device_2' || jsonMap['device_id'] == '2') {
               inferredDeviceId = 'device_2';
             }
+            // Payload rusak diabaikan diam-diam: satu pesan cacat tidak boleh mematikan
+            // aliran telemetri.
             final sensorModel = SensorModel.fromJson(jsonMap, defaultDeviceId: inferredDeviceId);
             onDataReceived?.call(sensorModel);
           } catch (_) {}
@@ -90,6 +113,11 @@ class MqttService {
     onConnectionChanged?.call(false);
   }
 
+  // Mengirim perintah aktuator dalam bentuk JSON.
+  //
+  // Tidak melempar error bila broker terputus; pemanggil (provider) yang
+  // bertanggung jawab memberi tahu pengguna. QoS 0 dipakai karena perintah
+  // kontrol dikirim ulang oleh pengguna bila tidak bereaksi.
   void publish(String topic, String message) {
     if (_client != null && _client!.connectionStatus?.state == MqttConnectionState.connected) {
       final builder = MqttClientPayloadBuilder();
@@ -98,6 +126,7 @@ class MqttService {
     }
   }
 
+  // Menutup koneksi dan memberi sinyal ke UI bahwa status menjadi offline.
   void disconnect() {
     _client?.disconnect();
     onConnectionChanged?.call(false);

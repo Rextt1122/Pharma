@@ -12,6 +12,15 @@ import '../theme/app_theme.dart';
 import '../widgets/app_toast.dart';
 import '../widgets/shimmer_loading.dart';
 
+// Dashboard utama. Satu halaman, dua wajah:
+//
+//   Rak Vaksin  (device_1) : gauge suhu besar, kelembapan, gas, kontrol kipas/
+//                            sirine/pompa, mode auto climate.
+//   Ruang Steril (device_2): hero keselamatan (pintu, PIR, interlock UV),
+//                            kapasitas stok, kontrol UV dan LED.
+//
+// Tata letak responsif: di bawah 760 px satu kolom (ponsel), di atasnya dua
+// kolom (tablet/desktop). Semua angka berasal dari SensorProvider.
 class ClimateDashboardPage extends StatelessWidget {
   const ClimateDashboardPage({super.key});
 
@@ -39,6 +48,11 @@ class ClimateDashboardPage extends StatelessWidget {
         ],
       );
 
+  // Menyusun dashboard untuk node aktif.
+  //
+  // safe = suhu & kelembapan dalam ambang, gas tidak bahaya, pintu tertutup.
+  // Nilai ini menentukan warna hero dan banner status, bukan sekadar hiasan:
+  // operator harus bisa menilai kondisi dari satu pandangan.
   Widget _dashboard(BuildContext context, SensorProvider p, SensorModel s) {
     final targetMin = p.currentTempMin;
     final targetMax = p.currentTempMax;
@@ -152,6 +166,8 @@ class ClimateDashboardPage extends StatelessWidget {
     );
   }
 
+  // Pemilih node. Kedua tab lebarnya sama (Expanded) supaya target sentuh
+  // seimbang dan tidak ada teks yang terpotong.
   Widget _selector(SensorProvider p) => Container(
         padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
@@ -196,6 +212,9 @@ class ClimateDashboardPage extends StatelessWidget {
         ),
       );
 
+  // Hero Rak Vaksin: gauge suhu melingkar dengan cincin ambang 2-8 °C.
+  // Warna cincin mengikuti tempOk; jarum dan angka tetap netral agar mudah
+  // dibaca saat kondisi normal maupun alarm.
   Widget _buildHeroClimateDial({
     required SensorModel s,
     required SensorProvider p,
@@ -471,6 +490,9 @@ class ClimateDashboardPage extends StatelessWidget {
     );
   }
 
+  // Hero Ruang Steril. Fokus pada keselamatan, bukan suhu:
+  // status pintu, deteksi gerak, status UV, dan pengingat interlock. Gauge suhu
+  // tidak relevan di node ini sehingga tidak ditampilkan.
   Widget _buildCleanroomSecurityHero({
     required BuildContext context,
     required SensorModel s,
@@ -752,6 +774,8 @@ class ClimateDashboardPage extends StatelessWidget {
     );
   }
 
+  // Kisi metrik pendukung (cahaya, kapasitas stok, status aktuator) di bawah
+  // hero. Kartu hanya menampilkan informasi; aksi ada di bagian kontrol.
   Widget _buildBentoEnvironmentMetrics({
     required BuildContext context,
     required SensorModel s,
@@ -976,6 +1000,11 @@ class ClimateDashboardPage extends StatelessWidget {
     );
   }
 
+  // Kontrol aktuator per node.
+  //
+  // guard() memeriksa peran sebelum aksi dijalankan: pengguna non-operator
+  // mendapat toast, bukan tombol mati tanpa penjelasan. Ini juga mencegah
+  // kebingungan ketika tombol tampak aktif tetapi tidak bereaksi.
   Widget _buildSmartControlTiles(BuildContext context, SensorProvider p, SensorModel s) {
     void guard(VoidCallback act) {
       if (!p.isOperator) {
@@ -1091,6 +1120,8 @@ class ClimateDashboardPage extends StatelessWidget {
     );
   }
 
+  // Kartu aksi dengan umpan balik taktil dan warna status. Aktif berarti
+  // aktuator menyala sesuai state terakhir yang diketahui aplikasi.
   Widget _buildTactileActionCard({
     required String title,
     required String status,
@@ -1186,6 +1217,7 @@ class ClimateDashboardPage extends StatelessWidget {
     );
   }
 
+  // Pesan seragam saat pengguna tanpa hak mencoba mengendalikan perangkat.
   void _showOperatorOnlySnack(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

@@ -47,6 +47,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Konfigurasi koneksi. DB dan broker MQTT berada di VM "Prototype PBL"
+# (192.168.33.10) saat demo; nilai dapat ditimpa lewat environment variable
+# agar tidak perlu mengubah kode saat pindah host.
 DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
 MQTT_HOST = os.getenv("MQTT_HOST", "192.168.33.10")
 
@@ -66,6 +69,8 @@ except Exception as e:
     print(f"[DB WARNING] Pool creation error: {e}")
     db_pool = None
 
+# Mengambil koneksi dari pool (5 koneksi). Bila pool gagal dibuat saat start,
+# fungsi jatuh ke koneksi langsung supaya layanan tetap hidup untuk diagnosis.
 def get_db():
     if db_pool:
         return db_pool.get_connection()
@@ -84,6 +89,11 @@ TOKEN_TTL = 7 * 24 * 3600
 _KEY_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".secret_key")
 
 
+# Kunci HMAC untuk token.
+#
+# Urutan sumber: environment PHARMA_SECRET_KEY -> berkas .secret_key -> dibuat
+# baru dengan izin 0600. Kunci tidak pernah ditulis di kode agar token tidak
+# bisa dipalsukan hanya dengan membaca repositori.
 def _load_secret() -> bytes:
     env = os.environ.get("PHARMA_SECRET_KEY")
     if env:
@@ -101,12 +111,18 @@ def _load_secret() -> bytes:
 SECRET_KEY = _load_secret()
 
 
+# PBKDF2-HMAC-SHA256, 200.000 iterasi, salt acak per pengguna.
+# Format tersimpan: pbkdf2$iterasi$salt$digest sehingga parameter bisa
+# ditingkatkan tanpa mematahkan hash lama.
 def hash_password(password: str) -> str:
     salt = secrets.token_hex(16)
     dk = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt.encode("utf-8"), PBKDF2_ITERS)
     return f"pbkdf2${PBKDF2_ITERS}${salt}${dk.hex()}"
 
 
+# Mendukung dua format: PBKDF2 (baru) dan SHA-256+salt statis (warisan).
+# Perbandingan memakai compare_digest agar tidak rentan timing attack.
+# Hash warisan yang cocok akan di-upgrade saat login berikutnya.
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     if hashed_password.startswith("pbkdf2$"):
         try:
@@ -131,6 +147,11 @@ def _unb64(s: str) -> bytes:
     return base64.urlsafe_b64decode(s + "=" * (-len(s) % 4))
 
 
+# Token sesi: base64url(payload).base64url(HMAC-SHA256).
+#
+# Payload berisi uid, username, role, dan exp (7 hari). Hanya dua bagian,
+# bukan JWT tiga bagian standar — klien menyesuaikan (lihat StorageService).
+# Ditandatangani, bukan dienkripsi: isinya boleh dibaca, tidak boleh diubah.
 def create_token(user: dict) -> str:
     payload = {
         "uid": user["id"],
@@ -143,6 +164,8 @@ def create_token(user: dict) -> str:
     return f"{body}.{sig}"
 
 
+# Memverifikasi tanda tangan dan masa berlaku. Kesalahan apa pun
+# ditampilkan sebagai 401 agar penyerang tidak mendapat petunjuk tambahan.
 def decode_token(token: str) -> dict:
     try:
         body, sig = token.split(".")
@@ -175,6 +198,10 @@ def require_user(cred: HTTPAuthorizationCredentials = Depends(_bearer)) -> dict:
     return decode_token(cred.credentials)
 
 
+# Guard untuk endpoint administratif dan kontrol aktuator.
+#
+# Peran dibaca ulang dari database, bukan hanya dari token, sehingga pencabutan
+# hak berlaku segera tanpa menunggu token kedaluwarsa.
 def require_operator(user: dict = Depends(require_user)) -> dict:
     """Verifikasi hak akses Operator langsung ke DB"""
     try:
@@ -195,6 +222,9 @@ def require_operator(user: dict = Depends(require_user)) -> dict:
 
 
 _FAILS: dict = {}
+# Pembatasan percobaan login: 5 kegagalan per (IP + username) membuka kunci
+# setelah 5 menit. Disimpan di memori proses; cukup untuk satu instance
+# backend dan hilang saat restart.
 MAX_FAILS = 5
 LOCK_SECONDS = 300
 
@@ -217,6 +247,9 @@ def record_fail(key: str):
     _FAILS[key] = (cnt, time.time() + LOCK_SECONDS)
 
 
+# Membuat tabel yang dibutuhkan bila belum ada. Dijalankan saat startup;
+# kegagalan dicetak, tidak menghentikan layanan, supaya pesan error tetap
+# bisa dibaca dari log.
 def init_db():
     try:
         conn = get_db()
@@ -344,6 +377,16 @@ class GenericResponse(BaseModel):
     message: str
 
 
+# Gerbang tunggal untuk semua telemetri (MQTT, /kirim-data, simulator).
+#
+# Menentukan status:
+#   Bahaya    : gas > 50 PPM, pintu terbuka, atau cahaya > 600 lux
+#   Peringatan: suhu di luar 2-8 °C atau cahaya > 300 lux
+#   Aman      : selain itu
+#
+# Baris kemudian disimpan ke sensor_data. Kegagalan database hanya dicetak:
+# telemetri berikutnya akan menyusul, dan backend tidak boleh mati karena
+# satu baris gagal.
 def process_and_save_sensor_data(data: dict):
     """Pengolahan Data Cloud: Analisis batas aman cold-chain vaksin & gas berbahaya"""
     device_id = str(data.get("device_id", data.get("deviceId", "device_1")))
@@ -378,6 +421,8 @@ def process_and_save_sensor_data(data: dict):
 
 mqtt_client_global = None
 
+# Berlangganan tiga pola topik agar firmware lama dan baru sama-sama masuk:
+# pharma/sensor, greenhouse/sensor, dan pharma/<device>/sensor.
 def on_mqtt_connect(client, userdata, flags, rc, properties=None):
     global mqtt_client_global
     mqtt_client_global = client
@@ -386,6 +431,8 @@ def on_mqtt_connect(client, userdata, flags, rc, properties=None):
     client.subscribe("greenhouse/sensor")
     client.subscribe("pharma/+/sensor")
 
+# Payload JSON apa pun langsung diproses. Pesan rusak dicatat dan dilewati;
+# satu paket cacat tidak boleh menghentikan listener.
 def on_mqtt_message(client, userdata, msg):
     try:
         payload = msg.payload.decode("utf-8")
@@ -394,6 +441,8 @@ def on_mqtt_message(client, userdata, msg):
     except Exception as e:
         print(f"[MQTT PARSE ERROR] {e}")
 
+# Mengirim perintah ke broker. Return False bila broker belum terhubung,
+# sehingga endpoint kontrol bisa melaporkan kegagalan yang sebenarnya.
 def publish_mqtt(topic: str, message: str) -> bool:
     global mqtt_client_global
     if mqtt_client_global:
@@ -405,6 +454,9 @@ def publish_mqtt(topic: str, message: str) -> bool:
             print(f"[MQTT PUB ERROR] {e}")
     return False
 
+# Mencoba beberapa alamat broker berurutan (Docker bridge, VM, localhost)
+# karena posisi Mosquitto berbeda antara mode demo dan produksi.
+# Berjalan di thread daemon agar tidak menahan proses FastAPI.
 def start_mqtt_listener():
     candidates = ["172.17.0.1", MQTT_HOST, "172.17.0.2", "192.168.33.10", "127.0.0.1"]
     for host in candidates:
@@ -443,6 +495,11 @@ def root():
 
 # Autentikasi MySQL lalu menerbitkan token sesi untuk request berikutnya.
 @app.post("/login", tags=["Autentikasi"], response_model=AuthResponse, summary="Login Akun")
+# Autentikasi + proteksi brute force.
+#
+# Alur: cek kunci -> verifikasi -> catat kegagalan atau bersihkan penghitung ->
+# upgrade hash warisan -> terbitkan token. Respons sukses memuat profil agar
+# klien tidak perlu request tambahan.
 def login_user(req: LoginRequest, request: Request):
     """Autentikasi User Farmasi via Database MySQL Node 2"""
     fkey = _fail_key(request, req.username)
@@ -762,6 +819,12 @@ def delete_user(user_id: int, user: dict = Depends(require_operator)):
         raise HTTPException(status_code=500, detail="Database error")
 
 @app.get("/sensor", tags=["Telemetri"], response_model=List[SensorItem], summary="Riwayat Sensor")
+# Riwayat telemetri terbaru, default 50 baris (maksimal 500).
+#
+# Bila tabel kosong atau query gagal, satu baris contoh dikembalikan supaya
+# aplikasi demo tidak menampilkan layar kosong. Timestamp dinormalisasi ke
+# string "YYYY-MM-DD HH:MM:SS" dan diduplikasi ke field waktu untuk
+# kompatibilitas klien lama.
 def get_sensor_data(limit: int = 50, _user: dict = Depends(require_user)):
     """Ambil riwayat data sensor untuk mobile app dan export CSV"""
     limit = max(1, min(limit, 500))
@@ -851,6 +914,8 @@ def get_sensor_summary(_user: dict = Depends(require_user)):
 # 3. Flutter yang subscribe topik ini langsung menerima data secara realtime.
 # Endpoint simulasi tanpa login untuk Wokwi, Python, dan dashboard web.
 @app.post("/kirim-data", tags=["Telemetri"], summary="Kirim Data Sensor")
+# Endpoint uji tanpa login wajib (token opsional). Menyimpan data lalu
+# memantulkannya ke MQTT agar dashboard web dan aplikasi ikut terbarui.
 def kirim_data(data_baru: dict, _user: Optional[dict] = Depends(optional_user)):
     process_and_save_sensor_data(data_baru)
     try:
@@ -860,6 +925,11 @@ def kirim_data(data_baru: dict, _user: Optional[dict] = Depends(optional_user)):
     return {"pesan": "Data berhasil diolah dan disimpan ke Database Node 2", "data": data_baru}
 
 @app.post("/control/{device}", tags=["Telemetri"], summary="Kontrol Aktuator IoT")
+# Meneruskan perintah aktuator ke dua topik: per-aktuator
+# (pharma/control/uv) dan per-device (pharma/control/device_2).
+#
+# Firmware membaca salah satu, tergantung versinya; mengirim keduanya membuat
+# perintah tetap bekerja setelah pembaruan firmware bertahap.
 def control_actuator(device: str, req: ActuatorControlRequest, _user: dict = Depends(require_user)):
     """Kirim perintah kontrol aktuator ke MQTT Broker (uv, buzzer, fan, pump)"""
     device_name = device.lower().strip()
@@ -879,6 +949,7 @@ def control_actuator(device: str, req: ActuatorControlRequest, _user: dict = Dep
     }
 
 @app.post("/change-password", tags=["Autentikasi"], response_model=GenericResponse, summary="Ganti Password")
+# Ganti sandi pengguna aktif. Sandi lama wajib benar; minimal 6 karakter.
 def change_password(req: ChangePasswordRequest, user: dict = Depends(require_user)):
     """Ganti Password Pengguna yang Sedang Login"""
     if len(req.new_password) < 6:
@@ -901,6 +972,7 @@ def change_password(req: ChangePasswordRequest, user: dict = Depends(require_use
     return {"success": True, "message": "Password berhasil diperbarui"}
 
 @app.post("/update-profile", tags=["Autentikasi"], response_model=GenericResponse, summary="Perbarui Profil")
+# Memperbarui nama dan email pengguna aktif.
 def update_profile(req: UpdateProfileRequest, user: dict = Depends(require_user)):
     """Update Nama & Email Pengguna"""
     if not req.full_name.strip() or not req.email.strip():

@@ -69,6 +69,8 @@ state_node2 = {
 
 mqtt_client = None
 
+# Berlangganan topik kontrol setelah terhubung, sehingga perintah dari
+# aplikasi langsung mengubah state simulasi.
 def on_connect(client, userdata, flags, rc, properties=None):
     if rc == 0:
         print("[MQTT] Berhasil terhubung ke Broker Mosquitto!")
@@ -77,6 +79,9 @@ def on_connect(client, userdata, flags, rc, properties=None):
     else:
         print(f"[MQTT] Gagal terhubung (rc={rc})")
 
+# Meniru perilaku firmware: perintah UV ditolak bila PIR mendeteksi orang.
+# Interlock ini sengaja dipertahankan di simulator agar uji coba aplikasi
+# menunjukkan pengaman yang sama dengan perangkat asli.
 def on_message(client, userdata, msg):
     """Menerima perintah dari tombol di aplikasi Flutter"""
     try:
@@ -126,6 +131,8 @@ def on_message(client, userdata, msg):
     except Exception as e:
         print(f"[PARSE ERROR KONTROL] {e}")
 
+# Input keyboard untuk memicu kejadian hardware (pintu dibuka, gerak
+# terdeteksi, gas naik) tanpa menunggu nilai acak.
 def input_listener():
     """Thread interaktif agar user bisa trigger event hardware dari keyboard"""
     while True:

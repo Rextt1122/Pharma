@@ -9,7 +9,8 @@ import 'package:path_provider/path_provider.dart';
 import '../models/sensor_model.dart';
 import '../services/api_service.dart';
 
-// Menyimpan state riwayat telemetri agar halaman tidak request langsung dari widget.
+// Menyimpan daftar log terbaru dan status muat untuk halaman Riwayat.
+// Widget tidak boleh memanggil ApiService sendiri; semua akses data lewat sini.
 class HistoryProvider extends ChangeNotifier {
   final ApiService _apiService = ApiService();
   List<SensorModel> _historyList = [];
@@ -20,11 +21,20 @@ class HistoryProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
+  // Memuat log pertama kali provider dibuat (saat aplikasi start).
   HistoryProvider() {
     fetchHistory();
   }
 
 // Mengambil log dari backend dan mengubah state loading/error.
+// Mengambil ulang log dari backend.
+//
+// Efek samping: mengubah isLoading, errorMessage, dan historyList, lalu
+// notifyListeners(). Daftar dipotong maksimal 50 entri terbaru agar RAM dan
+// waktu render tetap wajar di perangkat kelas menengah.
+//
+// Loading ditahan minimal 400 ms supaya indikator tidak berkedip pada respons
+// cepat (<100 ms).
 Future<void> fetchHistory() async {
     _isLoading = true;
     _errorMessage = null;
@@ -41,6 +51,8 @@ Future<void> fetchHistory() async {
       }
       _errorMessage = null;
     } catch (e) {
+      // Pesan error diterjemahkan ke bahasa manusia; pengguna tidak perlu melihat
+      // detail exception.
       if (e is FormatException) {
         _errorMessage = 'Data riwayat tidak dapat dibaca. Coba muat ulang.';
       } else if (e.toString().contains('Sesi berakhir') || e.toString().contains('401')) {
@@ -60,6 +72,12 @@ Future<void> fetchHistory() async {
     }
   }
 
+  // Menulis seluruh log yang sedang tampil ke berkas CSV di folder dokumen
+  // aplikasi.
+  //
+  // Return: path absolut berkas, atau null bila daftar kosong.
+  // Kolom mengikuti urutan: No, Suhu, Kelembapan, Gas, Cahaya, Pintu, UV,
+  // Status, Waktu. Pemisah koma standar RFC 4180.
   Future<String?> exportToCsv() async {
     if (_historyList.isEmpty) {
       return null;

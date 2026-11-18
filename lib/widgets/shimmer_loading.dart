@@ -1,10 +1,16 @@
 // ============================================================================
-// DOKUMENTASI KODE: shimmer_loading.dart — Komponen pendukung aplikasi Pharma Medic
-// Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
+// DOKUMENTASI: shimmer_loading.dart — Placeholder animasi saat memuat
+//
+// Komponen presentasi murni: tidak menyimpan data dan tidak memanggil API.
+// Dipakai dashboard, riwayat, dan pengaturan agar transisi konten tidak melompat.
+//
+// Dibaca sebagai referensi implementasi; komentar menjelaskan alasan, bukan mengulang nama simbol.
 // ============================================================================
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
+// Placeholder beranimasi untuk keadaan memuat. Bentuk dan radius dibuat sama
+// dengan kartu asli agar transisi ke konten tidak melompat.
 class ShimmerLoading extends StatefulWidget {
   final double height;
   final double? width;
@@ -21,6 +27,8 @@ class ShimmerLoading extends StatefulWidget {
   State<ShimmerLoading> createState() => _ShimmerLoadingState();
 }
 
+// Menggerakkan gradien selebar dua kali lebar widget dari kiri ke kanan
+// selama 1,4 detik, berulang tanpa henti.
 class _ShimmerLoadingState extends State<ShimmerLoading> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
 
@@ -80,6 +88,7 @@ class _ShimmerLoadingState extends State<ShimmerLoading> with SingleTickerProvid
   }
 }
 
+// Menggeser gradien horizontal berdasarkan progres animasi (0..1).
 class _SlidingGradientTransform extends GradientTransform {
   final double slidePercent;
   const _SlidingGradientTransform({required this.slidePercent});

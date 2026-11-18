@@ -1,6 +1,11 @@
 // ============================================================================
-// DOKUMENTASI KODE: api_service.dart — Klien REST API FastAPI dan autentikasi aplikasi
-// Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
+// DOKUMENTASI: api_service.dart — Klien REST, penemuan host, dan autentikasi
+//
+// Menemukan host backend (cloud / LAN / hasil scan), lalu memanggil endpoint FastAPI.
+// Semua request membawa token Bearer; 401 memicu invalidateSession + redirectToLogin.
+// Berkas terkait: backend/main.py, services/storage_service.dart, services/navigation_service.dart
+//
+// Dibaca sebagai referensi implementasi; komentar menjelaskan alasan, bukan mengulang nama simbol.
 // ============================================================================
 import 'dart:async';
 import 'dart:convert';
@@ -15,15 +20,34 @@ import 'subnet_ips_io.dart'
     if (dart.library.html) 'subnet_ips_web.dart';
 
 // Gerbang REST ke FastAPI. Menentukan host aktif dan menangani autentikasi request.
+// Klien REST untuk backend FastAPI (backend/main.py).
+//
+// Dua tugas utama:
+//   1. Menemukan host yang bisa dijangkau (cloud, IP LAN tersimpan, atau hasil
+//      pemindaian subnet) supaya aplikasi tetap jalan di lab maupun di lapangan.
+//   2. Membungkus endpoint autentikasi dan telemetri, termasuk penanganan 401
+//      yang mengarahkan pengguna kembali ke halaman login.
+//
+// Semua method mengembalikan Map/List siap pakai; error diterjemahkan menjadi
+// Exception dengan pesan berbahasa Indonesia agar bisa langsung ditampilkan.
 class ApiService {
   final StorageService _storageService = StorageService();
+  // Penemuan host berjalan sekali untuk semua pemanggil. Tanpa ini, dashboard
+  // dan halaman riwayat bisa memindai jaringan bersamaan dan menggandakan beban.
   static Future<String?>? _ongoingDiscovery;
+  // Host aktif di-cache selama sesi agar request berikutnya tidak menunggu
+  // probe. Diinvalidasi saat request gagal (lihat catch di fetchSensorHistory).
   static String? _cachedActiveHost;
 
+  // Memaksa probe ulang pada request berikutnya. Dipakai setelah kegagalan
+  // jaringan atau saat pengguna mengganti alamat server di Pengaturan.
   static void invalidateHostCache() {
     _cachedActiveHost = null;
   }
 
+  // Menyusun URL dari berbagai bentuk alamat yang mungkin diketik pengguna:
+  //   https://host , http://host:port , domain pharma.web.id, atau IP LAN murni.
+  // IP LAN murni diarahkan ke port 8001 (port FastAPI di VM/dev).
   Uri buildUrl(String ip, String path) {
     final cleanIp = ip.trim();
     if (cleanIp.startsWith('http://') || cleanIp.startsWith('https://')) {
@@ -36,6 +60,16 @@ class ApiService {
     return Uri.parse('http://$cleanIp:8001$path');
   }
 
+  // Mengembalikan host yang paling mungkin hidup.
+  //
+  // Tahapan:
+  //   1. Cache sesi.
+  //   2. Probe cepat host tersimpan (800 ms) supaya start aplikasi terasa instan.
+  //   3. Penemuan penuh: balapan kandidat cloud/LAN, lalu pindai /24 perangkat.
+  // Host yang ditemukan disimpan agar pemakaian berikutnya langsung tepat.
+  //
+  // Selalu mengembalikan string (host tersimpan sebagai fallback) supaya pemanggil
+  // tidak perlu menangani null.
   Future<String> resolveReachableIp() async {
     if (_cachedActiveHost != null) return _cachedActiveHost!;
 
@@ -79,6 +113,8 @@ class ApiService {
     }
   }
 
+  // GET / dengan timeout pendek. Status 200 berarti server FastAPI hidup.
+  // Exception apa pun dianggap "tidak hidup" agar pemindaian bisa lanjut.
   Future<String?> _probeIp(String ip, Duration timeout) async {
     try {
       final response = await http.get(buildUrl(ip, '/')).timeout(timeout);
@@ -89,6 +125,8 @@ class ApiService {
     return null;
   }
 
+  // Menembak semua kandidat paralel dan memakai yang pertama menjawab.
+  // Host yang mati tidak memperlambat keseluruhan karena tidak ditunggu berurutan.
   Future<String?> _raceIps(List<String> ips, Duration timeout) async {
     if (ips.isEmpty) return null;
     final completer = Completer<String?>();
@@ -109,6 +147,9 @@ class ApiService {
     return completer.future;
   }
 
+  // Dua tahap: kandidat yang sudah dikenal, lalu pemindaian subnet Wi-Fi.
+  // Pemindaian dibagi batch 64 alamat dengan timeout 650 ms per batch agar
+  // ponsel tidak membuka terlalu banyak koneksi sekaligus.
   Future<String?> _discoverIp(String savedIp) async {
     final fastCandidates = <String>{
       'api.pharma.web.id',
@@ -140,6 +181,14 @@ class ApiService {
     return null;
   }
 
+  // Mengambil log sensor (GET /sensor).
+  //
+  // Token wajib ada; bila tidak ada atau server menjawab 401, sesi dihapus dan
+  // aplikasi diarahkan ke login. Respons boleh berupa list (banyak log) atau satu
+  // objek (log terbaru saja) — keduanya diterima.
+  //
+  // Timeout 12 detik: cukup untuk koneksi seluler lambat, cukup pendek agar
+  // pengguna tidak menunggu tanpa kepastian.
   Future<List<SensorModel>> fetchSensorHistory() async {
     final ip = await resolveReachableIp();
     final url = buildUrl(ip, '/sensor');
@@ -190,6 +239,11 @@ class ApiService {
 
   // Mengirim username & password ke endpoint POST /login di server FastAPI.
 
+  // POST /login. Menyimpan token dan peran pengguna ke penyimpanan aman.
+  //
+  // Return: map respons server (berisi token dan objek user).
+  // Error: pesan "detail" dari server diteruskan apa adanya agar pengguna tahu
+  // apakah kredensial salah atau akun bermasalah.
   Future<Map<String, dynamic>> login(String username, String password) async {
     final ip = await resolveReachableIp();
     final url = buildUrl(ip, '/login');
@@ -240,6 +294,7 @@ class ApiService {
     }
   }
 
+  // POST /register. Akun baru dibuat dengan peran default dari server.
   Future<Map<String, dynamic>> register({
     required String username,
     required String password,
@@ -287,6 +342,7 @@ class ApiService {
     }
   }
 
+  // Memperbarui nama/email pengguna yang sedang login.
   Future<Map<String, dynamic>> updateProfile({
     required String fullName,
     required String email,
@@ -322,6 +378,7 @@ class ApiService {
     }
   }
 
+  // Mengganti kata sandi. Token lama tetap berlaku sampai kedaluwarsa.
   Future<Map<String, dynamic>> changePassword({
     required String oldPassword,
     required String newPassword,
@@ -357,6 +414,7 @@ class ApiService {
     }
   }
 
+  // Daftar pengguna (khusus admin) untuk halaman manajemen pengguna.
   Future<List<Map<String, dynamic>>> fetchUsers() async {
     final ip = await resolveReachableIp();
     final url = buildUrl(ip, '/users');
@@ -392,6 +450,7 @@ class ApiService {
     }
   }
 
+  // Mengubah peran pengguna (admin/operator/user).
   Future<Map<String, dynamic>> updateUserRole({
     required int userId,
     required String role,
@@ -433,6 +492,7 @@ class ApiService {
     }
   }
 
+  // Menghapus akun pengguna berdasarkan id.
   Future<Map<String, dynamic>> deleteUser(int userId) async {
     final ip = await resolveReachableIp();
     final url = buildUrl(ip, '/users/$userId');
@@ -467,6 +527,8 @@ class ApiService {
     }
   }
 
+  // GET /me. Menyegarkan profil dari server dan menyimpannya lokal supaya
+  // halaman profil tetap benar walau data berubah di perangkat lain.
   Future<Map<String, dynamic>> fetchMyProfile() async {
     final ip = await resolveReachableIp();
     final url = buildUrl(ip, '/me');

@@ -13,7 +13,6 @@ import '../services/storage_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_toast.dart';
 
-// Halaman autentikasi awal. Mengirim kredensial ke ApiService dan menyimpan profil respons server.
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -21,6 +20,15 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
+// Halaman login dan registrasi dalam satu layar.
+//
+// Mode berganti lewat segmented control; form registrasi menambah field email
+// dan konfirmasi sandi. Setelah berhasil, token disimpan (ApiService) dan
+// aplikasi pindah ke /main.
+//
+// Dua jalur masuk: sandi (server) dan biometrik (token tersimpan di perangkat).
+// Biometrik tidak pernah membuat sesi baru; ia hanya membuka token yang sudah
+// diterbitkan server.
 class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -43,6 +51,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   bool _isAuthenticatingBiometric = false;
 
   @override
+  // Menyiapkan animasi ambient dan entrance bertahap, lalu memeriksa apakah
+  // login biometrik bisa ditawarkan.
   void initState() {
     super.initState();
     _checkBiometrics();
@@ -73,6 +83,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     );
   }
 
+  // Membungkus elemen dengan fade + slide yang tertunda sesuai urutan (step).
+  // Efeknya: form masuk berurutan, bukan muncul serentak.
   Widget _buildStaggered(int step, Widget child) {
     final double start = (0.12 + step * 0.08).clamp(0.0, 0.75);
     final double end = (start + 0.42).clamp(0.0, 1.0);
@@ -95,6 +107,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     );
   }
 
+  // Tombol biometrik hanya tampil bila tiga syarat terpenuhi: perangkat
+  // mendukung, pengguna mengaktifkannya di Pengaturan, dan token tersimpan
+  // belum kedaluwarsa.
   Future<void> _checkBiometrics() async {
     final supported = await _biometricService.isDeviceSupported();
     final enabled = await StorageService().isBiometricEnabled();
@@ -104,6 +119,11 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     }
   }
 
+  // Alur biometrik: verifikasi sidik jari -> promosikan token biometrik menjadi
+  // token sesi -> masuk dashboard.
+  //
+  // Bila token ternyata kedaluwarsa, opsi biometrik disembunyikan dan pengguna
+  // diarahkan memakai sandi.
   Future<void> _handleBiometricLogin() async {
     if (_isAuthenticatingBiometric) return;
     setState(() => _isAuthenticatingBiometric = true);
@@ -129,6 +149,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     }
   }
 
+  // Bottom sheet konfigurasi alamat server, dapat diakses sebelum login.
+  // Dipakai saat demo di jaringan lokal (IP VM/PC berubah-ubah).
   Future<void> _showServerConfigSheet() async {
     final currentIp = await StorageService().getServerIp();
     final ipCtrl = TextEditingController(text: currentIp);
@@ -264,6 +286,14 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
   // HANDLER LOGIN & REGISTER
 
+  // Menangani tombol utama.
+  //
+  // Registrasi: POST /register, simpan profil, langsung masuk.
+  // Login      : POST /login, simpan token + profil, masuk dashboard.
+  //
+  // Pesan error dari server ditampilkan apa adanya setelah prefiks Exception
+  // dibuang, sehingga pengguna melihat "Username atau password salah", bukan
+  // stack trace.
   Future<void> _handleSubmit() async {
     if (_isSubmitting) return;
     if (_formKey.currentState!.validate()) {
@@ -339,6 +369,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     }
   }
 
+  // Berganti mode masuk/daftar. Form di-reset agar validasi dan isian lama
+  // tidak terbawa, lalu animasi entrance diulang dari awal.
   void _toggleAuthMode(bool signUp) {
     setState(() {
       _isSignUp = signUp;
@@ -1028,6 +1060,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   }
 }
 
+// Dedaunan organik beranimasi di sudut kiri atas. Digambar dengan Canvas
+// supaya ringan dan tidak membutuhkan aset.
 class _TopLeftDecorPainter extends CustomPainter {
   final double progress;
 
@@ -1095,6 +1129,8 @@ class _TopLeftDecorPainter extends CustomPainter {
       oldDelegate.progress != progress;
 }
 
+// Ilustrasi tanaman farmasi di bagian bawah layar sebagai penyeimbang
+// visual; murni dekoratif dan diabaikan pembaca layar.
 class _PharmaPlantPainter extends CustomPainter {
   final double progress;
 

@@ -18,7 +18,6 @@ import '../widgets/app_toast.dart';
 import '../widgets/botanic_vector_decor.dart';
 import '../widgets/shimmer_loading.dart';
 
-// Pusat konfigurasi akun, server, keamanan, dan pembaruan aplikasi.
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
 
@@ -26,6 +25,13 @@ class SettingsPage extends StatefulWidget {
   State<SettingsPage> createState() => _SettingsPageState();
 }
 
+// Pusat pengaturan: profil, ambang sensor, jaringan, pengguna, layanan,
+// pembaruan, dan logout.
+//
+// Semua nilai dibaca dari StorageService saat halaman dibuka, lalu ditulis
+// kembali ketika pengguna menyimpan. Perubahan ambang langsung memengaruhi
+// warna status di dashboard karena SensorProvider membacanya dari sumber yang
+// sama.
 class _SettingsPageState extends State<SettingsPage> {
   final StorageService _storageService = StorageService();
   final ApiService _apiService = ApiService();
@@ -69,6 +75,13 @@ class _SettingsPageState extends State<SettingsPage> {
     _loadSettings();
   }
 
+  // Memuat profil, ambang, IP, dan status biometrik secara paralel.
+  //
+  // Nilai ambang di-clamp ke rentang wajar: data lama atau input manual yang
+  // salah tidak boleh membuat grafik mustahil (mis. kelembapan 500%).
+  //
+  // Pemeriksaan biometrik diberi timeout 500 ms; pada perangkat tanpa sensor
+  // panggilan platform bisa menggantung dan menahan seluruh halaman.
   Future<void> _loadSettings() async {
     try {
       final results = await Future.wait([
@@ -144,6 +157,7 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
+  // Umpan balik seragam untuk aksi pengaturan.
   void _showSnack(BuildContext ctx, String message, {bool isError = false}) {
     if (isError) {
       AppToast.error(ctx, message);
@@ -152,6 +166,9 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
+  // Manajemen pengguna (khusus admin): daftar, cari, ubah peran, hapus.
+  // State lokal modal memakai StatefulBuilder agar daftar bisa diperbarui tanpa
+  // membangun ulang seluruh halaman.
   void _showManageUsersModal() {
     List<Map<String, dynamic>> users = [];
     bool loading = true;
@@ -607,6 +624,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  // Konfirmasi penghapusan akun. Aksi destruktif selalu butuh dua langkah.
   void _confirmDeleteUser(
     BuildContext parentCtx, {
     required int userId,
@@ -675,6 +693,8 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  // Edit profil dan ganti sandi dalam satu modal dua tab. Avatar disimpan
+  // sebagai string base64 di preferences agar tidak perlu unggah berkas.
   void _showEditProfileDialog() {
     final nameCtrl = TextEditingController(text: _userName);
     final emailCtrl = TextEditingController(text: _userEmail);
@@ -1311,6 +1331,9 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  // Mengaktifkan biometrik mewajibkan verifikasi sidik jari lebih dulu,
+  // supaya orang yang memegang perangkat tidak bisa mengaktifkannya tanpa izin
+  // pemilik. Menonaktifkan langsung menghapus token biometrik.
   Future<void> _toggleBiometric(bool value) async {
     if (value) {
       final authenticated = await _biometricService.authenticate(
@@ -1349,6 +1372,8 @@ class _SettingsPageState extends State<SettingsPage> {
   // PROGRESSIVE SETTINGS MODALS (Design Guide)
   // ==========================================
 
+  // Pengaturan ambang suhu, kelembapan, dan gas. Perubahan disimpan lewat
+  // SensorProvider.updateThresholds agar dashboard langsung memakai nilai baru.
   void _showThresholdsModal() {
     double tempMin = _tempMin;
     double tempMax = _tempMax;
@@ -1639,6 +1664,8 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  // Alamat server manual. Setelah disimpan, cache host di ApiService
+  // diinvalidasi agar request berikutnya memakai alamat baru.
   void _showNetworkConfigModal() {
     final ipCtrl = TextEditingController(text: _ipController.text);
     bool isSavingIp = false;
@@ -1838,6 +1865,8 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  // Ringkasan status layanan backend (API, MQTT, basis data) untuk membantu
+  // diagnosis saat demo.
   void _showServicesModal() {
     showModalBottomSheet(
       context: context,
@@ -2005,6 +2034,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  // Informasi aplikasi: versi, tujuan, dan kredit.
   void _showAboutModal() {
     showModalBottomSheet(
       context: context,
@@ -2072,6 +2102,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  // Konfirmasi logout. Sesi lokal dihapus, lalu pengguna kembali ke login.
   void _showLogoutConfirmDialog() {
     showDialog(
       context: context,
@@ -2284,6 +2315,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  // Kartu profil utama: avatar, nama, peran, dan status operator.
   Widget _buildHeroProfileCard() {
     return Container(
       decoration: BoxDecoration(
@@ -2594,6 +2626,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  // Skeleton sampai seluruh pengaturan selesai dibaca.
   Widget _buildLoadingSkeleton() {
     return ListView(
       physics: const BouncingScrollPhysics(),

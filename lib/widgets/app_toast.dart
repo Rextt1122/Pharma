@@ -5,9 +5,20 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
+// Varian notifikasi. Tiap varian menentukan warna latar dan ikon bawaan.
 enum AppToastType { success, error, warning, info }
 
+// Pembungkus SnackBar agar semua umpan balik memakai bentuk, warna, dan jarak
+// yang sama. Selalu pakai kelas ini, jangan memanggil ScaffoldMessenger langsung.
 class AppToast {
+  // Menampilkan satu notifikasi.
+  //
+  // context   : konteks yang masih terpasang pada ScaffoldMessenger.
+  // message   : isi pesan singkat (satu kalimat).
+  // title     : opsional, tampil tebal di atas pesan.
+  // type      : menentukan warna dan ikon.
+  // duration  : lama tampil, default 3 detik.
+  // actionLabel/onAction : tombol aksi opsional (mis. "Ulangi").
   static void show(
     BuildContext context,
     String message, {
@@ -18,6 +29,8 @@ class AppToast {
     String? actionLabel,
     VoidCallback? onAction,
   }) {
+    // maybeOf + return: aman dipanggil dari service setelah layar ditutup,
+    // tidak melempar exception.
     final messenger = ScaffoldMessenger.maybeOf(context);
     if (messenger == null) return;
 
@@ -47,6 +60,7 @@ class AppToast {
       icon = customIcon;
     }
 
+    // Antrian dibersihkan agar notifikasi baru tidak mengantre di belakang yang lama.
     messenger.clearSnackBars();
     messenger.showSnackBar(
       SnackBar(
@@ -137,18 +151,23 @@ class AppToast {
     );
   }
 
+  // Pintasan untuk pesan sukses (hijau, ikon centang).
   static void success(BuildContext context, String message, {String? title, String? actionLabel, VoidCallback? onAction}) {
     show(context, message, title: title, type: AppToastType.success, actionLabel: actionLabel, onAction: onAction);
   }
 
+  // Pintasan untuk pesan gagal (merah). Gunakan untuk kegagalan yang perlu
+  // diketahui pengguna, bukan untuk error internal.
   static void error(BuildContext context, String message, {String? title, String? actionLabel, VoidCallback? onAction}) {
     show(context, message, title: title, type: AppToastType.error, actionLabel: actionLabel, onAction: onAction);
   }
 
+  // Pintasan untuk peringatan (oranye), mis. sensor mendekati ambang.
   static void warning(BuildContext context, String message, {String? title, String? actionLabel, VoidCallback? onAction}) {
     show(context, message, title: title, type: AppToastType.warning, actionLabel: actionLabel, onAction: onAction);
   }
 
+  // Pintasan untuk informasi netral (navy).
   static void info(BuildContext context, String message, {String? title, String? actionLabel, VoidCallback? onAction}) {
     show(context, message, title: title, type: AppToastType.info, actionLabel: actionLabel, onAction: onAction);
   }

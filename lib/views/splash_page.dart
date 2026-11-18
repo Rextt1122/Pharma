@@ -17,6 +17,11 @@ class SplashPage extends StatefulWidget {
   State<SplashPage> createState() => _SplashPageState();
 }
 
+// Splash 2 detik: animasi logo lalu memilih rute berdasarkan keberadaan
+// token yang masih berlaku.
+//
+// Penundaan sengaja: memberi waktu Flutter memuat font dan provider, sekaligus
+// menghindari kedipan halaman login bagi pengguna yang sudah punya sesi.
 class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;

@@ -18,6 +18,11 @@ class Model3dPage extends StatefulWidget {
   State<Model3dPage> createState() => _Model3dPageState();
 }
 
+// Digital twin gudang: model GLB (model-viewer) dan denah vektor.
+//
+// Zona (Semua, Cold Storage, Kamar UV, Pintu Utama, Detektor Gas) mengubah
+// kamera dan menyorot area terkait. Data sensor yang ditampilkan tetap berasal
+// dari SensorProvider; halaman ini tidak menulis state perangkat.
 class _Model3dPageState extends State<Model3dPage> {
   bool _is3dModel = true;
   bool _autoRotate = false;
@@ -31,6 +36,8 @@ class _Model3dPageState extends State<Model3dPage> {
     'Detektor Gas',
   ];
 
+  // Denah vektor layar penuh untuk dibaca di ponsel sempit. Memakai dialog
+  // transparan agar tidak menambah rute baru.
   void _openFullScreenDenah() {
     showDialog(
       context: context,
@@ -99,6 +106,9 @@ class _Model3dPageState extends State<Model3dPage> {
   );
   }
 
+  // Posisi kamera per zona, dalam format orbit model-viewer
+  // (yaw pitch distance). Nilai dipilih agar tiap zona terlihat tanpa terhalang
+  // rak lain.
   String _getCameraOrbit() {
     switch (_selectedZone) {
       case 1:
@@ -114,6 +124,8 @@ class _Model3dPageState extends State<Model3dPage> {
     }
   }
 
+  // Titik fokus kamera per zona (meter) agar rotasi tetap mengarah ke area
+  // yang dipilih.
   String _getCameraTarget() {
     switch (_selectedZone) {
       case 1:
@@ -951,6 +963,8 @@ class _Model3dPageState extends State<Model3dPage> {
   }
 }
 
+// Denah gudang 2D: rak, kamar UV, pintu, dan titik sensor. Digambar dari
+// primitif agar ringan dan tidak bergantung pada aset gambar.
 class Warehouse3dPainter extends CustomPainter {
   final String viewMode;
   final SensorModel sensorMode;

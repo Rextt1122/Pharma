@@ -11,6 +11,13 @@ import '../services/storage_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shimmer_loading.dart';
 
+// Tab Realtime. Menampilkan node terpilih dalam dua tata letak:
+//
+//   device_1 : konten sensor suhu/kelembapan/gas + aktuator iklim.
+//   device_2 : panel keamanan (pintu, PIR) + aktuator UV/LED.
+//
+// Pemilihan node memakai SensorProvider.selectDevice sehingga sama dengan
+// pemilih di dashboard.
 class RealtimePage extends StatelessWidget {
   const RealtimePage({super.key});
 
@@ -111,6 +118,8 @@ class RealtimePage extends StatelessWidget {
     );
   }
 
+  // Mengubah timestamp ISO dari server menjadi jam lokal yang mudah dibaca;
+  // nilai tidak valid ditampilkan sebagai "-" bukan crash.
   String _formatLastUpdate(String? value) {
     if (value == null || value.isEmpty) return '--:--';
     final parsed = DateTime.tryParse(value)?.toLocal();
@@ -118,6 +127,7 @@ class RealtimePage extends StatelessWidget {
     return '${parsed.hour.toString().padLeft(2, '0')}:${parsed.minute.toString().padLeft(2, '0')}';
   }
 
+  // Skeleton sampai data pertama tiba (maksimal 3 detik, lihat provider).
   Widget _buildLoadingSkeleton() {
     return ListView(
       physics: const BouncingScrollPhysics(),
@@ -158,6 +168,7 @@ class RealtimePage extends StatelessWidget {
     return _buildSensorNodeContent(context, provider, sensor, isConnected);
   }
 
+  // Isi Node 1: kartu telemetri, status koneksi, dan kontrol iklim.
   Widget _buildSensorNodeContent(BuildContext context, SensorProvider provider, SensorModel sensor, bool isConnected) {
     return ListView(
       physics: const BouncingScrollPhysics(),
@@ -644,6 +655,8 @@ class RealtimePage extends StatelessWidget {
     );
   }
 
+  // Isi Node 2: panel keselamatan gelap (pintu/PIR/UV) dengan aksen indigo
+  // agar terasa berbeda dari node iklim dan menekankan sifat keamanan.
   Widget _buildActuatorNodeContent(BuildContext context, SensorProvider provider, SensorModel sensor, bool isConnected) {
     return ListView(
       physics: const BouncingScrollPhysics(),
@@ -1251,6 +1264,8 @@ class RealtimePage extends StatelessWidget {
     );
   }
 
+  // Baris aktuator: ikon, nama, status, dan sakelar. Non-operator melihat
+  // nilai tetapi sakelar dinonaktifkan dengan penjelasan.
   Widget _buildActuatorRow({
     required String title,
     required String subtitle,

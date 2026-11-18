@@ -47,12 +47,14 @@ float jarakStok = 22.0;    // Kapasitas tumpukan kardus obat (cm)
 unsigned long waktuKirimTerakhir = 0;
 unsigned long waktuBacaSensor = 0;
 
+// LED RGB common-anode: logika dibalik (LOW = menyala).
 void aturRGB(bool merah, bool hijau, bool biru) {
   digitalWrite(LED_RED_PIN, RGB_COMMON_ANODE ? !merah : merah);
   digitalWrite(LED_GREEN_PIN, RGB_COMMON_ANODE ? !hijau : hijau);
   digitalWrite(LED_BLUE_PIN, RGB_COMMON_ANODE ? !biru : biru);
 }
 
+// Relay UV aktif LOW. Status disimpan untuk telemetri.
 void aturRelayUV(int aktif) {
   statusUV = aktif;
   if (RELAY_ACTIVE_LOW) {
@@ -77,6 +79,9 @@ void aturBuzzer(int aktif) {
   }
 }
 
+// HC-SR04: pulsa trigger 10 us, lalu ukur lebar pulsa echo.
+// Jarak = durasi * 0.034 / 2 (bolak-balik). Nilai mustahil dijepit agar
+// kapasitas stok tidak menampilkan angka negatif.
 float ukurJarakUltrasonik() {
   digitalWrite(TRIG_PIN, LOW);
   delayMicroseconds(2);
@@ -92,6 +97,11 @@ float ukurJarakUltrasonik() {
 }
 
 // Callback menerima perintah dari Flutter Mobile / Web Dashboard
+// Perintah UV dan LED dari aplikasi.
+//
+// Perintah UV yang meminta menyala saat PIR aktif DITOLAK. Pengaman ini ada di
+// perangkat, bukan hanya di aplikasi, sehingga perintah keliru atau replay
+// tidak bisa menyalakan UV-C saat ada orang.
 void callbackMQTT(char* topic, byte* payload, unsigned int length) {
   StaticJsonDocument<256> doc;
   deserializeJson(doc, payload, length);
@@ -166,6 +176,7 @@ void koneksiMQTT() {
   }
 }
 
+// Inisialisasi pin, sensor, Wi-Fi, dan MQTT; LED diatur ke hijau (aman).
 void setup() {
   Serial.begin(115200);
   delay(1000); // Jeda wajib agar Serial Monitor Wokwi siap menangkap teks boot

@@ -1,6 +1,11 @@
 // ============================================================================
-// DOKUMENTASI KODE: main.dart — Bootstrap aplikasi Flutter dan konfigurasi provider global
-// Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
+// DOKUMENTASI: main.dart — Titik masuk aplikasi Pharma Medic
+//
+// Menyiapkan binding Flutter, gaya system bar, provider global, dan tabel rute.
+// Alur: main() -> MyApp -> SplashPage -> (sesi valid ? MainNavigation : LoginPage)
+// Berkas terkait: providers/, services/navigation_service.dart, theme/app_theme.dart
+//
+// Dibaca sebagai referensi implementasi; komentar menjelaskan alasan, bukan mengulang nama simbol.
 // ============================================================================
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -29,6 +34,13 @@ void main() {
   runApp(const MyApp());
 }
 
+// Akar widget aplikasi.
+//
+// Menyediakan dua ChangeNotifier global: SensorProvider (telemetri realtime) dan
+// HistoryProvider (log historis). Keduanya hidup selama aplikasi berjalan sehingga
+// perpindahan tab tidak memicu koneksi ulang.
+//
+// Rute: /splash (cek sesi) -> /login atau /main.
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -36,10 +48,16 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        // SensorProvider dibuat sekali di root supaya koneksi MQTT/REST tidak terputus
+        // saat pengguna berpindah halaman.
         ChangeNotifierProvider(create: (_) => SensorProvider()),
+        // HistoryProvider ikut di root karena halaman riwayat dan dashboard memakai
+        // data yang sama; constructor-nya langsung memuat log awal.
         ChangeNotifierProvider(create: (_) => HistoryProvider()),
       ],
       child: MaterialApp(
+        // Navigator key global dipakai ApiService untuk memaksa kembali ke /login
+        // ketika token kedaluwarsa (lihat navigation_service.dart).
         navigatorKey: appNavigatorKey,
         title: 'Pharma Medic',
         debugShowCheckedModeBanner: false,
