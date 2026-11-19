@@ -1,6 +1,15 @@
 // ============================================================================
-// DOKUMENTASI KODE: login_page.dart — Halaman autentikasi pengguna
-// Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
+// DOKUMENTASI: login_page.dart — Autentikasi dan registrasi
+//
+// Satu layar, dua mode: masuk (POST /login) dan daftar (POST /register).
+// Jalur ketiga adalah biometrik: membuka token yang sudah tersimpan, tanpa
+// memanggil backend.
+//
+// Semua akses jaringan didelegasikan ke ApiService; halaman ini hanya
+// menangani validasi form, state tombol, dan navigasi.
+//
+// Berkas terkait: services/api_service.dart, services/storage_service.dart,
+// services/biometric_service.dart, widgets/app_toast.dart
 // ============================================================================
 import 'dart:math' as math;
 
@@ -13,6 +22,12 @@ import '../services/storage_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_toast.dart';
 
+// Layar masuk dan daftar. Satu-satunya tempat kredensial dikirim ke
+// backend (POST /login atau POST /register lewat ApiService).
+//
+// Setelah sukses: token tersimpan, lalu Navigator.pushReplacementNamed
+// ke /main. Halaman ini tidak melakukan GET; data dashboard diambil provider.
+//
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -284,16 +299,25 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     );
   }
 
-  // HANDLER LOGIN & REGISTER
+  // ----------------------------------------------------------------
+  // Aksi form: login, daftar, biometrik
+  // ----------------------------------------------------------------
 
-  // Menangani tombol utama.
+  // Handler tombol utama — satu-satunya jalur POST dari halaman login.
   //
-  // Registrasi: POST /register, simpan profil, langsung masuk.
-  // Login      : POST /login, simpan token + profil, masuk dashboard.
+  // Alur login:
+  //   1. Validasi form (username + password tidak kosong).
+  //   2. POST /login lewat ApiService -> token + objek user.
+  //   3. Simpan profil (nama, email, peran) ke SharedPreferences.
+  //   4. pushReplacementNamed("/main").
   //
-  // Pesan error dari server ditampilkan apa adanya setelah prefiks Exception
-  // dibuang, sehingga pengguna melihat "Username atau password salah", bukan
-  // stack trace.
+  // Alur daftar:
+  //   1. Validasi tambahan (email valid, konfirmasi sandi sama).
+  //   2. POST /register -> token + user (peran "user").
+  //   3. Simpan profil, lalu masuk dashboard.
+  //
+  // Kegagalan: pesan "detail" server ditampilkan lewat AppToast setelah
+  // prefiks "Exception: " dibuang. _isSubmitting mencegah tap ganda.
   Future<void> _handleSubmit() async {
     if (_isSubmitting) return;
     if (_formKey.currentState!.validate()) {

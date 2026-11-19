@@ -19,17 +19,23 @@ import 'subnet_ips_io.dart'
     if (dart.library.js_interop) 'subnet_ips_web.dart'
     if (dart.library.html) 'subnet_ips_web.dart';
 
-// Gerbang REST ke FastAPI. Menentukan host aktif dan menangani autentikasi request.
 // Klien REST untuk backend FastAPI (backend/main.py).
 //
-// Dua tugas utama:
-//   1. Menemukan host yang bisa dijangkau (cloud, IP LAN tersimpan, atau hasil
-//      pemindaian subnet) supaya aplikasi tetap jalan di lab maupun di lapangan.
-//   2. Membungkus endpoint autentikasi dan telemetri, termasuk penanganan 401
-//      yang mengarahkan pengguna kembali ke halaman login.
+// Tiga tanggung jawab:
+//   1. Menemukan host yang hidup (cloud, IP LAN tersimpan, atau hasil scan).
+//   2. Menyediakan satu method per endpoint: GET untuk membaca, POST/DELETE
+//      untuk mengubah.
+//   3. Menerjemahkan kegagalan HTTP menjadi Exception berbahasa Indonesia
+//      yang siap ditampilkan UI.
 //
-// Semua method mengembalikan Map/List siap pakai; error diterjemahkan menjadi
-// Exception dengan pesan berbahasa Indonesia agar bisa langsung ditampilkan.
+// Pola semua method:
+//   resolveReachableIp() -> buildUrl() -> http.<verb>(timeout 12 dtk)
+//   -> cek status -> jsonDecode -> Map/List
+//
+// Header Authorization: Bearer <token> hanya dikirim oleh endpoint yang
+// butuh sesi. Endpoint publik: /login, /register, /kirim-data.
+// Respons 401 pada endpoint ber-sesi berarti token tidak berlaku: sesi lokal
+// dihapus lalu pengguna diarahkan ke /login (lihat navigation_service.dart).
 class ApiService {
   final StorageService _storageService = StorageService();
   // Penemuan host berjalan sekali untuk semua pemanggil. Tanpa ini, dashboard
@@ -181,11 +187,13 @@ class ApiService {
     return null;
   }
 
-  // Mengambil log sensor (GET /sensor).
+  // GET /sensor — butuh token.
   //
-  // Token wajib ada; bila tidak ada atau server menjawab 401, sesi dihapus dan
-  // aplikasi diarahkan ke login. Respons boleh berupa list (banyak log) atau satu
-  // objek (log terbaru saja) — keduanya diterima.
+  // Query opsional: limit (default server 50, maksimal 500).
+  // Respons: list objek telemetri, atau satu objek bila server hanya
+  // mengembalikan baris terakhir. Keduanya diterima di sini.
+  // Error: 401 -> hapus sesi + redirectToLogin; timeout/gagal koneksi ->
+  // Exception agar HistoryProvider dapat menampilkan pesan.
   //
   // Timeout 12 detik: cukup untuk koneksi seluler lambat, cukup pendek agar
   // pengguna tidak menunggu tanpa kepastian.
@@ -237,13 +245,18 @@ class ApiService {
 
   // FUNGSI AUTENTIKASI: LOGIN USER / OPERATOR
 
-  // Mengirim username & password ke endpoint POST /login di server FastAPI.
-
-  // POST /login. Menyimpan token dan peran pengguna ke penyimpanan aman.
+  // POST /login — publik (tanpa token).
   //
-  // Return: map respons server (berisi token dan objek user).
-  // Error: pesan "detail" dari server diteruskan apa adanya agar pengguna tahu
-  // apakah kredensial salah atau akun bermasalah.
+  // Body  : { "username": ..., "password": ... }  (JSON)
+  // Sukses: 200 { success, message, token, user{id,username,name,email,role} }
+  // Gagal : 401 { detail: "Username atau password salah" }, atau 429 setelah
+  //         5 percobaan gagal dalam 5 menit (batas backend).
+  //
+  // Efek samping: token disimpan ke secure storage, peran ke preferences.
+  // Setelah sukses, pemanggil cukup navigasi ke /main.
+  //
+  // Pesan "detail" dari server diteruskan apa adanya supaya pengguna tahu
+  // apakah kredensial salah atau akun terkunci.
   Future<Map<String, dynamic>> login(String username, String password) async {
     final ip = await resolveReachableIp();
     final url = buildUrl(ip, '/login');
@@ -294,7 +307,13 @@ class ApiService {
     }
   }
 
-  // POST /register. Akun baru dibuat dengan peran default dari server.
+  // POST /register — publik (tanpa token).
+  //
+  // Body  : { username, password, full_name, email }
+  // Sukses: 200 dengan token + user (peran awal "user" dari server).
+  // Gagal : 400 bila username/email sudah dipakai (field detail).
+  //
+  // Token langsung disimpan sehingga pengguna masuk tanpa login ulang.
   Future<Map<String, dynamic>> register({
     required String username,
     required String password,
@@ -342,7 +361,11 @@ class ApiService {
     }
   }
 
-  // Memperbarui nama/email pengguna yang sedang login.
+  // POST /update-profile — butuh token.
+  //
+  // Body  : { full_name, email }
+  // Sukses: 200 { success, message }
+  // Gagal : 400/401 dengan field detail.
   Future<Map<String, dynamic>> updateProfile({
     required String fullName,
     required String email,
@@ -378,7 +401,14 @@ class ApiService {
     }
   }
 
-  // Mengganti kata sandi. Token lama tetap berlaku sampai kedaluwarsa.
+  // POST /change-password — butuh token.
+  //
+  // Body  : { old_password, new_password }  (minimal 6 karakter)
+  // Sukses: 200 { success, message }
+  // Gagal : 400 bila sandi lama salah atau sandi baru terlalu pendek.
+  //
+  // Token lama tetap berlaku sampai kedaluwarsa; pengguna tidak dipaksa
+  // login ulang setelah mengganti sandi.
   Future<Map<String, dynamic>> changePassword({
     required String oldPassword,
     required String newPassword,
@@ -414,7 +444,10 @@ class ApiService {
     }
   }
 
-  // Daftar pengguna (khusus admin) untuk halaman manajemen pengguna.
+  // GET /users — butuh token operator/admin.
+  //
+  // Respons: list { id, username, full_name, email, role }.
+  // Gagal : 403 bila peran tidak mencukupi.
   Future<List<Map<String, dynamic>>> fetchUsers() async {
     final ip = await resolveReachableIp();
     final url = buildUrl(ip, '/users');
@@ -450,7 +483,11 @@ class ApiService {
     }
   }
 
-  // Mengubah peran pengguna (admin/operator/user).
+  // POST /users/role — butuh token operator/admin.
+  //
+  // Body  : { user_id, role }  (role: admin | operator | user)
+  // Sukses: 200 { success, message }
+  // Gagal : 403/404 dengan field detail.
   Future<Map<String, dynamic>> updateUserRole({
     required int userId,
     required String role,
@@ -492,7 +529,12 @@ class ApiService {
     }
   }
 
-  // Menghapus akun pengguna berdasarkan id.
+  // DELETE /users/{id} — butuh token operator/admin.
+  //
+  // Sukses: 200 { success, message }
+  // Gagal : 403 (tidak berhak) atau 404 (akun tidak ditemukan).
+  //
+  // Aksi destruktif: UI wajib meminta konfirmasi sebelum memanggil method ini.
   Future<Map<String, dynamic>> deleteUser(int userId) async {
     final ip = await resolveReachableIp();
     final url = buildUrl(ip, '/users/$userId');
@@ -527,8 +569,12 @@ class ApiService {
     }
   }
 
-  // GET /me. Menyegarkan profil dari server dan menyimpannya lokal supaya
-  // halaman profil tetap benar walau data berubah di perangkat lain.
+  // GET /me — butuh token.
+  //
+  // Respons: { id, username, name, email, role }.
+  // Efek samping: profil lokal diperbarui supaya halaman Pengaturan tetap
+  // benar walau data diubah dari perangkat lain.
+  // Gagal : 401 -> sesi dihapus + redirect ke login.
   Future<Map<String, dynamic>> fetchMyProfile() async {
     final ip = await resolveReachableIp();
     final url = buildUrl(ip, '/me');
