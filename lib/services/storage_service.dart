@@ -1,27 +1,12 @@
-// ============================================================================
-// DOKUMENTASI: storage_service.dart — Penyimpanan lokal dan siklus sesi
-//
-// SharedPreferences untuk data non-rahasia; FlutterSecureStorage untuk token JWT.
-// Token backend 2 bagian (payload.signature); exp dicek sebelum dipakai.
-// Berkas terkait: services/api_service.dart, providers/sensor_provider.dart, views/settings_page.dart
-//
-// Dibaca sebagai referensi implementasi; komentar menjelaskan alasan, bukan mengulang nama simbol.
-// ============================================================================
+// storage_service.dart — Penyimpanan lokal
+// Preferences untuk profil/ambang; secure storage untuk token.
 import 'dart:convert';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// Penyimpanan konfigurasi, profil, dan status sesi lokal.
-// Satu pintu untuk semua data lokal.
-//
-// Pembagian media penyimpanan:
-//   - SharedPreferences : alamat server, profil, peran, preferensi biometrik,
-//     ambang batas sensor. Bukan rahasia.
-//   - FlutterSecureStorage : token JWT. Terenkripsi oleh Keystore/Keychain.
-//
-// Token disimpan di secure storage karena kebocoran token sama dengan
-// kebocoran akun; data lain cukup di preferences.
+// Satu pintu untuk data lokal: preferences (profil, ambang) dan
+// secure storage (token).
 class StorageService {
   static const String _keyServerIp = 'server_ip';
   static const String _keyAuthToken = 'auth_token';
@@ -99,7 +84,7 @@ class StorageService {
   // Dipakai splash screen untuk memilih rute awal.
   Future<bool> isLoggedIn() async => (await getAuthToken()) != null;
 
-  /// Logout. Token biometrik ikut dihapus kecuali login biometrik aktif.
+  // / Logout. Token biometrik ikut dihapus kecuali login biometrik aktif.
   // Logout biasa. Token biometrik dipertahankan bila pengguna mengaktifkan
   // login biometrik, supaya ia bisa masuk lagi tanpa mengetik sandi.
   Future<void> clearSession() async {
@@ -109,7 +94,7 @@ class StorageService {
     }
   }
 
-  /// Sesi tidak valid (401 / kedaluwarsa): hapus semua token.
+  // / Sesi tidak valid (401 / kedaluwarsa): hapus semua token.
   // Sesi ditolak server (401) atau token rusak: hapus semuanya termasuk token
   // biometrik, karena token itu sudah tidak sah.
   Future<void> invalidateSession() async {
@@ -132,7 +117,7 @@ class StorageService {
     return token != null && !_isExpired(token);
   }
 
-  /// Setelah biometrik lolos: pulihkan sesi dari token tersimpan.
+  // / Setelah biometrik lolos: pulihkan sesi dari token tersimpan.
   // Setelah biometrik lolos, token biometrik dipromosikan menjadi token sesi
   // aktif. Return false bila token tidak ada atau kedaluwarsa.
   Future<bool> restoreSessionFromBiometric() async {

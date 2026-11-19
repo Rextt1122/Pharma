@@ -1,21 +1,5 @@
-// ============================================================================
-// DOKUMENTASI: sensor_model.dart — Model telemetri dan normalisasi payload
-//
-// Satu kelas untuk dua node (device_1 cold chain, device_2 sterilisasi UV).
-// Titik masuk data: SensorModel.fromJson() dipakai MqttService dan ApiService.
-// Berkas terkait: providers/sensor_provider.dart, services/mqtt_service.dart
-//
-// Dibaca sebagai referensi implementasi; komentar menjelaskan alasan, bukan mengulang nama simbol.
-// ============================================================================
-// Satu cuplikan telemetri dari satu perangkat.
-//
-// Satu objek menampung gabungan dua node karena payload firmware, simulator, dan
-// API memakai satu skema datar:
-//   device_1 : suhu, kelembapan, gas, cahaya, kipas, buzzer, pompa
-//   device_2 : PIR, pintu, jarak stok, UV, LED
-//
-// Field yang tidak dipakai node tertentu dibiarkan 0 dan tidak ditampilkan UI.
-// Semua field non-final (immutable); perubahan state memakai copyWith.
+// sensor_model.dart — Model telemetri dua node
+// Normalisasi payload firmware/simulator/API; copyWith untuk update optimistis.
 class SensorModel {
   // Penanda node: device_1 (cold chain) atau device_2 (sterilisasi).
   // Menentukan field mana yang relevan dan ke mana perintah kontrol dikirim.
@@ -65,14 +49,6 @@ class SensorModel {
 // Normalisasi field payload agar variasi firmware lama tidak menghilangkan nilai sensor.
 // Membangun model dari payload JSON yang bisa berasal dari firmware, simulator,
 // MQTT, atau REST.
-//
-// Nama field berbeda antar versi firmware (suhu/gas/mq2, pintu/status_pintu,
-// dst.), sehingga setiap nilai dibaca dari beberapa alias. Urutan alias penting:
-// yang pertama cocok dipakai. Nilai hilang menjadi 0 / 'Aman' agar UI tidak
-// pernah menerima null.
-//
-// defaultDeviceId dipakai bila payload tidak menyertakan device_id (skema lama);
-// pemanggil biasanya mengisinya dari nama topik MQTT.
 factory SensorModel.fromJson(
     Map<String, dynamic> json, {
     String defaultDeviceId = 'device_1',
@@ -197,10 +173,8 @@ factory SensorModel.fromJson(
       isGerakTerdeteksi ? 'Ada Orang (UV Lock)' : 'Ruangan Kosong (Aman UV)';
   // Perkiraan kapasitas rak dari jarak HC-SR04 ke tumpukan kardus.
   // Makin dekat sensor, makin tinggi tumpukan:
-  //   <= 0 cm  : data tidak valid, tampilkan asumsi tinggi
-  //   < 15 cm  : hampir penuh
-  //   < 35 cm  : optimal
-  //   lainnya  : rendah
+  // <= 0 cm  : data tidak valid, tampilkan asumsi tinggi
+  // < 15 cm  : hampir penuh
   String get teksKapasitasStok {
     if (jarakStok <= 0) return 'Tinggi (85%)';
     if (jarakStok < 15) return 'Penuh (> 85%)';

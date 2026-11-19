@@ -1,7 +1,5 @@
-// ============================================================================
-// DOKUMENTASI KODE: climate_dashboard_page.dart — Dashboard monitoring dan kontrol Node 1/Node 2
-// Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
-// ============================================================================
+// climate_dashboard_page.dart — Dashboard utama
+// Rak vaksin & ruang steril; layout responsif satu/dua kolom.
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
@@ -12,15 +10,8 @@ import '../theme/app_theme.dart';
 import '../widgets/app_toast.dart';
 import '../widgets/shimmer_loading.dart';
 
-// Dashboard utama. Satu halaman, dua wajah:
-//
-//   Rak Vaksin  (device_1) : gauge suhu besar, kelembapan, gas, kontrol kipas/
-//                            sirine/pompa, mode auto climate.
-//   Ruang Steril (device_2): hero keselamatan (pintu, PIR, interlock UV),
-//                            kapasitas stok, kontrol UV dan LED.
-//
-// Tata letak responsif: di bawah 760 px satu kolom (ponsel), di atasnya dua
-// kolom (tablet/desktop). Semua angka berasal dari SensorProvider.
+// Dashboard dua node: Rak Vaksin (iklim) dan Ruang Steril (UV/keamanan).
+// Angka dari SensorProvider; satu kolom di ponsel, dua kolom di tablet.
 class ClimateDashboardPage extends StatelessWidget {
   const ClimateDashboardPage({super.key});
 
@@ -49,10 +40,6 @@ class ClimateDashboardPage extends StatelessWidget {
       );
 
   // Menyusun dashboard untuk node aktif.
-  //
-  // safe = suhu & kelembapan dalam ambang, gas tidak bahaya, pintu tertutup.
-  // Nilai ini menentukan warna hero dan banner status, bukan sekadar hiasan:
-  // operator harus bisa menilai kondisi dari satu pandangan.
   Widget _dashboard(BuildContext context, SensorProvider p, SensorModel s) {
     final targetMin = p.currentTempMin;
     final targetMax = p.currentTempMax;
@@ -1001,10 +988,6 @@ class ClimateDashboardPage extends StatelessWidget {
   }
 
   // Kontrol aktuator per node.
-  //
-  // guard() memeriksa peran sebelum aksi dijalankan: pengguna non-operator
-  // mendapat toast, bukan tombol mati tanpa penjelasan. Ini juga mencegah
-  // kebingungan ketika tombol tampak aktif tetapi tidak bereaksi.
   Widget _buildSmartControlTiles(BuildContext context, SensorProvider p, SensorModel s) {
     void guard(VoidCallback act) {
       if (!p.isOperator) {

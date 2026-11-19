@@ -1,7 +1,5 @@
-// ============================================================================
-// DOKUMENTASI KODE: mqtt_service.dart — Koneksi MQTT, subscribe telemetri, dan publish kontrol
-// Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
-// ============================================================================
+// mqtt_service.dart — Koneksi MQTT
+// Pilih host broker, subscribe telemetri, publish perintah aktuator.
 import 'dart:convert';
 import 'package:mqtt_client/mqtt_client.dart';
 import '../models/sensor_model.dart';
@@ -11,13 +9,8 @@ import 'mqtt_client_factory_io.dart'
     if (dart.library.html) 'mqtt_client_factory_web.dart';
 import 'storage_service.dart';
 
-// Mengelola koneksi broker, aliran telemetri, dan publish perintah aktuator.
 // Satu koneksi MQTT untuk seluruh aplikasi.
-//
-// Tanggung jawab: memilih host broker yang hidup, berlangganan topik telemetri,
-// mengubah payload JSON menjadi SensorModel, dan mengirim perintah aktuator.
-// Callback onDataReceived/onConnectionChanged disediakan agar provider tidak
-// perlu mengetahui detail protokol.
+// Pilih host hidup, subscribe telemetri, publish perintah aktuator.
 class MqttService {
   MqttClient? _client;
   Function(SensorModel)? onDataReceived;
@@ -29,13 +22,6 @@ class MqttService {
   set onStatusChanged(Function(bool)? callback) => onConnectionChanged = callback;
 
   // Mencoba kandidat broker satu per satu hingga berhasil.
-  //
-  // Urutan kandidat: cloud (api.pharma.web.id), host hasil resolve REST, host
-  // tersimpan, lalu beberapa IP lokal/Docker yang biasa dipakai saat demo.
-  //
-  // Timeout 2,5 detik per host: cukup untuk jaringan lokal, cukup singkat agar
-  // tidak membuat splash screen menggantung saat host mati. Host yang berhasil
-  // disimpan ke SharedPreferences sehingga percobaan berikutnya lebih cepat.
   Future<void> connect() async {
     final savedIp = await _storageService.getServerIp();
     final reachableIp = await _apiService.resolveReachableIp();
@@ -114,10 +100,6 @@ class MqttService {
   }
 
   // Mengirim perintah aktuator dalam bentuk JSON.
-  //
-  // Tidak melempar error bila broker terputus; pemanggil (provider) yang
-  // bertanggung jawab memberi tahu pengguna. QoS 0 dipakai karena perintah
-  // kontrol dikirim ulang oleh pengguna bila tidak bereaksi.
   void publish(String topic, String message) {
     if (_client != null && _client!.connectionStatus?.state == MqttConnectionState.connected) {
       final builder = MqttClientPayloadBuilder();

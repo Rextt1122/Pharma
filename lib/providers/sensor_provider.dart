@@ -1,12 +1,5 @@
-// ============================================================================
-// DOKUMENTASI: sensor_provider.dart — State pusat dashboard dua node
-//
-// Menggabungkan REST (data awal), MQTT (realtime), ambang batas, notifikasi, dan kontrol aktuator.
-// Topik kontrol: pharma/control/device_1 | pharma/control/device_2 (+ alias legacy).
-// Berkas terkait: services/mqtt_service.dart, services/storage_service.dart, views/climate_dashboard_page.dart
-//
-// Dibaca sebagai referensi implementasi; komentar menjelaskan alasan, bukan mengulang nama simbol.
-// ============================================================================
+// sensor_provider.dart — State dashboard
+// Gabungan REST + MQTT, ambang batas, notifikasi, kontrol aktuator.
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -17,9 +10,6 @@ import '../services/mqtt_service.dart';
 import '../services/storage_service.dart';
 
 // Entri notifikasi dalam aplikasi (bukan push notification).
-//
-// id dipakai untuk mencegah duplikat dalam jendela cooldown; isCritical
-// menentukan gaya tampilan merah versus netral.
 class AppNotification {
   final String id;
   final String title;
@@ -36,18 +26,8 @@ class AppNotification {
   });
 }
 
-// Sumber state tunggal dashboard. Memisahkan telemetri Device 1 dan Device 2 agar pesan MQTT tidak saling menimpa.
 // State pusat dashboard: telemetri dua node, status koneksi, peran pengguna,
 // ambang batas, dan notifikasi.
-//
-// Alur data masuk:
-//   1. REST  : _fetchInitialApiData() mengisi tampilan sebelum MQTT siap.
-//   2. MQTT  : onDataReceived menimpa data dengan pembacaan terbaru.
-// Perintah aktuator dikirim lewat MQTT dan state lokal diperbarui optimistis;
-// bila perangkat tidak merespons, UI tetap konsisten dengan niat pengguna.
-//
-// Nilai awal di bawah adalah data demo supaya dashboard tidak kosong saat
-// aplikasi dibuka tanpa perangkat.
 class SensorProvider extends ChangeNotifier {
   final MqttService _mqttService = MqttService();
   final StorageService _storageService = StorageService();
@@ -202,11 +182,6 @@ class SensorProvider extends ChangeNotifier {
 
   // Device 2 Actuator 1: Lampu UV Sterilisasi (Dengan Human Interlock Protection)
   // Lampu UV-C Device 2 dengan pengaman manusia.
-  //
-  // Interlock: bila PIR mendeteksi gerak dan UV sedang mati, perintah ditolak dan
-  // notifikasi kritis dibuat. UV tidak boleh menyala saat ada orang di ruang
-  // sterilisasi. Saat UV dinyalakan, status juga dicerminkan ke _device1Data
-  // karena dashboard lama membaca field itu.
   bool toggleUv() {
     if (!_isOperator) return false;
     if (_device2Data.isGerakTerdeteksi && _device2Data.statusUv == 0) {
@@ -477,10 +452,6 @@ class SensorProvider extends ChangeNotifier {
   bool get isReconnecting => _isReconnecting;
 
   // Menghubungkan ulang secara manual.
-  //
-  // Fetch REST dan koneksi MQTT dijalankan paralel dengan batas 4 detik; timer
-  // cadangan memastikan indikator "menghubungkan" berhenti walau keduanya
-  // menggantung.
   Future<void> reconnect() async {
     if (_isReconnecting) return;
     _isReconnecting = true;

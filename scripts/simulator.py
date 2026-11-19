@@ -1,7 +1,5 @@
-# ============================================================================
-# DOKUMENTASI KODE: simulator.py — Simulator telemetri Device 1 dan Device 2
-# Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
-# ============================================================================
+# simulator.py — Simulator dua node
+# Publish telemetri MQTT, dengarkan kontrol, input keyboard.
 """
 SIMULATOR PERANGKAT IOT ESP32-S3 (PHARMA MEDIC)
 ================================================

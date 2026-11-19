@@ -1,7 +1,5 @@
-// ============================================================================
-// DOKUMENTASI KODE: device2_sketch.ino — Firmware ESP32 Device 2 sterilisasi UV dan interlock
-// Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
-// ============================================================================
+// device2_sketch.ino — ESP32 Node 2 (sterilisasi)
+// PIR, pintu, HC-SR04; UV-C berinterlock, LED RGB.
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
@@ -98,10 +96,6 @@ float ukurJarakUltrasonik() {
 
 // Callback menerima perintah dari Flutter Mobile / Web Dashboard
 // Perintah UV dan LED dari aplikasi.
-//
-// Perintah UV yang meminta menyala saat PIR aktif DITOLAK. Pengaman ini ada di
-// perangkat, bukan hanya di aplikasi, sehingga perintah keliru atau replay
-// tidak bisa menyalakan UV-C saat ada orang.
 void callbackMQTT(char* topic, byte* payload, unsigned int length) {
   StaticJsonDocument<256> doc;
   deserializeJson(doc, payload, length);

@@ -1,7 +1,5 @@
-// ============================================================================
-// DOKUMENTASI KODE: settings_page.dart — Pengaturan akun, jaringan, dan aplikasi
-// Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
-// ============================================================================
+// settings_page.dart — Pengaturan
+// Profil, ambang, jaringan, pengguna, layanan, pembaruan, logout.
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -27,11 +25,6 @@ class SettingsPage extends StatefulWidget {
 
 // Pusat pengaturan: profil, ambang sensor, jaringan, pengguna, layanan,
 // pembaruan, dan logout.
-//
-// Semua nilai dibaca dari StorageService saat halaman dibuka, lalu ditulis
-// kembali ketika pengguna menyimpan. Perubahan ambang langsung memengaruhi
-// warna status di dashboard karena SensorProvider membacanya dari sumber yang
-// sama.
 class _SettingsPageState extends State<SettingsPage> {
   final StorageService _storageService = StorageService();
   final ApiService _apiService = ApiService();
@@ -76,12 +69,6 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   // Memuat profil, ambang, IP, dan status biometrik secara paralel.
-  //
-  // Nilai ambang di-clamp ke rentang wajar: data lama atau input manual yang
-  // salah tidak boleh membuat grafik mustahil (mis. kelembapan 500%).
-  //
-  // Pemeriksaan biometrik diberi timeout 500 ms; pada perangkat tanpa sensor
-  // panggilan platform bisa menggantung dan menahan seluruh halaman.
   Future<void> _loadSettings() async {
     try {
       final results = await Future.wait([
@@ -1368,10 +1355,7 @@ class _SettingsPageState extends State<SettingsPage> {
     super.dispose();
   }
 
-  // ==========================================
-  // PROGRESSIVE SETTINGS MODALS (Design Guide)
-  // ==========================================
-
+  // Modal pengaturan
   // Pengaturan ambang suhu, kelembapan, dan gas. Perubahan disimpan lewat
   // SensorProvider.updateThresholds agar dashboard langsung memakai nilai baru.
   void _showThresholdsModal() {
@@ -2192,9 +2176,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  // ==========================================
   // STRUCTURED GROUP UI BUILDERS (Design Guide)
-  // ==========================================
 
   Widget _buildSectionHeader(String title) {
     return Padding(

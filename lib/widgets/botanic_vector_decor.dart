@@ -1,16 +1,8 @@
-// ============================================================================
-// DOKUMENTASI: botanic_vector_decor.dart — Dekorasi botani vektor
-//
-// Watermark daun, stempel merek, dan hiasan modal. Semua digambar dengan Canvas.
-// Tidak menyimpan state dan tidak memengaruhi tata letak konten (dipakai di dalam Stack).
-//
-// Dibaca sebagai referensi implementasi; komentar menjelaskan alasan, bukan mengulang nama simbol.
-// ============================================================================
+// botanic_vector_decor.dart — Dekorasi vektor
+// Watermark daun, stempel merek, hiasan modal.
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
-/// Clean, subtle medical botanic vector watermark for card backgrounds.
-/// Clean lines, low contrast, zero clutter.
 // Watermark daun di latar kartu. Opasitas sangat rendah (default 0.08) supaya
 // tidak mengganggu angka sensor; hanya tekstur, bukan elemen informasi.
 class BotanicVectorCardWatermark extends StatelessWidget {
@@ -129,8 +121,6 @@ class _BotanicVectorPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-/// Mini brand stamp with pharmaceutical potted plant illustration and caption.
-/// Perfect footer for Settings and About pages to create pleasant breathing room.
 // Stempel merek untuk header dan modal.
 class PharmaBrandStamp extends StatelessWidget {
   const PharmaBrandStamp({super.key});
@@ -270,7 +260,6 @@ class _MiniPotPlantPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-/// Subtle organic corner leaf accent for dialog sheets.
 // Dekorasi sudut untuk bagian atas bottom sheet.
 class ModalSheetTopDecor extends StatelessWidget {
   final Widget child;

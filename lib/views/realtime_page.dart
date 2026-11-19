@@ -1,7 +1,5 @@
-// ============================================================================
-// DOKUMENTASI KODE: realtime_page.dart — Tampilan data telemetri realtime
-// Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
-// ============================================================================
+// realtime_page.dart — Tab realtime
+// Konten Node 1 (iklim) dan Node 2 (UV/keamanan).
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
@@ -11,13 +9,8 @@ import '../services/storage_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shimmer_loading.dart';
 
-// Tab Realtime. Menampilkan node terpilih dalam dua tata letak:
-//
-//   device_1 : konten sensor suhu/kelembapan/gas + aktuator iklim.
-//   device_2 : panel keamanan (pintu, PIR) + aktuator UV/LED.
-//
-// Pemilihan node memakai SensorProvider.selectDevice sehingga sama dengan
-// pemilih di dashboard.
+// Tab Realtime: konten Node 1 (iklim) atau Node 2 (UV/keamanan).
+// Node dipilih lewat SensorProvider.selectDevice.
 class RealtimePage extends StatelessWidget {
   const RealtimePage({super.key});
 

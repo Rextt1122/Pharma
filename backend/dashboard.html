@@ -1,21 +1,6 @@
-<!-- ============================================================================
-     DOKUMENTASI: dashboard.html — Konsol web Pharma Medic (satu berkas)
-
-     Isi: dashboard status cluster, telemetri dua node, simulator input sensor,
-     manajemen pengguna, workbench API, dan riwayat log.
-
-     Catatan arsitektur: HTML, CSS, dan JS sengaja digabung dalam satu berkas
-     agar dapat disajikan langsung oleh FastAPI (GET /dashboard) tanpa build step.
-     Semua data berasal dari endpoint REST yang sama dengan aplikasi Flutter.
-
-     Bagian berkas (cari penanda di bawah):
-       - <style>            : token warna dan tata letak
-       - <body>             : markup panel
-       - "const ENDPOINTS"  : katalog endpoint API
-       - fungsi render*     : daftar endpoint, telemetri, pengguna
-
-     Kredensial: jangan menaruh token atau sandi di berkas ini.
-     ============================================================================ -->
+<!-- dashboard.html — Konsol web Pharma Medic
+     Dashboard, simulator, pengguna, dan workbench API dalam satu berkas.
+     Data dari endpoint REST yang sama dengan aplikasi Flutter. -->
 <!DOCTYPE html>
 <html lang="id" data-theme="light">
 <head>

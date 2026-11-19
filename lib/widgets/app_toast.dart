@@ -1,7 +1,5 @@
-// ============================================================================
-// DOKUMENTASI KODE: app_toast.dart — Notifikasi umpan balik pengguna yang konsisten
-// Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
-// ============================================================================
+// app_toast.dart — Notifikasi
+// SnackBar seragam: sukses, gagal, peringatan, info.
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
@@ -12,13 +10,6 @@ enum AppToastType { success, error, warning, info }
 // yang sama. Selalu pakai kelas ini, jangan memanggil ScaffoldMessenger langsung.
 class AppToast {
   // Menampilkan satu notifikasi.
-  //
-  // context   : konteks yang masih terpasang pada ScaffoldMessenger.
-  // message   : isi pesan singkat (satu kalimat).
-  // title     : opsional, tampil tebal di atas pesan.
-  // type      : menentukan warna dan ikon.
-  // duration  : lama tampil, default 3 detik.
-  // actionLabel/onAction : tombol aksi opsional (mis. "Ulangi").
   static void show(
     BuildContext context,
     String message, {

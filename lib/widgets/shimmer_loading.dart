@@ -1,11 +1,5 @@
-// ============================================================================
-// DOKUMENTASI: shimmer_loading.dart — Placeholder animasi saat memuat
-//
-// Komponen presentasi murni: tidak menyimpan data dan tidak memanggil API.
-// Dipakai dashboard, riwayat, dan pengaturan agar transisi konten tidak melompat.
-//
-// Dibaca sebagai referensi implementasi; komentar menjelaskan alasan, bukan mengulang nama simbol.
-// ============================================================================
+// shimmer_loading.dart — Placeholder memuat
+// Bentuk sama dengan kartu asli agar transisi tidak melompat.
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 

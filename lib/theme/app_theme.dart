@@ -1,7 +1,5 @@
-// ============================================================================
-// DOKUMENTASI KODE: app_theme.dart — Token visual dan tema aplikasi
-// Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
-// ============================================================================
+// app_theme.dart — Token visual
+// Warna, jarak, radius, tipografi, dan tema Material 3.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

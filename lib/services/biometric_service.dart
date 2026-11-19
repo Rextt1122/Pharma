@@ -1,7 +1,5 @@
-// ============================================================================
-// DOKUMENTASI KODE: biometric_service.dart — Verifikasi biometrik untuk membuka sesi tersimpan
-// Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
-// ============================================================================
+// biometric_service.dart — Login biometrik
+// Membuka token tersimpan; bukan pengganti autentikasi server.
 import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
 
@@ -33,11 +31,6 @@ class BiometricService {
   }
 
   // Menampilkan dialog biometrik sistem.
-  //
-  // reason : teks yang tampil di dialog, jelaskan tujuannya ke pengguna.
-  // biometricOnly=true mencegah PIN/pola perangkat dipakai sebagai jalan pintas.
-  // persistAcrossBackgrounding menjaga dialog tetap valid saat aplikasi sempat
-  // ke background (mis. menerima panggilan).
   Future<bool> authenticate({
     String reason = 'Verifikasi biometrik untuk akses sistem gudang farmasi',
   }) async {

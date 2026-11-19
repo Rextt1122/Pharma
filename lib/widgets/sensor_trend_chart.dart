@@ -1,7 +1,5 @@
-// ============================================================================
-// DOKUMENTASI KODE: sensor_trend_chart.dart — Grafik tren sensor dengan sampling dan skala dinamis
-// Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
-// ============================================================================
+// sensor_trend_chart.dart — Grafik tren
+// Suhu/kelembapan/gas; downsample 48 titik, garis ambang.
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import '../models/sensor_model.dart';
@@ -9,12 +7,8 @@ import '../theme/app_theme.dart';
 
 enum ChartMetric { suhu, kelembapan, gas }
 
-// Grafik histori sensor. Data dipadatkan agar kurva halus dan ringan.
-// Grafik tren tiga metrik (suhu, kelembapan, gas) untuk halaman riwayat.
-//
-// Data mentah diurutkan menurut waktu, dipotong, lalu dihaluskan supaya kurva
-// mudah dibaca. Garis putus-putus menandai ambang atas/bawah; area di luar
-// ambang diberi warna peringatan.
+// Grafik tren suhu, kelembapan, atau gas dari log riwayat.
+// Data diurutkan, dipadatkan ke 48 titik, lalu dihaluskan; garis ambang ditandai.
 class SensorTrendChart extends StatefulWidget {
   final List<SensorModel> historyData;
   final double tempMin;
@@ -97,11 +91,10 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
     }
   }
 
-  /// Garis batas bawah visual agar ketiga tab (Suhu, Kelembapan, Kadar Gas)
-  /// konsisten memiliki bingkai Maks & Min seperti grafik Kelembapan.
+  // / Garis batas bawah visual agar ketiga tab (Suhu, Kelembapan, Kadar Gas)
+  // / konsisten memiliki bingkai Maks & Min seperti grafik Kelembapan.
   // Garis referensi bawah selalu ada agar ketiga tab punya bingkai Maks/Min
   // yang sama. Untuk gas tidak ada ambang bawah medis, jadi dipakai 5 PPM
-  // sebagai acuan visual.
   double get _lowerReferenceLine {
     switch (_selectedMetric) {
       case ChartMetric.suhu:
@@ -137,7 +130,7 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
     return indexed.map((e) => e.value).toList();
   }
 
-  /// Gabungkan data mentah ke maksimal [maxPoints] titik (rata-rata per bucket).
+  // / Gabungkan data mentah ke maksimal [maxPoints] titik (rata-rata per bucket).
   // Menggabungkan titik per bucket (rata-rata) sampai maksimal 48 titik.
   // Tujuan: kurva tetap terbaca dan render tetap ringan walau log ratusan baris.
   List<SensorModel> _downsample(List<SensorModel> src, int maxPoints) {
@@ -159,7 +152,7 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
     return out;
   }
 
-  /// Haluskan gelombang kurva agar tidak patah/lancip tajam.
+  // / Haluskan gelombang kurva agar tidak patah/lancip tajam.
   // Penghalusan 3-titik (0.22 / 0.56 / 0.22) untuk meredam lonjakan sensor
   // tunggal. Titik ujung memakai bobot berbeda agar tidak turun ke nol.
   List<double> _smoothSeries(List<double> vals) {

@@ -1,7 +1,5 @@
-// ============================================================================
-// DOKUMENTASI KODE: splash_page.dart — Inisialisasi sesi sebelum masuk aplikasi
-// Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
-// ============================================================================
+// splash_page.dart — Splash screen
+// Animasi 2 detik lalu pilih /login atau /main sesuai token.
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -19,9 +17,6 @@ class SplashPage extends StatefulWidget {
 
 // Splash 2 detik: animasi logo lalu memilih rute berdasarkan keberadaan
 // token yang masih berlaku.
-//
-// Penundaan sengaja: memberi waktu Flutter memuat font dan provider, sekaligus
-// menghindari kedipan halaman login bagi pengguna yang sudah punya sesi.
 class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;

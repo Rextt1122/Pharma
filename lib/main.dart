@@ -1,12 +1,5 @@
-// ============================================================================
-// DOKUMENTASI: main.dart — Titik masuk aplikasi Pharma Medic
-//
-// Menyiapkan binding Flutter, gaya system bar, provider global, dan tabel rute.
-// Alur: main() -> MyApp -> SplashPage -> (sesi valid ? MainNavigation : LoginPage)
-// Berkas terkait: providers/, services/navigation_service.dart, theme/app_theme.dart
-//
-// Dibaca sebagai referensi implementasi; komentar menjelaskan alasan, bukan mengulang nama simbol.
-// ============================================================================
+// main.dart — Bootstrap aplikasi
+// Provider global, tema, rute /splash -> /login -> /main.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -35,12 +28,6 @@ void main() {
 }
 
 // Akar widget aplikasi.
-//
-// Menyediakan dua ChangeNotifier global: SensorProvider (telemetri realtime) dan
-// HistoryProvider (log historis). Keduanya hidup selama aplikasi berjalan sehingga
-// perpindahan tab tidak memicu koneksi ulang.
-//
-// Rute: /splash (cek sesi) -> /login atau /main.
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 

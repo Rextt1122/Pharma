@@ -1,7 +1,5 @@
-// ============================================================================
-// DOKUMENTASI KODE: history_provider.dart — State riwayat telemetri dari API backend
-// Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
-// ============================================================================
+// history_provider.dart — Riwayat telemetri
+// Muat log (maks 50), status loading/error, ekspor CSV.
 import 'dart:io';
 import 'package:csv/csv.dart';
 import 'package:flutter/foundation.dart';
@@ -28,13 +26,6 @@ class HistoryProvider extends ChangeNotifier {
 
 // Mengambil log dari backend dan mengubah state loading/error.
 // Mengambil ulang log dari backend.
-//
-// Efek samping: mengubah isLoading, errorMessage, dan historyList, lalu
-// notifyListeners(). Daftar dipotong maksimal 50 entri terbaru agar RAM dan
-// waktu render tetap wajar di perangkat kelas menengah.
-//
-// Loading ditahan minimal 400 ms supaya indikator tidak berkedip pada respons
-// cepat (<100 ms).
 Future<void> fetchHistory() async {
     _isLoading = true;
     _errorMessage = null;
@@ -74,10 +65,6 @@ Future<void> fetchHistory() async {
 
   // Menulis seluruh log yang sedang tampil ke berkas CSV di folder dokumen
   // aplikasi.
-  //
-  // Return: path absolut berkas, atau null bila daftar kosong.
-  // Kolom mengikuti urutan: No, Suhu, Kelembapan, Gas, Cahaya, Pintu, UV,
-  // Status, Waktu. Pemisah koma standar RFC 4180.
   Future<String?> exportToCsv() async {
     if (_historyList.isEmpty) {
       return null;

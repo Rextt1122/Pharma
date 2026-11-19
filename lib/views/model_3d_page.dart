@@ -1,7 +1,5 @@
-// ============================================================================
-// DOKUMENTASI KODE: model_3d_page.dart — Digital twin 3D dan denah sensor gudang
-// Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
-// ============================================================================
+// model_3d_page.dart — Digital twin
+// Model GLB dan denah vektor; pilihan zona mengubah kamera.
 import 'package:flutter/material.dart';
 import 'package:model_viewer_plus/model_viewer_plus.dart';
 import 'package:provider/provider.dart';
@@ -19,10 +17,6 @@ class Model3dPage extends StatefulWidget {
 }
 
 // Digital twin gudang: model GLB (model-viewer) dan denah vektor.
-//
-// Zona (Semua, Cold Storage, Kamar UV, Pintu Utama, Detektor Gas) mengubah
-// kamera dan menyorot area terkait. Data sensor yang ditampilkan tetap berasal
-// dari SensorProvider; halaman ini tidak menulis state perangkat.
 class _Model3dPageState extends State<Model3dPage> {
   bool _is3dModel = true;
   bool _autoRotate = false;

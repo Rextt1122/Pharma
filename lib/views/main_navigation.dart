@@ -1,7 +1,5 @@
-// ============================================================================
-// DOKUMENTASI KODE: main_navigation.dart — Navigasi utama antar halaman aplikasi
-// Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
-// ============================================================================
+// main_navigation.dart — Kerangka navigasi
+// Header jam, empat tab, bottom sheet notifikasi, cek update.
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
@@ -25,10 +23,6 @@ class MainNavigation extends StatefulWidget {
 
 // Kerangka navigasi: header dengan jam berjalan, empat tab
 // (Realtime, Digital Twin, Riwayat, Pengaturan), dan bottom sheet notifikasi.
-//
-// Hanya tab terpilih yang dibangun ulang (IndexedStack tidak dipakai) agar
-// halaman berat seperti 3D dan pengaturan tidak memakan memori saat tidak
-// dilihat; provider tetap menyimpan state.
 class _MainNavigationState extends State<MainNavigation>
     with TickerProviderStateMixin {
   int _selectedIndex = 0;

@@ -1,7 +1,5 @@
-# ============================================================================
-# DOKUMENTASI KODE: main.py — Backend FastAPI untuk autentikasi, telemetri, dan MQTT
-# Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
-# ============================================================================
+# main.py — Backend FastAPI
+# Token HMAC, telemetri MySQL, jembatan MQTT, kontrol aktuator.
 import json
 import threading
 import datetime
@@ -90,7 +88,6 @@ _KEY_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".secret_ke
 
 
 # Kunci HMAC untuk token.
-#
 # Urutan sumber: environment PHARMA_SECRET_KEY -> berkas .secret_key -> dibuat
 # baru dengan izin 0600. Kunci tidak pernah ditulis di kode agar token tidak
 # bisa dipalsukan hanya dengan membaca repositori.
@@ -148,7 +145,6 @@ def _unb64(s: str) -> bytes:
 
 
 # Token sesi: base64url(payload).base64url(HMAC-SHA256).
-#
 # Payload berisi uid, username, role, dan exp (7 hari). Hanya dua bagian,
 # bukan JWT tiga bagian standar — klien menyesuaikan (lihat StorageService).
 # Ditandatangani, bukan dienkripsi: isinya boleh dibaca, tidak boleh diubah.
@@ -199,7 +195,6 @@ def require_user(cred: HTTPAuthorizationCredentials = Depends(_bearer)) -> dict:
 
 
 # Guard untuk endpoint administratif dan kontrol aktuator.
-#
 # Peran dibaca ulang dari database, bukan hanya dari token, sehingga pencabutan
 # hak berlaku segera tanpa menunggu token kedaluwarsa.
 def require_operator(user: dict = Depends(require_user)) -> dict:
@@ -378,15 +373,9 @@ class GenericResponse(BaseModel):
 
 
 # Gerbang tunggal untuk semua telemetri (MQTT, /kirim-data, simulator).
-#
-# Menentukan status:
-#   Bahaya    : gas > 50 PPM, pintu terbuka, atau cahaya > 600 lux
-#   Peringatan: suhu di luar 2-8 °C atau cahaya > 300 lux
-#   Aman      : selain itu
-#
-# Baris kemudian disimpan ke sensor_data. Kegagalan database hanya dicetak:
-# telemetri berikutnya akan menyusul, dan backend tidak boleh mati karena
-# satu baris gagal.
+# Status: Bahaya (gas > 50 PPM / pintu terbuka / cahaya > 600 lux),
+# Peringatan (suhu di luar 2-8 °C / cahaya > 300 lux), selain itu Aman.
+# Baris disimpan ke sensor_data; gagal simpan hanya dicatat, tidak menghentikan layanan.
 def process_and_save_sensor_data(data: dict):
     """Pengolahan Data Cloud: Analisis batas aman cold-chain vaksin & gas berbahaya"""
     device_id = str(data.get("device_id", data.get("deviceId", "device_1")))
@@ -496,7 +485,6 @@ def root():
 # Autentikasi MySQL lalu menerbitkan token sesi untuk request berikutnya.
 @app.post("/login", tags=["Autentikasi"], response_model=AuthResponse, summary="Login Akun")
 # Autentikasi + proteksi brute force.
-#
 # Alur: cek kunci -> verifikasi -> catat kegagalan atau bersihkan penghitung ->
 # upgrade hash warisan -> terbitkan token. Respons sukses memuat profil agar
 # klien tidak perlu request tambahan.
@@ -819,12 +807,9 @@ def delete_user(user_id: int, user: dict = Depends(require_operator)):
         raise HTTPException(status_code=500, detail="Database error")
 
 @app.get("/sensor", tags=["Telemetri"], response_model=List[SensorItem], summary="Riwayat Sensor")
-# Riwayat telemetri terbaru, default 50 baris (maksimal 500).
-#
-# Bila tabel kosong atau query gagal, satu baris contoh dikembalikan supaya
-# aplikasi demo tidak menampilkan layar kosong. Timestamp dinormalisasi ke
-# string "YYYY-MM-DD HH:MM:SS" dan diduplikasi ke field waktu untuk
-# kompatibilitas klien lama.
+# Riwayat telemetri terbaru (default 50, maksimal 500).
+# Timestamp diformat "YYYY-MM-DD HH:MM:SS" dan diduplikasi ke field waktu.
+# Tabel kosong/query gagal -> satu baris contoh agar demo tidak kosong.
 def get_sensor_data(limit: int = 50, _user: dict = Depends(require_user)):
     """Ambil riwayat data sensor untuk mobile app dan export CSV"""
     limit = max(1, min(limit, 500))
@@ -907,15 +892,9 @@ def get_sensor_summary(_user: dict = Depends(require_user)):
     except Exception:
         raise HTTPException(status_code=500, detail="Server error")
 
-# Menerima data dari tombol 'Kirim Node' di Web Dashboard.
-# Alur ke Flutter:
-# 1. Simpan ke database MySQL (Node 2).
-# 2. Broadcast ke broker MQTT topik 'pharma/sensor' (Node 3).
-# 3. Flutter yang subscribe topik ini langsung menerima data secara realtime.
-# Endpoint simulasi tanpa login untuk Wokwi, Python, dan dashboard web.
+# Telemetri dari simulator/web (token opsional): simpan ke MySQL,
+# lalu broadcast ke 'pharma/sensor' agar Flutter menerima realtime.
 @app.post("/kirim-data", tags=["Telemetri"], summary="Kirim Data Sensor")
-# Endpoint uji tanpa login wajib (token opsional). Menyimpan data lalu
-# memantulkannya ke MQTT agar dashboard web dan aplikasi ikut terbarui.
 def kirim_data(data_baru: dict, _user: Optional[dict] = Depends(optional_user)):
     process_and_save_sensor_data(data_baru)
     try:
@@ -927,7 +906,6 @@ def kirim_data(data_baru: dict, _user: Optional[dict] = Depends(optional_user)):
 @app.post("/control/{device}", tags=["Telemetri"], summary="Kontrol Aktuator IoT")
 # Meneruskan perintah aktuator ke dua topik: per-aktuator
 # (pharma/control/uv) dan per-device (pharma/control/device_2).
-#
 # Firmware membaca salah satu, tergantung versinya; mengirim keduanya membuat
 # perintah tetap bekerja setelah pembaruan firmware bertahap.
 def control_actuator(device: str, req: ActuatorControlRequest, _user: dict = Depends(require_user)):

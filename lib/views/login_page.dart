@@ -1,16 +1,5 @@
-// ============================================================================
-// DOKUMENTASI: login_page.dart — Autentikasi dan registrasi
-//
-// Satu layar, dua mode: masuk (POST /login) dan daftar (POST /register).
-// Jalur ketiga adalah biometrik: membuka token yang sudah tersimpan, tanpa
-// memanggil backend.
-//
-// Semua akses jaringan didelegasikan ke ApiService; halaman ini hanya
-// menangani validasi form, state tombol, dan navigasi.
-//
-// Berkas terkait: services/api_service.dart, services/storage_service.dart,
-// services/biometric_service.dart, widgets/app_toast.dart
-// ============================================================================
+// login_page.dart — Login dan registrasi
+// POST /login atau /register; biometrik membuka token tersimpan.
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -24,10 +13,6 @@ import '../widgets/app_toast.dart';
 
 // Layar masuk dan daftar. Satu-satunya tempat kredensial dikirim ke
 // backend (POST /login atau POST /register lewat ApiService).
-//
-// Setelah sukses: token tersimpan, lalu Navigator.pushReplacementNamed
-// ke /main. Halaman ini tidak melakukan GET; data dashboard diambil provider.
-//
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -35,15 +20,7 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
-// Halaman login dan registrasi dalam satu layar.
-//
-// Mode berganti lewat segmented control; form registrasi menambah field email
-// dan konfirmasi sandi. Setelah berhasil, token disimpan (ApiService) dan
-// aplikasi pindah ke /main.
-//
-// Dua jalur masuk: sandi (server) dan biometrik (token tersimpan di perangkat).
-// Biometrik tidak pernah membuat sesi baru; ia hanya membuka token yang sudah
-// diterbitkan server.
+// State form: mode masuk/daftar, validasi, dan status tombol.
 class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -136,9 +113,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
   // Alur biometrik: verifikasi sidik jari -> promosikan token biometrik menjadi
   // token sesi -> masuk dashboard.
-  //
-  // Bila token ternyata kedaluwarsa, opsi biometrik disembunyikan dan pengguna
-  // diarahkan memakai sandi.
   Future<void> _handleBiometricLogin() async {
     if (_isAuthenticatingBiometric) return;
     setState(() => _isAuthenticatingBiometric = true);
@@ -299,25 +273,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     );
   }
 
-  // ----------------------------------------------------------------
   // Aksi form: login, daftar, biometrik
-  // ----------------------------------------------------------------
-
   // Handler tombol utama — satu-satunya jalur POST dari halaman login.
-  //
-  // Alur login:
-  //   1. Validasi form (username + password tidak kosong).
-  //   2. POST /login lewat ApiService -> token + objek user.
-  //   3. Simpan profil (nama, email, peran) ke SharedPreferences.
-  //   4. pushReplacementNamed("/main").
-  //
-  // Alur daftar:
-  //   1. Validasi tambahan (email valid, konfirmasi sandi sama).
-  //   2. POST /register -> token + user (peran "user").
-  //   3. Simpan profil, lalu masuk dashboard.
-  //
-  // Kegagalan: pesan "detail" server ditampilkan lewat AppToast setelah
-  // prefiks "Exception: " dibuang. _isSubmitting mencegah tap ganda.
   Future<void> _handleSubmit() async {
     if (_isSubmitting) return;
     if (_formKey.currentState!.validate()) {

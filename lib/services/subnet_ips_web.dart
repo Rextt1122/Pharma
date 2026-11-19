@@ -1,11 +1,5 @@
-// ============================================================================
-// DOKUMENTASI: subnet_ips_web.dart — Prefix subnet lokal (web)
-//
-// Stub untuk Flutter Web; browser tidak dapat membaca antarmuka jaringan.
-// Dipilih otomatis lewat conditional import di api_service.dart.
-//
-// Dibaca sebagai referensi implementasi; komentar menjelaskan alasan, bukan mengulang nama simbol.
-// ============================================================================
+// subnet_ips_web.dart — Prefix subnet (web)
+// Stub: browser tidak bisa membaca antarmuka jaringan.
 Future<List<String>> getLocalSubnetPrefixes() async {
   return const <String>[];
 }

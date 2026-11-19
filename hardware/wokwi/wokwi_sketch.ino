@@ -1,7 +1,5 @@
-// ============================================================================
-// DOKUMENTASI KODE: wokwi_sketch.ino — Firmware Wokwi prototipe perangkat
-// Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
-// ============================================================================
+// wokwi_sketch.ino — Firmware prototipe gabungan
+// Versi lama; device1/device2 adalah firmware aktif.
 #include <Arduino.h>
 
 #define PIR_PIN          37

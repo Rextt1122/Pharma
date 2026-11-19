@@ -1,12 +1,5 @@
-// ============================================================================
-// DOKUMENTASI: update_service.dart — Pembaruan aplikasi lewat GitHub Releases
-//
-// Sumber: api.github.com/repos/Rextt1122/Pharma/releases/latest (aset .apk).
-// Perbandingan versi numerik; kegagalan jaringan diabaikan.
-// Berkas terkait: android/ (MethodChannel installer), views/settings_page.dart
-//
-// Dibaca sebagai referensi implementasi; komentar menjelaskan alasan, bukan mengulang nama simbol.
-// ============================================================================
+// update_service.dart — Pembaruan aplikasi
+// Cek GitHub Releases, unduh APK, serahkan ke installer Android.
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -38,13 +31,8 @@ class AppUpdateInfo {
   });
 }
 
-// Memeriksa GitHub Release lalu meneruskan APK ke installer Android.
-// Pemeriksa pembaruan berbasis GitHub Releases.
-//
-// Alur: GET releases/latest -> bandingkan tag dengan versi terpasang -> bila
-// lebih baru, tampilkan bottom sheet berisi catatan rilis dan tombol unduh.
-// Seluruh proses bersifat opsional: kegagalan jaringan tidak pernah
-// mengganggu pemakaian aplikasi.
+// Pemeriksa pembaruan lewat GitHub Releases.
+// Versi lebih baru -> unduh APK -> serahkan ke installer Android.
 class UpdateService {
   static const String _repo = 'Rextt1122/Pharma';
   static const String _latestReleaseApi =
@@ -52,12 +40,8 @@ class UpdateService {
 
   static bool _hasPromptedThisSession = false;
 
-  /// Check GitHub Releases for newer version
+  // / Check GitHub Releases for newer version
   // Membaca rilis terbaru dari GitHub.
-  //
-  // Tag "v1.2.3" dinormalisasi menjadi "1.2.3". Aset pertama berakhiran .apk
-  // dipakai sebagai sumber unduhan. Bila offline, rate-limited, atau rilis tidak
-  // punya APK, hasil "tidak ada pembaruan" dikembalikan tanpa melempar error.
   static Future<AppUpdateInfo> checkForUpdate() async {
     try {
       final packageInfo = await PackageInfo.fromPlatform();
@@ -113,7 +97,7 @@ class UpdateService {
     );
   }
 
-  /// Semver compare
+  // / Semver compare
   // Perbandingan numerik per komponen (mayor.minor.patch), bukan leksikal:
   // "1.0.10" dianggap lebih baru dari "1.0.9".
   static bool _isVersionNewer(String latest, String current) {
@@ -133,7 +117,7 @@ class UpdateService {
     }
   }
 
-  /// Automatically prompt user if update is available (once per app launch)
+  // / Automatically prompt user if update is available (once per app launch)
   // Dipanggil sekali per peluncuran aplikasi; _hasPromptedThisSession mencegah
   // dialog muncul berulang saat pengguna berpindah halaman.
   static Future<void> checkAndPromptAutoUpdate(BuildContext context) async {
@@ -146,7 +130,7 @@ class UpdateService {
     }
   }
 
-  /// Show the styled update modal
+  // / Show the styled update modal
   // Bottom sheet pembaruan. Ditutup dengan menggeser ke bawah agar pengguna
   // bisa menunda tanpa kehilangan konteks layar.
   static void showUpdateDialog(BuildContext context, AppUpdateInfo info) {

@@ -1,7 +1,5 @@
-// ============================================================================
-// DOKUMENTASI KODE: device1_sketch.ino — Firmware ESP32 Device 1 pemantauan rak vaksin
-// Dibaca sebagai referensi implementasi; komentar hanya menjelaskan alur penting.
-// ============================================================================
+// device1_sketch.ino — ESP32 Node 1 (rak vaksin)
+// DHT22, MQ-2, LDR; kipas, buzzer, pompa, auto climate.
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include <DHT.h>
@@ -63,9 +61,6 @@ void aturKipas(int aktif) {
 // Callback menerima perintah JSON dari Mobile / Web Dashboard
 // Menerima perintah dashboard: kipas, sirine, pompa, dan mode auto climate.
 // Perintah masuk: fan, buzzer, pump, auto_climate.
-//
-// Perintah fan manual otomatis mematikan modeAuto, supaya keputusan pengguna
-// tidak langsung ditimpa kontrol otomatis pada siklus berikutnya.
 void callbackMQTT(char* topic, byte* payload, unsigned int length) {
   StaticJsonDocument<256> doc;
   deserializeJson(doc, payload, length);
