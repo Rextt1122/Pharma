@@ -33,6 +33,7 @@ class SensorProvider extends ChangeNotifier {
   final StorageService _storageService = StorageService();
   final ApiService _apiService = ApiService();
   
+  // Inisialisasi awal Node 1 (Rak Vaksin). Standar cold chain 2.0 - 8.0 C.
   SensorModel _device1Data = SensorModel(
     deviceId: 'device_1',
     suhu: 4.2,
@@ -44,8 +45,15 @@ class SensorProvider extends ChangeNotifier {
     statusPompa: 0,
     status: 'Normal (Suhu & Udara Gudang)',
   );
+
+  // Inisialisasi awal Node 2 (Ruang Steril & Cleanroom).
+  // Dokumentasi: Nilai default suhu (22.0 C) & kelembapan (50.0%) disesuaikan dengan
+  // standar Cleanroom ISO/BPOM (15 - 25 C) agar saat aplikasi pertama kali dibuka
+  // tidak menampilkan angka 0.0 C / 0% sebelum telemetri MQTT mengalir.
   SensorModel _device2Data = SensorModel(
     deviceId: 'device_2',
+    suhu: 22.0,
+    kelembapan: 50.0,
     deteksiGerak: 0,
     statusPintu: 0,
     jarakStok: 28.0,
@@ -226,14 +234,27 @@ class SensorProvider extends ChangeNotifier {
   }
 
   // Mengisi data awal dari REST agar dashboard langsung berisi angka terakhir
-  // sebelum MQTT mengalir. Kegagalan diabaikan karena MQTT masih bisa menyusul.
+  // sebelum MQTT mengalir.
+  // Dokumentasi: Mencari entri terakhir untuk masing-masing device (device_1 dan device_2)
+  // dari riwayat telemetri API agar kedua tab langsung sinkron saat cold start.
   Future<void> _fetchInitialApiData() async {
     try {
       final history = await _apiService.fetchSensorHistory();
       if (history.isNotEmpty) {
-        _device1Data = history.first.copyWith(deviceId: 'device_1');
+        // Cari data terbaru untuk device_1 (atau fallback ke history pertama)
+        final dev1Entry = history.firstWhere(
+          (h) => h.deviceId == 'device_1',
+          orElse: () => history.first,
+        );
+        _device1Data = dev1Entry.copyWith(deviceId: 'device_1');
         _buzzerActive = _device1Data.isBuzzerAktif;
-        if (_device2Data.waktu == null) {
+
+        // Cari data terbaru untuk device_2 jika ada di history
+        final dev2Matches = history.where((h) => h.deviceId == 'device_2');
+        if (dev2Matches.isNotEmpty) {
+          _device2Data = dev2Matches.first;
+        } else {
+          // Jika backend belum memiliki log eksplisit device_2, sinkronkan waktu & parameter ruangan
           _device2Data = _device2Data.copyWith(
             waktu: history.first.waktu,
           );

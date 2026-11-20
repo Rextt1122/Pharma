@@ -2249,8 +2249,23 @@
       }
     }
 
-    // Menyegarkan data tanpa memuat ulang halaman, dengan animasi ikon sebagai
-    // umpan balik bahwa permintaan sedang berjalan.
+    // Sinkronkan data profil dan hak akses terbaru dari backend
+    async function syncUserProfile() {
+      if (!bearerToken) return;
+      try {
+        const res = await fetch("/me", {
+          headers: { "Authorization": "Bearer " + bearerToken }
+        });
+        if (res.ok) {
+          const profile = await res.json();
+          activeUser = `${profile.username} (${profile.role})`;
+          localStorage.setItem("pharma_console_user", activeUser);
+          updateAuthUi();
+        }
+      } catch (_) {}
+    }
+
+    // Menyegarkan telemetri, daftar pengguna, dan hak akses tanpa perlu F5
     async function triggerManualRefresh() {
       const refIcon = document.getElementById("refreshIcon");
       if (refIcon) {
@@ -2263,7 +2278,12 @@
           }
         }, 550);
       }
-      await refreshDashboardData();
+      await Promise.allSettled([
+        refreshDashboardData(),
+        loadUsersData(),
+        syncUserProfile()
+      ]);
+      showToast("Data & Hak Akses Berhasil Diperbarui");
     }
     function toggleTheme() {
       const cur = document.documentElement.getAttribute("data-theme");

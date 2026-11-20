@@ -204,15 +204,8 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
         ? _upperThreshold!
         : maxVal;
 
-    final range = (effectiveMax - effectiveMin).abs();
-    final yMargin = range < 1.0 ? 1.0 : range * 0.08;
-    double chartMinY = effectiveMin - yMargin;
-    double chartMaxY = effectiveMax + yMargin;
-    if (minVal >= 0 && chartMinY < 0) {
-      chartMinY = 0;
-    }
-
-    final double span = (chartMaxY - chartMinY).abs();
+    // Tentukan interval sumbu Y yang rapi
+    final double span = (effectiveMax - effectiveMin).abs();
     double yInterval = 5.0;
     if (span <= 8) {
       yInterval = 1.0;
@@ -222,6 +215,19 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
       yInterval = 5.0;
     } else {
       yInterval = 10.0;
+    }
+
+    // Bulatkan chartMinY ke bawah dan chartMaxY ke atas mengikuti interval
+    // agar tick tidak menumpuk di tepi atas/bawah.
+    double chartMinY = (effectiveMin / yInterval).floor() * yInterval;
+    double chartMaxY = (effectiveMax / yInterval).ceil() * yInterval;
+
+    // Tambah satu step margin jika terlalu mepet dengan batas
+    if ((chartMaxY - effectiveMax).abs() < 0.001) {
+      chartMaxY += yInterval;
+    }
+    if ((effectiveMin - chartMinY).abs() < 0.001 && chartMinY > 0) {
+      chartMinY = (chartMinY - yInterval).clamp(0.0, double.infinity);
     }
     if (minVal >= 0 && chartMinY < 0) {
       chartMinY = 0;
@@ -394,14 +400,20 @@ class _SensorTrendChartState extends State<SensorTrendChart> {
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      reservedSize: 34,
+                      reservedSize: 26,
                       interval: yInterval,
                       getTitlesWidget: (value, meta) {
-                        if (value == meta.min) {
+                        // Hindari menggambar angka di batas min atau max agar tidak tabrakan/terpotong
+                        if (value <= meta.min + 0.01 || value >= meta.max - 0.01) {
+                          return const SizedBox.shrink();
+                        }
+                        // Pastikan hanya kelipatan pas interval yang dirender
+                        final remainder = (value / yInterval).round() * yInterval;
+                        if ((value - remainder).abs() > 0.05) {
                           return const SizedBox.shrink();
                         }
                         return Padding(
-                          padding: const EdgeInsets.only(right: 6),
+                          padding: const EdgeInsets.only(right: 4),
                           child: Text(
                             value.toStringAsFixed(0),
                             style: const TextStyle(
